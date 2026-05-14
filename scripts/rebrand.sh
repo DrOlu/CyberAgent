@@ -32,8 +32,12 @@ restore_files() {
   fi
 
   echo "Restoring CyberAgent-specific files from snapshot..."
-  # Restore all snapshot files, preserving directory structure
-  rsync -a --delete "$snap/" ./
+  # Restore all snapshot files, preserving directory structure.
+  # --no-implied-dirs prevents rsync from deleting files that aren't in
+  # the snapshot. We only want to overwrite snapshotted files with our
+  # versions, not remove upstream additions.
+  # Exit code 24 = "some files vanished" — harmless in CI.
+  rsync -a --no-implied-dirs "$snap/" ./ || [ $? -eq 24 ]
   echo "Restore complete."
 }
 
