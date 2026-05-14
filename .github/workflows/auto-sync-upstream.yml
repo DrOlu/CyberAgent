@@ -1,0 +1,189 @@
+name: Sync Upstream
+
+on:
+  schedule:
+    # Run every 4 hours
+    - cron: "0 */4 * * *"
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Force sync even if no new upstream commits"
+        type: boolean
+        default: false
+      create_tag:
+        description: "Tag to create after sync (e.g. v1.0.1) — triggers release"
+        type: string
+        default: ""
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    # Only run on the canonical repo, not forks
+    if: github.repository_owner == 'DrOlu'
+    steps:
+      - name: Checkout CyberAgent
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          # PAT_TOKEN is required so the merge commit (which may include
+          # workflow file changes) can be pushed back to the repo.
+          # GITHUB_TOKEN cannot push .github/workflows/ files.
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/multica-ai/multica.git
+          git fetch upstream main --depth=1000
+
+      - name: Check for upstream changes
+        id: check
+        run: |
+          set -e
+          FORCE="${{ github.event.inputs.force }}"
+          if [ "$FORCE" = "true" ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "Force sync requested."
+            exit 0
+          fi
+
+          # Count new commits on upstream/main that aren't on origin/main
+          MERGE_BASE=$(git merge-base origin/main upstream/main)
+          NEW_COMMITS=$(git rev-list --count "$MERGE_BASE"..upstream/main)
+
+          if [ "$NEW_COMMITS" -gt 0 ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "Found $NEW_COMMITS new upstream commit(s)."
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "No new upstream commits."
+          fi
+
+      - name: Snapshot CyberAgent-specific files
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          SNAP=".cyberagent-snapshot"
+          rm -rf "$SNAP"
+          mkdir -p "$SNAP"
+
+          # ── CyberAgent-owned files to preserve across merges ──────────
+          # These are either binary assets (icons, images) or files with
+          # structural customisations that cannot be handled by sed.
+          FILES=(
+            # Agent config
+            AGENTS.md
+            CLAUDE.md
+            .github/PULL_REQUEST_TEMPLATE.md
+
+            # Icons and images (binary — can't sed)
+            apps/desktop/build/icon.icns
+            apps/desktop/build/icon.ico
+            apps/desktop/build/icon.png
+            apps/desktop/build/icons
+            apps/desktop/resources/icon.png
+            apps/web/public/favicon.svg
+            apps/web/public/og-image.png
+
+            # Workflows — we manage our own copies with CyberAgent branding
+            .github/workflows/auto-sync-upstream.yml
+            .github/workflows/release.yml
+            .github/workflows/ci.yml
+
+            # Rebrand script itself
+            scripts/rebrand.sh
+
+            # GoReleaser — project_name changed, brews section removed
+            .goreleaser.yml
+
+            # Desktop config — appId, productName, protocol differ
+            apps/desktop/electron-builder.yml
+            apps/desktop/package.json
+
+            # Docker compose — hardcoded drolu/ image paths
+            docker-compose.yml
+            docker-compose.selfhost.yml
+
+            # LICENSE — author line changed
+            LICENSE
+          )
+
+          for f in "${FILES[@]}"; do
+            if [ -e "$f" ]; then
+              mkdir -p "$SNAP/$(dirname "$f")"
+              cp -a "$f" "$SNAP/$f"
+            fi
+          done
+
+          echo "Snapshotted $(find "$SNAP" -type f | wc -l) file(s)."
+
+      - name: Merge upstream
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          set -e
+          git config user.name "CyberAgent Sync Bot"
+          git config user.email "cyberagent-bot@hyperspace.ng"
+
+          # Merge upstream/main, preferring ours on conflict for snapshotted
+          # files. Any conflicts in non-snapshotted files will fail the job
+          # and need manual resolution.
+          git merge upstream/main --no-edit --no-ff || {
+            echo "::error::Merge conflict — manual resolution required"
+            git merge --abort
+            exit 1
+          }
+
+      - name: Restore CyberAgent-specific files
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          ./scripts/rebrand.sh --restore
+
+          # Clean up snapshot dir (don't commit it)
+          rm -rf .cyberagent-snapshot
+
+      - name: Apply rebrand substitutions
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          ./scripts/rebrand.sh --rebrand
+
+      - name: Commit and push
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          set -e
+          # Stage all rebrand changes
+          git add -A
+
+          # Only commit if there are changes
+          if git diff --cached --quiet; then
+            echo "No rebrand changes to commit."
+            exit 0
+          fi
+
+          UPSTREAM_SHA=$(git rev-parse --short upstream/main)
+          git commit -m "sync: merge upstream multica-ai/multica@${UPSTREAM_SHA} + rebrand"
+          git push origin main
+          echo "Pushed sync commit."
+
+      - name: Create tag (optional)
+        if: >
+          steps.check.outputs.has_changes == 'true' &&
+          github.event.inputs.create_tag != ''
+        run: |
+          set -e
+          TAG="${{ github.event.inputs.create_tag }}"
+          git tag "$TAG"
+          git push origin "$TAG"
+          echo "Created tag $TAG — this will trigger the Release workflow."
+
+      - name: Summary
+        if: always()
+        run: |
+          echo "## Sync Upstream Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ "${{ steps.check.outputs.has_changes }}" = "true" ]; then
+            UPSTREAM_SHA=$(git rev-parse --short upstream/main 2>/dev/null || echo "N/A")
+            echo "✅ Merged upstream changes (multica-ai/multica@${UPSTREAM_SHA}) and applied rebrand." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "⏭️ No new upstream commits found." >> "$GITHUB_STEP_SUMMARY"
+          fi
