@@ -112,7 +112,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/cyberagent-backend
+          images: ghcr.io/drolu/cyberagent-backend
           labels: |
             org.opencontainers.image.title=CyberAgent Backend
             org.opencontainers.image.description=CyberAgent self-hosted backend
@@ -141,7 +141,7 @@ jobs:
           build-args: |
             VERSION=${{ needs.verify.outputs.tag_name }}
             COMMIT=${{ github.sha }}
-          outputs: type=image,name=ghcr.io/${{ github.repository_owner }}/cyberagent-backend,push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,name=ghcr.io/drolu/cyberagent-backend,push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
         run: |
@@ -178,7 +178,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/cyberagent-backend
+          images: ghcr.io/drolu/cyberagent-backend
           flavor: |
             latest=false
           tags: |
@@ -198,12 +198,12 @@ jobs:
         run: |
           docker buildx imagetools create \
             $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf 'ghcr.io/${{ github.repository_owner }}/cyberagent-backend@sha256:%s ' *)
+            $(printf 'ghcr.io/drolu/cyberagent-backend@sha256:%s ' *)
 
       - name: Inspect image
         run: |
           docker buildx imagetools inspect \
-            ghcr.io/${{ github.repository_owner }}/cyberagent-backend:${{ steps.meta.outputs.version }}
+            ghcr.io/drolu/cyberagent-backend:${{ steps.meta.outputs.version }}
 
   docker-web-build:
     needs: verify
@@ -229,7 +229,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/cyberagent-web
+          images: ghcr.io/drolu/cyberagent-web
           labels: |
             org.opencontainers.image.title=CyberAgent Web
             org.opencontainers.image.description=CyberAgent self-hosted web frontend
@@ -258,7 +258,7 @@ jobs:
           build-args: |
             REMOTE_API_URL=http://backend:8080
             NEXT_PUBLIC_APP_VERSION=${{ needs.verify.outputs.tag_name }}
-          outputs: type=image,name=ghcr.io/${{ github.repository_owner }}/cyberagent-web,push-by-digest=true,name-canonical=true,push=true
+          outputs: type=image,name=ghcr.io/drolu/cyberagent-web,push-by-digest=true,name-canonical=true,push=true
 
       - name: Export digest
         run: |
@@ -295,7 +295,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/cyberagent-web
+          images: ghcr.io/drolu/cyberagent-web
           flavor: |
             latest=false
           tags: |
@@ -315,12 +315,12 @@ jobs:
         run: |
           docker buildx imagetools create \
             $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf 'ghcr.io/${{ github.repository_owner }}/cyberagent-web@sha256:%s ' *)
+            $(printf 'ghcr.io/drolu/cyberagent-web@sha256:%s ' *)
 
       - name: Inspect image
         run: |
           docker buildx imagetools inspect \
-            ghcr.io/${{ github.repository_owner }}/cyberagent-web:${{ steps.meta.outputs.version }}
+            ghcr.io/drolu/cyberagent-web:${{ steps.meta.outputs.version }}
 
   # Build the Desktop installers for Linux and Windows and upload them to
   # the GitHub Release that the `release` job above just published. macOS
