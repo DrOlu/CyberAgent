@@ -145,3 +145,8 @@ packages/views/auth/login-page.test.tsx
 
 # Root package.json
 package.json
+
+# Go module files — must not be rebranded (import paths are code identifiers)
+server/go.mod
+server/go.sum
+server/sqlc.yaml

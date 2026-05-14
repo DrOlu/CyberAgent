@@ -7,8 +7,8 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 
-	"github.com/cyberagent.sh/multica/server/internal/daemonws"
-	"github.com/cyberagent.sh/multica/server/internal/realtime"
+	"github.com/multica-ai/multica/server/internal/daemonws"
+	"github.com/multica-ai/multica/server/internal/realtime"
 )
 
 type RegistryOptions struct {

@@ -18,10 +18,10 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/cyberagent.sh/multica/server/internal/analytics"
-	"github.com/cyberagent.sh/multica/server/internal/auth"
-	"github.com/cyberagent.sh/multica/server/internal/logger"
-	db "github.com/cyberagent.sh/multica/server/pkg/db/generated"
+	"github.com/multica-ai/multica/server/internal/analytics"
+	"github.com/multica-ai/multica/server/internal/auth"
+	"github.com/multica-ai/multica/server/internal/logger"
+	db "github.com/multica-ai/multica/server/pkg/db/generated"
 )
 
 // SignupError represents signup restriction errors

@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 
-	"github.com/cyberagent.sh/multica/server/internal/util"
-	db "github.com/cyberagent.sh/multica/server/pkg/db/generated"
+	"github.com/multica-ai/multica/server/internal/util"
+	db "github.com/multica-ai/multica/server/pkg/db/generated"
 )
 
 // HasSquadLeaderNoActionEvaluationForTask reports whether this exact task

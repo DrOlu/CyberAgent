@@ -5,9 +5,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/cyberagent.sh/multica/server/internal/analytics"
-	"github.com/cyberagent.sh/multica/server/internal/events"
-	"github.com/cyberagent.sh/multica/server/internal/realtime"
+	"github.com/multica-ai/multica/server/internal/analytics"
+	"github.com/multica-ai/multica/server/internal/events"
+	"github.com/multica-ai/multica/server/internal/realtime"
 )
 
 func TestMainRouterDoesNotExposePrometheusMetrics(t *testing.T) {

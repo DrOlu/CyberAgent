@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/cyberagent.sh/multica/server/internal/daemon/execenv"
+	"github.com/multica-ai/multica/server/internal/daemon/execenv"
 )
 
 // BuildPrompt constructs the task prompt for an agent CLI.

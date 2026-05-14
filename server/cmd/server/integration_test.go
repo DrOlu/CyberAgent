@@ -17,10 +17,10 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/cyberagent.sh/multica/server/internal/analytics"
-	"github.com/cyberagent.sh/multica/server/internal/auth"
-	"github.com/cyberagent.sh/multica/server/internal/events"
-	"github.com/cyberagent.sh/multica/server/internal/realtime"
+	"github.com/multica-ai/multica/server/internal/analytics"
+	"github.com/multica-ai/multica/server/internal/auth"
+	"github.com/multica-ai/multica/server/internal/events"
+	"github.com/multica-ai/multica/server/internal/realtime"
 )
 
 var (

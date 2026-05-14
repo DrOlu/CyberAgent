@@ -13,14 +13,14 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/cyberagent.sh/multica/server/internal/analytics"
-	"github.com/cyberagent.sh/multica/server/internal/events"
-	"github.com/cyberagent.sh/multica/server/internal/mention"
-	"github.com/cyberagent.sh/multica/server/internal/realtime"
-	"github.com/cyberagent.sh/multica/server/internal/util"
-	db "github.com/cyberagent.sh/multica/server/pkg/db/generated"
-	"github.com/cyberagent.sh/multica/server/pkg/protocol"
-	"github.com/cyberagent.sh/multica/server/pkg/redact"
+	"github.com/multica-ai/multica/server/internal/analytics"
+	"github.com/multica-ai/multica/server/internal/events"
+	"github.com/multica-ai/multica/server/internal/mention"
+	"github.com/multica-ai/multica/server/internal/realtime"
+	"github.com/multica-ai/multica/server/internal/util"
+	db "github.com/multica-ai/multica/server/pkg/db/generated"
+	"github.com/multica-ai/multica/server/pkg/protocol"
+	"github.com/multica-ai/multica/server/pkg/redact"
 )
 
 type TaskService struct {

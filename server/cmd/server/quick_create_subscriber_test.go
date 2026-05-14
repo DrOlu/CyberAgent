@@ -5,10 +5,10 @@ import (
 	"testing"
 
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/cyberagent.sh/multica/server/internal/events"
-	"github.com/cyberagent.sh/multica/server/internal/service"
-	"github.com/cyberagent.sh/multica/server/internal/util"
-	db "github.com/cyberagent.sh/multica/server/pkg/db/generated"
+	"github.com/multica-ai/multica/server/internal/events"
+	"github.com/multica-ai/multica/server/internal/service"
+	"github.com/multica-ai/multica/server/internal/util"
+	db "github.com/multica-ai/multica/server/pkg/db/generated"
 )
 
 // TestQuickCreateCompletion_SubscribesRequester locks in the fix for the

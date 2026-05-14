@@ -4,8 +4,8 @@ import (
 	"context"
 	"strings"
 
-	"github.com/cyberagent.sh/multica/server/internal/util"
-	db "github.com/cyberagent.sh/multica/server/pkg/db/generated"
+	"github.com/multica-ai/multica/server/internal/util"
+	db "github.com/multica-ai/multica/server/pkg/db/generated"
 )
 
 // squadOperatingProtocol is the hard-coded system-level briefing prepended to

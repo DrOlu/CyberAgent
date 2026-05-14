@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/cyberagent.sh/multica/server/internal/util"
-	"github.com/cyberagent.sh/multica/server/pkg/protocol"
+	"github.com/multica-ai/multica/server/internal/util"
+	"github.com/multica-ai/multica/server/pkg/protocol"
 )
 
 type RuntimeLocalSkillRequestStatus string

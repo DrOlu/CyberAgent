@@ -6,8 +6,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/cyberagent.sh/multica/server/internal/events"
-	db "github.com/cyberagent.sh/multica/server/pkg/db/generated"
+	"github.com/multica-ai/multica/server/internal/events"
+	db "github.com/multica-ai/multica/server/pkg/db/generated"
 )
 
 // setupSweeperTestFixture creates an issue and a task in the given status with

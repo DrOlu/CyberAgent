@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/cyberagent.sh/multica/server/internal/analytics"
+	"github.com/multica-ai/multica/server/internal/analytics"
 )
 
 type AppConfig struct {

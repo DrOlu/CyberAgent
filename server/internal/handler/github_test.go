@@ -12,7 +12,7 @@ import (
 	"reflect"
 	"testing"
 
-	db "github.com/cyberagent.sh/multica/server/pkg/db/generated"
+	db "github.com/multica-ai/multica/server/pkg/db/generated"
 )
 
 func TestExtractIdentifiers(t *testing.T) {

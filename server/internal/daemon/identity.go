@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/cyberagent.sh/multica/server/internal/cli"
+	"github.com/multica-ai/multica/server/internal/cli"
 )
 
 // daemonIDFileName is the file that stores this machine's stable daemon

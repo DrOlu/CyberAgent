@@ -135,7 +135,6 @@ open('.goreleaser.yml', 'w').write(text)
       -e 's/your Multica/your CyberAgent/g' \
       -e 's/using Multica/using CyberAgent/g' \
       -e 's/A Multica/A CyberAgent/g' \
-      -e 's|multica-ai/multica|DrOlu/CyberAgent|g' \
       -e 's|multica.ai|cyberagent.sh|g' \
       {} + 2>/dev/null || true
 
@@ -164,7 +163,6 @@ open('.goreleaser.yml', 'w').write(text)
       -e 's/Multica Self-Hosted/CyberAgent Self-Hosted/g' \
       -e 's/Multica CLI/CyberAgent CLI/g' \
       -e 's|multica.ai|cyberagent.sh|g' \
-      -e 's|multica-ai/multica|DrOlu/CyberAgent|g' \
       {} + 2>/dev/null || true
 
   # ── Server Go files — prompt strings and user-visible text ──────────────
@@ -174,8 +172,6 @@ open('.goreleaser.yml', 'w').write(text)
       -e 's|Multica platform|CyberAgent platform|g' \
       -e 's|Multica CLI|CyberAgent CLI|g' \
       -e 's|Multica AI|CyberAgent|g' \
-      -e 's|multica.ai|cyberagent.sh|g' \
-      -e 's|multica-ai/multica|DrOlu/CyberAgent|g' \
       {} + 2>/dev/null || true
 
   # ── Desktop renderer / main process — user-visible strings ────────────
@@ -185,7 +181,6 @@ open('.goreleaser.yml', 'w').write(text)
       -e 's|Multica Desktop|CyberAgent Desktop|g' \
       -e 's|Multica Desktop App|CyberAgent Desktop|g' \
       -e 's|multica://|cyberagent://|g' \
-      -e 's|multica-ai/multica|DrOlu/CyberAgent|g' \
       {} + 2>/dev/null || true
 
   # ── Styles (CSS) ───────────────────────────────────────────────────────
@@ -194,8 +189,6 @@ open('.goreleaser.yml', 'w').write(text)
     -exec sed -i 's/Multica/CyberAgent/g' {} + 2>/dev/null || true
 
   # ── Install scripts ───────────────────────────────────────────────────
-  _sed scripts/install.sh 's|multica-ai/multica|DrOlu/CyberAgent|g' 2>/dev/null || true
-  _sed scripts/install.ps1 's|multica-ai/multica|DrOlu/CyberAgent|g' 2>/dev/null || true
 
   echo "Rebrand substitutions complete."
 }

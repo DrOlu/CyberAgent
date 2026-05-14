@@ -7,9 +7,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/cyberagent.sh/multica/server/internal/middleware"
-	"github.com/cyberagent.sh/multica/server/internal/util"
-	db "github.com/cyberagent.sh/multica/server/pkg/db/generated"
+	"github.com/multica-ai/multica/server/internal/middleware"
+	"github.com/multica-ai/multica/server/internal/util"
+	db "github.com/multica-ai/multica/server/pkg/db/generated"
 )
 
 // TestMemberAllowedForPrivateAgent_Pure exercises the pure predicate that

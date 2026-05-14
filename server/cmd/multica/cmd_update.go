@@ -8,7 +8,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/cyberagent.sh/multica/server/internal/cli"
+	"github.com/multica-ai/multica/server/internal/cli"
 )
 
 var updateDownloadTimeout time.Duration = cli.DefaultUpdateDownloadTimeout
@@ -58,7 +58,7 @@ func runUpdate(_ *cobra.Command, _ []string) error {
 
 	// Not installed via brew — download binary directly from GitHub Releases.
 	if latest == nil {
-		return fmt.Errorf("could not determine latest version; check https://github.com/cyberagent.sh/multica/releases/latest")
+		return fmt.Errorf("could not determine latest version; check https://github.com/multica-ai/multica/releases/latest")
 	}
 	targetVersion := latest.TagName
 	fmt.Fprintf(os.Stderr, "Downloading %s from GitHub Releases...\n", targetVersion)

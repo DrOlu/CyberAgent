@@ -9,9 +9,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/cyberagent.sh/multica/server/internal/service"
-	db "github.com/cyberagent.sh/multica/server/pkg/db/generated"
-	"github.com/cyberagent.sh/multica/server/pkg/protocol"
+	"github.com/multica-ai/multica/server/internal/service"
+	db "github.com/multica-ai/multica/server/pkg/db/generated"
+	"github.com/multica-ai/multica/server/pkg/protocol"
 )
 
 // computeNextRun delegates to the shared cron helper in the service package.

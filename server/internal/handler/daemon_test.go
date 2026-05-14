@@ -14,10 +14,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/cyberagent.sh/multica/server/internal/daemonws"
-	"github.com/cyberagent.sh/multica/server/internal/middleware"
-	db "github.com/cyberagent.sh/multica/server/pkg/db/generated"
-	"github.com/cyberagent.sh/multica/server/pkg/protocol"
+	"github.com/multica-ai/multica/server/internal/daemonws"
+	"github.com/multica-ai/multica/server/internal/middleware"
+	db "github.com/multica-ai/multica/server/pkg/db/generated"
+	"github.com/multica-ai/multica/server/pkg/protocol"
 )
 
 // slowProbeLocalSkillListStore wraps a LocalSkillListStore but blocks inside
