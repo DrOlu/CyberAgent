@@ -345,9 +345,9 @@ func buildMetaSkillContent(provider string, ctx TaskContextForEnv) string {
 	b.WriteString("After downloading, you can read the file directly (e.g. view an image, read a document).\n\n")
 
 	b.WriteString("## Important: Always Use the `multica` CLI\n\n")
-	b.WriteString("All interactions with Multica platform resources — including issues, comments, attachments, images, files, and any other platform data — **must** go through the `multica` CLI. ")
-	b.WriteString("Do NOT use `curl`, `wget`, or any other HTTP client to access Multica URLs or APIs directly. ")
-	b.WriteString("Multica resource URLs require authenticated access that only the `multica` CLI can provide.\n\n")
+	b.WriteString("All interactions with CyberAgent platform resources — including issues, comments, attachments, images, files, and any other platform data — **must** go through the `multica` CLI. ")
+	b.WriteString("Do NOT use `curl`, `wget`, or any other HTTP client to access CyberAgent URLs or APIs directly. ")
+	b.WriteString("CyberAgent resource URLs require authenticated access that only the `multica` CLI can provide.\n\n")
 	b.WriteString("If you need to perform an operation that is not covered by any existing `multica` command, ")
 	b.WriteString("do NOT attempt to work around it. Instead, post a comment mentioning the workspace owner to request the missing functionality.\n\n")
 
