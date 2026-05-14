@@ -322,11 +322,12 @@ jobs:
           docker buildx imagetools inspect \
             ghcr.io/drolu/cyberagent-web:${{ steps.meta.outputs.version }}
 
-  # Build the Desktop installers for Linux and Windows and upload them to
-  # the GitHub Release that the `release` job above just published. macOS
-  # Desktop continues to ship via the manual `release-desktop` skill so it
-  # can be signed + notarized with Apple Developer credentials that are
-  # not (yet) wired into CI.
+  # Build the Desktop installers for all platforms and upload them to
+  # the GitHub Release that the `release` job above just published.
+  # macOS builds are unsigned (CSC_IDENTITY_AUTO_DISCOVERY=false) until
+  # Apple Developer credentials are wired into CI secrets. Set
+  # CSC_LINK + CSC_KEY_PASSWORD + APPLE_ID + APPLE_APP_SPECIFIC_PASSWORD
+  # + APPLE_TEAM_ID to enable signing + notarization.
   desktop:
     needs: release
     strategy:
@@ -337,6 +338,8 @@ jobs:
             target: linux
           - os: windows-latest
             target: win
+          - os: macos-latest
+            target: mac
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
