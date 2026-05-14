@@ -22,8 +22,8 @@ const jsonLd = {
     {
       "@type": "Organization",
       name: "CyberAgent",
-      url: "https://www.multica.ai",
-      sameAs: ["https://github.com/multica-ai/multica"],
+      url: "https://www.cyberagent.sh",
+      sameAs: ["https://github.com/cyberagent.sh/multica"],
     },
     {
       "@type": "SoftwareApplication",

@@ -16,12 +16,12 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/multica-ai/multica/server/internal/analytics"
-	"github.com/multica-ai/multica/server/internal/logger"
-	"github.com/multica-ai/multica/server/internal/util"
-	"github.com/multica-ai/multica/server/pkg/agent"
-	db "github.com/multica-ai/multica/server/pkg/db/generated"
-	"github.com/multica-ai/multica/server/pkg/protocol"
+	"github.com/cyberagent.sh/multica/server/internal/analytics"
+	"github.com/cyberagent.sh/multica/server/internal/logger"
+	"github.com/cyberagent.sh/multica/server/internal/util"
+	"github.com/cyberagent.sh/multica/server/pkg/agent"
+	db "github.com/cyberagent.sh/multica/server/pkg/db/generated"
+	"github.com/cyberagent.sh/multica/server/pkg/protocol"
 )
 
 // IssueResponse is the JSON response for an issue.
@@ -1855,7 +1855,7 @@ func (h *Handler) BatchUpdateIssues(w http.ResponseWriter, r *http.Request) {
 	// real-world cases that hit this path are caller mistakes (status placed
 	// at the top level, "update" misspelled as singular). Telling the truth
 	// here — `{"updated": 0}` — keeps the wire shape stable while making the
-	// count match reality. See multica-ai/multica#1660.
+	// count match reality. See cyberagent.sh/multica#1660.
 	hasMutation := req.Updates.Title != nil ||
 		req.Updates.Description != nil ||
 		req.Updates.Status != nil ||

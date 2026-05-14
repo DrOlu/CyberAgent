@@ -9,11 +9,11 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 
-	"github.com/multica-ai/multica/server/internal/analytics"
-	"github.com/multica-ai/multica/server/internal/logger"
-	"github.com/multica-ai/multica/server/internal/util"
-	db "github.com/multica-ai/multica/server/pkg/db/generated"
-	"github.com/multica-ai/multica/server/pkg/protocol"
+	"github.com/cyberagent.sh/multica/server/internal/analytics"
+	"github.com/cyberagent.sh/multica/server/internal/logger"
+	"github.com/cyberagent.sh/multica/server/internal/util"
+	db "github.com/cyberagent.sh/multica/server/pkg/db/generated"
+	"github.com/cyberagent.sh/multica/server/pkg/protocol"
 )
 
 // Upper bound on free-text fields. `cloudWaitlistReasonMaxLen` is a

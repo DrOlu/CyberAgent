@@ -73,7 +73,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.multica.ai"),
+  metadataBase: new URL("https://www.cyberagent.sh"),
   title: {
     default: "CyberAgent — Project Management for Human + Agent Teams",
     template: "%s | CyberAgent",

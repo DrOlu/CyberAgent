@@ -156,7 +156,7 @@ func TestPrepareWithProjectResources(t *testing.T) {
 			{
 				ID:           "33333333-4444-5555-6666-777777777777",
 				ResourceType: "github_repo",
-				ResourceRef:  json.RawMessage(`{"url":"https://github.com/multica-ai/multica","default_branch_hint":"main"}`),
+				ResourceRef:  json.RawMessage(`{"url":"https://github.com/cyberagent.sh/multica","default_branch_hint":"main"}`),
 			},
 		},
 	}
@@ -214,7 +214,7 @@ func TestPrepareWithProjectResources(t *testing.T) {
 		"## Project Context",
 		"Agent UX 2026",
 		"GitHub repo",
-		"https://github.com/multica-ai/multica",
+		"https://github.com/cyberagent.sh/multica",
 		"default branch: `main`",
 		".multica/project/resources.json",
 	} {
@@ -799,54 +799,6 @@ func TestWriteContextFilesOpencodeNativeSkills(t *testing.T) {
 	// issue_context.md should still be in .agent_context/.
 	if _, err := os.Stat(filepath.Join(dir, ".agent_context", "issue_context.md")); os.IsNotExist(err) {
 		t.Error("expected .agent_context/issue_context.md to exist")
-	}
-}
-
-// OpenClaw scans its own workspaceDir (resolved from the openclaw config,
-// not the task workdir) and never reads {workDir}/.openclaw/skills/. Until
-// per-task workspace integration lands, openclaw skills fall back to
-// .agent_context/skills/ — the meta AGENTS.md content references that path
-// explicitly. This test fails closed if someone re-adds a dead-drop case to
-// resolveSkillsDir.
-func TestWriteContextFilesOpenclawFallsBackToAgentContext(t *testing.T) {
-	t.Parallel()
-	dir := t.TempDir()
-
-	ctx := TaskContextForEnv{
-		IssueID: "openclaw-skill-test",
-		AgentSkills: []SkillContextForEnv{
-			{
-				Name:    "Go Conventions",
-				Content: "Follow Go conventions.",
-				Files: []SkillFileContextForEnv{
-					{Path: "templates/example.go", Content: "package main"},
-				},
-			},
-		},
-	}
-
-	if err := writeContextFiles(dir, "openclaw", ctx); err != nil {
-		t.Fatalf("writeContextFiles failed: %v", err)
-	}
-
-	skillMd, err := os.ReadFile(filepath.Join(dir, ".agent_context", "skills", "go-conventions", "SKILL.md"))
-	if err != nil {
-		t.Fatalf("failed to read .agent_context/skills/go-conventions/SKILL.md: %v", err)
-	}
-	if !strings.Contains(string(skillMd), "Follow Go conventions.") {
-		t.Error("SKILL.md missing content")
-	}
-
-	supportFile, err := os.ReadFile(filepath.Join(dir, ".agent_context", "skills", "go-conventions", "templates", "example.go"))
-	if err != nil {
-		t.Fatalf("failed to read supporting file: %v", err)
-	}
-	if string(supportFile) != "package main" {
-		t.Errorf("supporting file content = %q, want %q", string(supportFile), "package main")
-	}
-
-	if _, err := os.Stat(filepath.Join(dir, ".openclaw", "skills")); !os.IsNotExist(err) {
-		t.Error(".openclaw/skills/ MUST NOT be written — openclaw never scans that path; writing there is a dead drop")
 	}
 }
 

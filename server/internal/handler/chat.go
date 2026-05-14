@@ -10,9 +10,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/multica-ai/multica/server/internal/analytics"
-	db "github.com/multica-ai/multica/server/pkg/db/generated"
-	"github.com/multica-ai/multica/server/pkg/protocol"
+	"github.com/cyberagent.sh/multica/server/internal/analytics"
+	db "github.com/cyberagent.sh/multica/server/pkg/db/generated"
+	"github.com/cyberagent.sh/multica/server/pkg/protocol"
 )
 
 // chatSessionTitleMaxLen caps the rename input. Long enough to fit a

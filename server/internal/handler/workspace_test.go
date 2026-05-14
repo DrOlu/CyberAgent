@@ -170,7 +170,7 @@ INSERT INTO member (workspace_id, user_id, role) VALUES ($1, $2, 'owner')
 		t.Fatalf("create requester member: %v", err)
 	}
 
-	targetEmail := fmt.Sprintf("revocation-%s@multica.ai", slug)
+	targetEmail := fmt.Sprintf("revocation-%s@cyberagent.sh", slug)
 	var targetUserID string
 	if err := testPool.QueryRow(ctx, `
 INSERT INTO "user" (name, email) VALUES ($1, $2) RETURNING id
@@ -438,7 +438,7 @@ INSERT INTO member (workspace_id, user_id, role) VALUES ($1, $2, 'owner')
 	var targetUserID string
 	if err := testPool.QueryRow(ctx, `
 INSERT INTO "user" (name, email) VALUES ($1, $2) RETURNING id
-`, "Revocation No Runtimes Target", "revocation-no-runtimes@multica.ai").Scan(&targetUserID); err != nil {
+`, "Revocation No Runtimes Target", "revocation-no-runtimes@cyberagent.sh").Scan(&targetUserID); err != nil {
 		t.Fatalf("create target user: %v", err)
 	}
 	t.Cleanup(func() {

@@ -6,10 +6,10 @@ import (
 	"log/slog"
 	"strings"
 
-	"github.com/multica-ai/multica/server/internal/events"
-	"github.com/multica-ai/multica/server/internal/handler"
-	"github.com/multica-ai/multica/server/internal/realtime"
-	"github.com/multica-ai/multica/server/pkg/protocol"
+	"github.com/cyberagent.sh/multica/server/internal/events"
+	"github.com/cyberagent.sh/multica/server/internal/handler"
+	"github.com/cyberagent.sh/multica/server/internal/realtime"
+	"github.com/cyberagent.sh/multica/server/pkg/protocol"
 )
 
 // registerListeners wires up event bus listeners for WS broadcasting.

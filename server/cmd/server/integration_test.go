@@ -17,10 +17,10 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"github.com/multica-ai/multica/server/internal/analytics"
-	"github.com/multica-ai/multica/server/internal/auth"
-	"github.com/multica-ai/multica/server/internal/events"
-	"github.com/multica-ai/multica/server/internal/realtime"
+	"github.com/cyberagent.sh/multica/server/internal/analytics"
+	"github.com/cyberagent.sh/multica/server/internal/auth"
+	"github.com/cyberagent.sh/multica/server/internal/events"
+	"github.com/cyberagent.sh/multica/server/internal/realtime"
 )
 
 var (
@@ -35,7 +35,7 @@ var (
 // the JWT_SECRET env var (set in .env) and stays in sync with the server.
 
 const (
-	integrationTestEmail         = "integration-test@multica.ai"
+	integrationTestEmail         = "integration-test@cyberagent.sh"
 	integrationTestName          = "Integration Tester"
 	integrationTestWorkspaceSlug = "integration-tests"
 )
@@ -275,7 +275,7 @@ func TestConfigRouteIsPublic(t *testing.T) {
 // ---- Auth ----
 
 func TestSendCodeAndVerify(t *testing.T) {
-	const email = "integration-sendcode@multica.ai"
+	const email = "integration-sendcode@cyberagent.sh"
 	ctx := context.Background()
 
 	t.Cleanup(func() {
@@ -358,7 +358,7 @@ func TestSendCodeAndVerify(t *testing.T) {
 }
 
 func TestVerifyCodeNewUserHasNoWorkspace(t *testing.T) {
-	const email = "new-integration-verify@multica.ai"
+	const email = "new-integration-verify@cyberagent.sh"
 	ctx := context.Background()
 
 	t.Cleanup(func() {
