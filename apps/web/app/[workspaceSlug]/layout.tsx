@@ -8,7 +8,7 @@ import { workspaceBySlugOptions } from "@multica/core/workspace";
 import { setCurrentWorkspace } from "@multica/core/platform";
 import { useAuthStore } from "@multica/core/auth";
 import { NoAccessPage } from "@multica/views/workspace/no-access-page";
-import { CyberAgentIcon } from "@multica/ui/components/common/multica-icon";
+import { MulticaIcon } from "@multica/ui/components/common/multica-icon";
 import { useWorkspaceSeen } from "@multica/views/workspace/use-workspace-seen";
 
 export default function WorkspaceLayout({
@@ -63,7 +63,7 @@ export default function WorkspaceLayout({
 
   const loadingIndicator = (
     <div className="flex h-svh items-center justify-center">
-      <CyberAgentIcon className="size-6 animate-pulse" />
+      <MulticaIcon className="size-6 animate-pulse" />
     </div>
   );
 

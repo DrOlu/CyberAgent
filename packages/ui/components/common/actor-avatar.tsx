@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Bot, Users } from "lucide-react";
 import { cn } from "@multica/ui/lib/utils";
-import { CyberAgentIcon } from "./multica-icon";
+import { MulticaIcon } from "./multica-icon";
 
 interface ActorAvatarProps {
   name: string;
@@ -54,7 +54,7 @@ function ActorAvatar({
           onError={() => setImgError(true)}
         />
       ) : isSystem ? (
-        <CyberAgentIcon noSpin style={{ width: size * 0.55, height: size * 0.55 }} />
+        <MulticaIcon noSpin style={{ width: size * 0.55, height: size * 0.55 }} />
       ) : isAgent ? (
         <Bot style={{ width: size * 0.55, height: size * 0.55 }} />
       ) : isSquad ? (
