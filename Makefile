@@ -8,9 +8,9 @@ ifneq ($(wildcard $(ENV_FILE)),)
 include $(ENV_FILE)
 endif
 
-POSTGRES_DB ?= multica
-POSTGRES_USER ?= multica
-POSTGRES_PASSWORD ?= multica
+POSTGRES_DB ?= cyberagent
+POSTGRES_USER ?= cyberagent
+POSTGRES_PASSWORD ?= cyberagent
 POSTGRES_PORT ?= 5432
 PORT ?= 8080
 FRONTEND_PORT ?= 3000
@@ -64,7 +64,7 @@ selfhost: ## Create .env if needed, then pull and start the official self-hosted
 		fi; \
 		echo "==> Generated random JWT_SECRET"; \
 	fi
-	@echo "==> Pulling official Multica images..."
+	@echo "==> Pulling official CyberAgent images..."
 	@if ! docker compose -f docker-compose.selfhost.yml pull; then \
 		echo ""; \
 		echo "Official images for tag '$${MULTICA_IMAGE_TAG:-latest}' are not published yet."; \
@@ -72,7 +72,7 @@ selfhost: ## Create .env if needed, then pull and start the official self-hosted
 		echo "  make selfhost-build"; \
 		exit 1; \
 	fi
-	@echo "==> Starting Multica via Docker Compose..."
+	@echo "==> Starting CyberAgent via Docker Compose..."
 	docker compose -f docker-compose.selfhost.yml up -d
 	@echo "==> Waiting for backend to be ready..."
 	@for i in $$(seq 1 30); do \
@@ -83,7 +83,7 @@ selfhost: ## Create .env if needed, then pull and start the official self-hosted
 	done
 	@if curl -sf http://localhost:$${PORT:-8080}/health > /dev/null 2>&1; then \
 		echo ""; \
-		echo "✓ Multica is running!"; \
+		echo "✓ CyberAgent is running!"; \
 		echo "  Frontend: http://localhost:$${FRONTEND_PORT:-3000}"; \
 		echo "  Backend:  http://localhost:$${PORT:-8080}"; \
 		echo ""; \
@@ -114,7 +114,7 @@ selfhost-build: ## Build backend/web from the current checkout and start the sel
 		fi; \
 		echo "==> Generated random JWT_SECRET"; \
 	fi
-	@echo "==> Building Multica from the current checkout..."
+	@echo "==> Building CyberAgent from the current checkout..."
 	docker compose -f docker-compose.selfhost.yml -f docker-compose.selfhost.build.yml up -d --build
 	@echo "==> Waiting for backend to be ready..."
 	@for i in $$(seq 1 30); do \
@@ -125,7 +125,7 @@ selfhost-build: ## Build backend/web from the current checkout and start the sel
 	done
 	@if curl -sf http://localhost:$${PORT:-8080}/health > /dev/null 2>&1; then \
 		echo ""; \
-		echo "✓ Multica is running!"; \
+		echo "✓ CyberAgent is running!"; \
 		echo "  Frontend: http://localhost:$${FRONTEND_PORT:-3000}"; \
 		echo "  Backend:  http://localhost:$${PORT:-8080}"; \
 		echo ""; \
@@ -145,7 +145,7 @@ selfhost-build: ## Build backend/web from the current checkout and start the sel
 	fi
 
 selfhost-stop: ## Stop the self-hosted Docker Compose stack
-	@echo "==> Stopping Multica services..."
+	@echo "==> Stopping CyberAgent services..."
 	docker compose -f docker-compose.selfhost.yml down
 	@echo "✓ All services stopped."
 

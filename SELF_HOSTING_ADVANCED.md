@@ -10,7 +10,7 @@ All configuration is done via environment variables. Copy `.env.example` as a st
 
 | Variable | Description | Example |
 |----------|-------------|---------|
-| `DATABASE_URL` | PostgreSQL connection string | `postgres://multica:multica@localhost:5432/multica?sslmode=disable` |
+| `DATABASE_URL` | PostgreSQL connection string | `postgres://cyberagent:cyberagent@localhost:5432/cyberagent?sslmode=disable` |
 | `JWT_SECRET` | **Must change from default.** Secret key for signing JWT tokens. Use a long random string. | `openssl rand -hex 32` |
 | `FRONTEND_ORIGIN` | URL where the frontend is served (used for CORS) | `https://app.example.com` |
 
@@ -189,7 +189,7 @@ In production, put a reverse proxy in front of both the backend and frontend to 
 **Single-domain layout** — frontend and backend served on the same hostname (this is what `docker-compose.selfhost.yml` defaults to):
 
 ```
-multica.example.com {
+cyberagent.example.com {
     # WebSocket route — must come before the catch-all
     @multica_ws path /ws /ws/*
     handle @multica_ws {

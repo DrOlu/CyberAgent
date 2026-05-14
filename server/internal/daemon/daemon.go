@@ -1369,7 +1369,7 @@ func (d *Daemon) handleUpdate(ctx context.Context, runtimeID string, update *Pen
 		d.logger.Info("refusing CLI self-update: daemon is managed by Desktop", "runtime_id", runtimeID, "update_id", update.ID)
 		d.reportUpdateResult(ctx, runtimeID, update.ID, map[string]any{
 			"status": "failed",
-			"error":  "CLI is managed by Multica Desktop — update the Desktop app to upgrade the CLI",
+			"error":  "CLI is managed by CyberAgent Desktop — update the Desktop app to upgrade the CLI",
 		})
 		return
 	}
@@ -2054,7 +2054,7 @@ func (d *Daemon) runTask(ctx context.Context, task Task, provider string, slot i
 	prompt := BuildPrompt(task, provider)
 
 	// Pass the daemon's auth credentials and context so the spawned agent CLI
-	// can call the Multica API and the local daemon (e.g. `multica repo checkout`).
+	// can call the CyberAgent API and the local daemon (e.g. `multica repo checkout`).
 	// MULTICA_TASK_SLOT is allocated from the daemon-wide concurrency pool, not
 	// per-agent. When one daemon hosts multiple agents, slots index shared
 	// daemon-level resources such as GPUs.

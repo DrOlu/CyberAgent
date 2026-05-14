@@ -8,28 +8,28 @@
 # Frontend: http://localhost:3000
 # Backend:  http://localhost:8080 (also used by CLI/daemon)
 
-name: multica
+name: cyberagent
 
 services:
   postgres:
     image: pgvector/pgvector:pg17
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-multica}
-      POSTGRES_USER: ${POSTGRES_USER:-multica}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-multica}
+      POSTGRES_DB: ${POSTGRES_DB:-cyberagent}
+      POSTGRES_USER: ${POSTGRES_USER:-cyberagent}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cyberagent}
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-multica} -d ${POSTGRES_DB:-multica}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-cyberagent} -d ${POSTGRES_DB:-cyberagent}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
   backend:
-    image: ${MULTICA_BACKEND_IMAGE:-ghcr.io/multica-ai/multica-backend}:${MULTICA_IMAGE_TAG:-latest}
+    image: ${MULTICA_BACKEND_IMAGE:-ghcr.io/drolu/cyberagent-backend}:${MULTICA_IMAGE_TAG:-latest}
     depends_on:
       postgres:
         condition: service_healthy
@@ -38,7 +38,7 @@ services:
     volumes:
       - backend_uploads:/app/data/uploads
     environment:
-      DATABASE_URL: postgres://${POSTGRES_USER:-multica}:${POSTGRES_PASSWORD:-multica}@postgres:5432/${POSTGRES_DB:-multica}?sslmode=disable
+      DATABASE_URL: postgres://${POSTGRES_USER:-cyberagent}:${POSTGRES_PASSWORD:-cyberagent}@postgres:5432/${POSTGRES_DB:-cyberagent}?sslmode=disable
       PORT: "8080"
       METRICS_ADDR: ${METRICS_ADDR:-}
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
@@ -66,7 +66,7 @@ services:
     restart: unless-stopped
 
   frontend:
-    image: ${MULTICA_WEB_IMAGE:-ghcr.io/multica-ai/multica-web}:${MULTICA_IMAGE_TAG:-latest}
+    image: ${MULTICA_WEB_IMAGE:-ghcr.io/drolu/cyberagent-web}:${MULTICA_IMAGE_TAG:-latest}
     depends_on:
       - backend
     ports:

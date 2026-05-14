@@ -80,12 +80,12 @@ func InjectRuntimeConfig(workDir, provider string, ctx TaskContextForEnv) (strin
 }
 
 // buildMetaSkillContent generates the meta skill markdown that teaches the agent
-// about the Multica runtime environment and available CLI tools.
+// about the CyberAgent runtime environment and available CLI tools.
 func buildMetaSkillContent(provider string, ctx TaskContextForEnv) string {
 	var b strings.Builder
 
-	b.WriteString("# Multica Agent Runtime\n\n")
-	b.WriteString("You are a coding agent in the Multica platform. Use the `multica` CLI to interact with the platform.\n\n")
+	b.WriteString("# CyberAgent Agent Runtime\n\n")
+	b.WriteString("You are a coding agent in the CyberAgent platform. Use the `multica` CLI to interact with the platform.\n\n")
 
 	// Always emit agent identity so the agent knows who it is, even when
 	// dispatched via @mention on an issue assigned to a different agent.
@@ -234,7 +234,7 @@ func buildMetaSkillContent(provider string, ctx TaskContextForEnv) string {
 		// that doesn't propagate the user message into its working context
 		// (or a resumed session) still avoids the assignment-task workflow
 		// pointing at an empty issue id.
-		b.WriteString("**This task was triggered by quick-create.** There is NO existing Multica issue. Follow the field and output rules in the user message you just received; ignore the default assignment-task workflow.\n\n")
+		b.WriteString("**This task was triggered by quick-create.** There is NO existing CyberAgent issue. Follow the field and output rules in the user message you just received; ignore the default assignment-task workflow.\n\n")
 		b.WriteString("Hard guardrails (apply even if the user message is missing):\n")
 		b.WriteString("- Run exactly one `multica issue create` invocation, then exit.\n")
 		b.WriteString("- Do NOT call `multica issue get`, `multica issue status`, or `multica issue comment add` for this task — there is no issue to query, transition, or comment on. The platform writes the user's success/failure inbox notification automatically based on whether `multica issue create` succeeded.\n")
@@ -242,7 +242,7 @@ func buildMetaSkillContent(provider string, ctx TaskContextForEnv) string {
 	} else if ctx.AutopilotRunID != "" {
 		// Autopilot run_only task: no issue exists, so the agent must not
 		// follow the assignment/comment workflow.
-		b.WriteString("**This task was triggered by an Autopilot in run-only mode.** There is no assigned Multica issue for this run.\n\n")
+		b.WriteString("**This task was triggered by an Autopilot in run-only mode.** There is no assigned CyberAgent issue for this run.\n\n")
 		fmt.Fprintf(&b, "- Autopilot run ID: `%s`\n", ctx.AutopilotRunID)
 		if ctx.AutopilotID != "" {
 			fmt.Fprintf(&b, "- Autopilot ID: `%s`\n", ctx.AutopilotID)
