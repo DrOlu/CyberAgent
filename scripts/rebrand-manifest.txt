@@ -4,6 +4,10 @@
 # upstream "Multica" content during git merge. After restoring, the rebrand
 # script handles any NEW upstream files that still carry Multica strings.
 #
+# POLICY: Snapshot files when they contain CyberAgent-specific changes that
+# can't be safely (re)derived by sed substitution from upstream.  Pure
+# brand-name rewrites are NOT snapshotted; they're applied via sed.
+#
 # One path per line. Blank lines and lines starting with # are ignored.
 # Directories are snapshot recursively (e.g. apps/desktop/build/icons).
 
@@ -60,7 +64,7 @@ apps/desktop/src/renderer/index.html
 apps/desktop/src/renderer/src/App.tsx
 apps/desktop/src/shared/runtime-config.test.ts
 
-# Docker compose — hardcoded drolu/ image paths
+# Docker compose — self-host points to our published images
 docker-compose.yml
 docker-compose.selfhost.yml
 
@@ -68,8 +72,6 @@ docker-compose.selfhost.yml
 apps/web/app/layout.tsx
 apps/web/app/custom.css
 apps/web/app/not-found.tsx
-apps/web/app/auth/callback/page.tsx
-apps/web/app/(auth)/login/page.test.tsx
 apps/web/next-env.d.ts
 apps/web/features/landing/i18n/en.ts
 apps/web/features/landing/i18n/zh.ts
@@ -83,64 +85,22 @@ apps/docs/app/layout.config.tsx
 apps/docs/components/architecture-diagram.tsx
 apps/docs/components/mermaid.tsx
 
-# Locales — rebranded strings
+# Locale glossary (we maintain our own glossary; per-key locale JSON files
+# are NOT snapshotted — they're rebranded purely by sed against upstream so
+# new upstream keys are picked up automatically).
 packages/views/locales/glossary.md
-packages/views/locales/en/agents.json
-packages/views/locales/en/auth.json
-packages/views/locales/en/chat.json
-packages/views/locales/en/onboarding.json
-packages/views/locales/en/runtimes.json
-packages/views/locales/en/settings.json
-packages/views/locales/en/workspace.json
-packages/views/locales/zh-Hans/agents.json
-packages/views/locales/zh-Hans/auth.json
-packages/views/locales/zh-Hans/chat.json
-packages/views/locales/zh-Hans/onboarding.json
-packages/views/locales/zh-Hans/runtimes.json
-packages/views/locales/zh-Hans/settings.json
-packages/views/locales/zh-Hans/workspace.json
 
-# Server — prompt strings rebranded
-server/internal/daemon/execenv/runtime_config.go
-server/internal/daemon/execenv/execenv_test.go
-server/internal/daemon/daemon.go
-server/internal/daemon/prompt.go
-server/internal/cli/client.go
-server/internal/handler/activity.go
-server/internal/handler/github.go
-server/internal/handler/runtime_models.go
-server/internal/handler/squad_briefing.go
-server/internal/metrics/registry.go
-server/internal/service/email.go
-server/cmd/multica/cmd_auth.go
-server/cmd/multica/cmd_login.go
-server/cmd/multica/cmd_setup.go
-server/cmd/multica/help.go
-server/cmd/multica/main.go
-server/cmd/server/notification_listeners.go
-server/cmd/server/router.go
-server/internal/agenttmpl/types.go
-server/internal/daemon/client.go
-server/internal/daemon/execenv/codex_home.go
-server/internal/daemon/execenv/codex_multi_agent.go
-server/internal/daemon/execenv/codex_sandbox.go
-server/internal/daemon/execenv/codex_skill_strip.go
-server/internal/daemon/repocache/cache.go
-server/pkg/agent/codex.go
-server/pkg/agent/kimi.go
-server/pkg/agent/models.go
+# Server — UPGRADE PATH redirect (GitHub Releases endpoint points to
+# DrOlu/CyberAgent because that's where we publish releases). The rest of
+# this file is untouched from upstream; the snapshot exists solely to
+# preserve that redirect across merges.
+server/internal/cli/update.go
+server/cmd/multica/cmd_update.go
 
-# Packages — user-visible strings
-packages/core/realtime/use-realtime-sync.ts
-packages/core/workspace/hooks.ts
+# Packages — user-visible strings that need stable CyberAgent text
 packages/ui/components/common/multica-icon.tsx
 packages/ui/styles/base.css
 packages/ui/styles/tokens.css
-packages/views/editor/content-editor.tsx
-packages/views/editor/extensions/index.ts
-packages/views/layout/app-sidebar.tsx
-packages/views/onboarding/utils/starter-content-content-en.ts
-packages/views/onboarding/utils/starter-content-content-zh.ts
 packages/views/auth/login-page.test.tsx
 
 # Root package.json

@@ -34,7 +34,7 @@ multica setup self-host
 This installs the CLI, checks out the latest self-host assets, pulls the official CyberAgent images from GHCR, and configures everything for localhost. Then open http://localhost:3000 and pick a login method: configure `RESEND_API_KEY` in `.env` for email-based codes (recommended), or leave Resend unset and copy the generated code from backend logs. See [Step 2 — Log In](#step-2--log-in) for details.
 
 <Callout>
-If the self-host server is already running and you only need the CLI on a macOS/Linux machine, install it with Homebrew: `brew install cyberagent.sh/tap/multica`.
+If the self-host server is already running and you only need the CLI on a macOS/Linux machine, install it with Homebrew: `brew install multica-ai/tap/multica`.
 </Callout>
 
 <Callout>
@@ -87,7 +87,7 @@ The daemon runs on your local machine (not inside Docker). It detects installed 
 ### a) Install the CLI and an AI agent
 
 ```bash
-brew install cyberagent.sh/tap/multica
+brew install multica-ai/tap/multica
 ```
 
 You also need at least one AI agent CLI:
@@ -145,13 +145,13 @@ multica daemon stop
 
 ## Switching to CyberAgent Cloud
 
-If you've been self-hosting and want to switch your CLI to [CyberAgent Cloud](https://cyberagent.sh):
+If you've been self-hosting and want to switch your CLI to [CyberAgent Cloud](https://multica.ai):
 
 ```bash
 multica setup
 ```
 
-This reconfigures the CLI for cyberagent.sh, re-authenticates, and restarts the daemon. You will be prompted before overwriting the existing configuration.
+This reconfigures the CLI for multica.ai, re-authenticates, and restarts the daemon. You will be prompted before overwriting the existing configuration.
 
 <Callout>
 Your local Docker services are unaffected. Stop them separately if you no longer need them.
@@ -188,7 +188,7 @@ CyberAgent uses email-based magic link authentication via [Resend](https://resen
 | Variable | Description |
 |----------|-------------|
 | `RESEND_API_KEY` | Your Resend API key |
-| `RESEND_FROM_EMAIL` | Sender email address (default: `noreply@cyberagent.sh`) |
+| `RESEND_FROM_EMAIL` | Sender email address (default: `noreply@multica.ai`) |
 
 ### Google OAuth (Optional)
 

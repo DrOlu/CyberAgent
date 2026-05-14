@@ -33,7 +33,7 @@ Open http://localhost:3000. To log in, configure `RESEND_API_KEY` in `.env` for 
 > **CLI only?** If the self-host server is already running and you only need the CLI on a macOS/Linux machine, install it with Homebrew:
 >
 > ```bash
-> brew install cyberagent.sh/tap/multica
+> brew install multica-ai/tap/multica
 > ```
 
 ---
@@ -86,7 +86,7 @@ Each team member who wants to run AI agents locally needs to:
 ### a) Install the CLI and an AI agent
 
 ```bash
-brew install cyberagent.sh/tap/multica
+brew install multica-ai/tap/multica
 ```
 
 You also need at least one AI agent CLI installed:
@@ -155,13 +155,13 @@ multica daemon stop
 
 ## Switching to CyberAgent Cloud
 
-If you've been self-hosting and want to switch your CLI to [CyberAgent Cloud](https://cyberagent.sh):
+If you've been self-hosting and want to switch your CLI to [CyberAgent Cloud](https://multica.ai):
 
 ```bash
 multica setup
 ```
 
-This reconfigures the CLI for cyberagent.sh, re-authenticates, and restarts the daemon. You will be prompted before overwriting the existing configuration.
+This reconfigures the CLI for multica.ai, re-authenticates, and restarts the daemon. You will be prompted before overwriting the existing configuration.
 
 > Your local Docker services are unaffected. Stop them separately if you no longer need them.
 

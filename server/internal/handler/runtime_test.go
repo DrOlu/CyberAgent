@@ -308,10 +308,10 @@ func TestUpdateAgentRuntimeTimezoneValidatesPermissionAndValue(t *testing.T) {
 	}
 
 	var otherUserID string
-	testPool.Exec(ctx, `DELETE FROM "user" WHERE email = 'runtime-tz-member@cyberagent.sh'`)
+	testPool.Exec(ctx, `DELETE FROM "user" WHERE email = 'runtime-tz-member@multica.ai'`)
 	if err := testPool.QueryRow(ctx, `
 		INSERT INTO "user" (name, email)
-		VALUES ('Runtime TZ Member', 'runtime-tz-member@cyberagent.sh')
+		VALUES ('Runtime TZ Member', 'runtime-tz-member@multica.ai')
 		RETURNING id
 	`).Scan(&otherUserID); err != nil {
 		t.Fatalf("create member user: %v", err)

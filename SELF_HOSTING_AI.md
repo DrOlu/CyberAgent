@@ -31,7 +31,7 @@ Wait for the server output `✓ CyberAgent server is running and CLI is ready!` 
 git clone https://github.com/DrOlu/CyberAgent.git
 cd multica
 make selfhost
-brew install cyberagent.sh/tap/multica
+brew install multica-ai/tap/multica
 multica setup self-host
 ```
 

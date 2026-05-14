@@ -29,7 +29,7 @@ var testWorkspaceID string
 var testRuntimeID string
 
 const (
-	handlerTestEmail         = "handler-test@cyberagent.sh"
+	handlerTestEmail         = "handler-test@multica.ai"
 	handlerTestName          = "Handler Test User"
 	handlerTestWorkspaceSlug = "handler-tests"
 )
@@ -1424,7 +1424,7 @@ func TestCreateWorkspaceInvalidSlugReturnsBadRequest(t *testing.T) {
 
 func TestSendCode(t *testing.T) {
 	w := httptest.NewRecorder()
-	body := map[string]string{"email": "sendcode-test@cyberagent.sh"}
+	body := map[string]string{"email": "sendcode-test@multica.ai"}
 	var buf bytes.Buffer
 	json.NewEncoder(&buf).Encode(body)
 	req := httptest.NewRequest("POST", "/auth/send-code", &buf)
@@ -1441,7 +1441,7 @@ func TestSendCode(t *testing.T) {
 	}
 
 	t.Cleanup(func() {
-		testPool.Exec(context.Background(), `DELETE FROM verification_code WHERE email = $1`, "sendcode-test@cyberagent.sh")
+		testPool.Exec(context.Background(), `DELETE FROM verification_code WHERE email = $1`, "sendcode-test@multica.ai")
 	})
 }
 
@@ -1456,7 +1456,7 @@ func TestSendCodeDbError(t *testing.T) {
 	cancel()
 
 	w := httptest.NewRecorder()
-	body := map[string]string{"email": "dberror-test@cyberagent.sh"}
+	body := map[string]string{"email": "dberror-test@multica.ai"}
 	var buf bytes.Buffer
 	json.NewEncoder(&buf).Encode(body)
 	req := httptest.NewRequest("POST", "/auth/send-code", &buf)
@@ -1479,7 +1479,7 @@ func TestSendCodeDbError(t *testing.T) {
 }
 
 func TestSendCodeRateLimit(t *testing.T) {
-	const email = "ratelimit-test@cyberagent.sh"
+	const email = "ratelimit-test@multica.ai"
 	t.Cleanup(func() {
 		testPool.Exec(context.Background(), `DELETE FROM verification_code WHERE email = $1`, email)
 	})
@@ -1509,7 +1509,7 @@ func TestSendCodeRateLimit(t *testing.T) {
 }
 
 func TestVerifyCode(t *testing.T) {
-	const email = "verify-test@cyberagent.sh"
+	const email = "verify-test@multica.ai"
 	ctx := context.Background()
 
 	t.Cleanup(func() {
@@ -1580,7 +1580,7 @@ func TestVerifyCodeRejectsDevCodeUnlessExplicitlyConfigured(t *testing.T) {
 	t.Setenv(devVerificationCodeEnv, "")
 	t.Setenv("APP_ENV", "")
 
-	const email = "dev-code-disabled-test@cyberagent.sh"
+	const email = "dev-code-disabled-test@multica.ai"
 	ctx := context.Background()
 
 	t.Cleanup(func() {
@@ -1604,7 +1604,7 @@ func TestVerifyCodeAcceptsConfiguredDevCodeOutsideProduction(t *testing.T) {
 	t.Setenv(devVerificationCodeEnv, "888888")
 	t.Setenv("APP_ENV", "development")
 
-	const email = "dev-code-enabled-test@cyberagent.sh"
+	const email = "dev-code-enabled-test@multica.ai"
 	ctx := context.Background()
 
 	t.Cleanup(func() {
@@ -1629,7 +1629,7 @@ func TestVerifyCodeRejectsConfiguredDevCodeInProduction(t *testing.T) {
 	t.Setenv(devVerificationCodeEnv, "888888")
 	t.Setenv("APP_ENV", "production")
 
-	const email = "dev-code-production-test@cyberagent.sh"
+	const email = "dev-code-production-test@multica.ai"
 	ctx := context.Background()
 
 	t.Cleanup(func() {
@@ -1652,7 +1652,7 @@ func TestVerifyCodeRejectsConfiguredDevCodeInProduction(t *testing.T) {
 func TestVerifyCodeWrongCode(t *testing.T) {
 	t.Setenv(devVerificationCodeEnv, "")
 
-	const email = "wrong-code-test@cyberagent.sh"
+	const email = "wrong-code-test@multica.ai"
 	ctx := context.Background()
 
 	t.Cleanup(func() {
@@ -1682,7 +1682,7 @@ func TestVerifyCodeWrongCode(t *testing.T) {
 func TestVerifyCodeBruteForceProtection(t *testing.T) {
 	t.Setenv(devVerificationCodeEnv, "")
 
-	const email = "bruteforce-test@cyberagent.sh"
+	const email = "bruteforce-test@multica.ai"
 	ctx := context.Background()
 
 	t.Cleanup(func() {
@@ -1732,7 +1732,7 @@ func TestVerifyCodeBruteForceProtection(t *testing.T) {
 }
 
 func TestVerifyCodeNewUserHasNoWorkspace(t *testing.T) {
-	const email = "workspace-verify-test@cyberagent.sh"
+	const email = "workspace-verify-test@multica.ai"
 	ctx := context.Background()
 
 	t.Cleanup(func() {

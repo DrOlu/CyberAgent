@@ -7,7 +7,7 @@ The `multica` CLI connects your local machine to CyberAgent. It handles authenti
 ### Homebrew (macOS/Linux)
 
 ```bash
-brew install cyberagent.sh/tap/multica
+brew install multica-ai/tap/multica
 ```
 
 ### Build from Source
@@ -22,7 +22,7 @@ cp server/bin/multica /usr/local/bin/multica
 ### Update
 
 ```bash
-brew upgrade cyberagent.sh/tap/multica
+brew upgrade multica-ai/tap/multica
 ```
 
 For install script or manual installs, use:

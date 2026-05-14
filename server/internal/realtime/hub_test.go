@@ -316,7 +316,7 @@ func TestCheckOrigin(t *testing.T) {
 	prev := allowedWSOrigins.Load().([]string)
 	SetAllowedOrigins([]string{
 		"http://localhost:3000",
-		"https://cyberagent.sh",
+		"https://multica.ai",
 	})
 	t.Cleanup(func() { SetAllowedOrigins(prev) })
 
@@ -326,13 +326,13 @@ func TestCheckOrigin(t *testing.T) {
 		origin string
 		want   bool
 	}{
-		{"empty origin allowed", "api.cyberagent.sh", "", true},
+		{"empty origin allowed", "api.multica.ai", "", true},
 		{"same-origin allowed (native client default)", "localhost:8080", "http://localhost:8080", true},
-		{"same-origin allowed (https)", "api.cyberagent.sh", "https://api.cyberagent.sh", true},
-		{"same-origin allowed (case-insensitive host, RFC 7230)", "API.Multica.AI", "https://api.cyberagent.sh", true},
+		{"same-origin allowed (https)", "api.multica.ai", "https://api.multica.ai", true},
+		{"same-origin allowed (case-insensitive host, RFC 7230)", "API.Multica.AI", "https://api.multica.ai", true},
 		{"whitelisted origin allowed (web cross-origin)", "localhost:8080", "http://localhost:3000", true},
-		{"whitelisted origin allowed (prod web)", "api.cyberagent.sh", "https://cyberagent.sh", true},
-		{"unknown origin rejected (CSWSH defense)", "api.cyberagent.sh", "https://evil.com", false},
+		{"whitelisted origin allowed (prod web)", "api.multica.ai", "https://multica.ai", true},
+		{"unknown origin rejected (CSWSH defense)", "api.multica.ai", "https://evil.com", false},
 		{"different port rejected", "localhost:8080", "http://localhost:9999", false},
 	}
 

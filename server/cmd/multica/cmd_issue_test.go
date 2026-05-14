@@ -792,7 +792,7 @@ func TestResolveAssigneeRespectsKinds(t *testing.T) {
 }
 
 // TestResolveAssigneeExactMatchWins covers the substring-collision scenario from
-// cyberagent.sh/multica#1620: when one name is a substring of another (e.g.
+// multica-ai/multica#1620: when one name is a substring of another (e.g.
 // "reviewer" vs "peer-reviewer"), an exact match on the shorter name must
 // short-circuit substring matching instead of erroring out as ambiguous.
 func TestResolveAssigneeExactMatchWins(t *testing.T) {
@@ -861,7 +861,7 @@ func TestResolveAssigneeExactMatchWins(t *testing.T) {
 }
 
 // TestResolveAssigneeByID covers the ID/ShortID escape hatch from
-// cyberagent.sh/multica#1620: passing a full UUID or its 8-char prefix must
+// multica-ai/multica#1620: passing a full UUID or its 8-char prefix must
 // resolve directly without going through name matching.
 func TestResolveAssigneeByID(t *testing.T) {
 	membersResp := []map[string]any{
