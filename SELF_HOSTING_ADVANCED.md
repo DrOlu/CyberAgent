@@ -1,6 +1,6 @@
 # Self-Hosting — Advanced Configuration
 
-This document covers advanced configuration for self-hosted Multica deployments. For the quick start guide, see [SELF_HOSTING.md](SELF_HOSTING.md).
+This document covers advanced configuration for self-hosted CyberAgent deployments. For the quick start guide, see [SELF_HOSTING.md](SELF_HOSTING.md).
 
 ## Configuration
 
@@ -25,7 +25,7 @@ These have sensible defaults and only need to be set when tuning a large or cons
 
 ### Email (Required for Authentication)
 
-Multica uses email-based magic link authentication via [Resend](https://resend.com).
+CyberAgent uses email-based magic link authentication via [Resend](https://resend.com).
 
 | Variable | Description |
 |----------|-------------|
@@ -122,7 +122,7 @@ Agent-specific overrides:
 
 ## Database Setup
 
-Multica requires PostgreSQL 17 with the pgvector extension.
+CyberAgent requires PostgreSQL 17 with the pgvector extension.
 
 ### Using Docker Compose (Recommended)
 
@@ -290,7 +290,7 @@ NEXT_PUBLIC_WS_URL=wss://api.example.com/ws
 
 ## LAN / Non-localhost Access
 
-By default, Multica works on `localhost`. If you access it from another machine on the LAN (e.g. `http://192.168.1.100:3000`), you need to tell the backend to accept that origin:
+By default, CyberAgent works on `localhost`. If you access it from another machine on the LAN (e.g. `http://192.168.1.100:3000`), you need to tell the backend to accept that origin:
 
 ```bash
 # .env — replace with your server's LAN IP

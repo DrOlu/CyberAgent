@@ -1,6 +1,6 @@
 import { LoginPage } from "@multica/views/auth";
 import { DragStrip } from "@multica/views/platform";
-import { MulticaIcon } from "@multica/ui/components/common/multica-icon";
+import { CyberAgentIcon } from "@multica/ui/components/common/multica-icon";
 
 function requireRuntimeAppUrl(): string {
   const runtimeConfig = window.desktopAPI.runtimeConfig;
@@ -26,7 +26,7 @@ export function DesktopLoginPage() {
     <div className="flex h-screen flex-col">
       <DragStrip />
       <LoginPage
-        logo={<MulticaIcon bordered size="lg" />}
+        logo={<CyberAgentIcon bordered size="lg" />}
         onSuccess={() => {
           // Auth store update triggers AppContent re-render → shows DesktopShell.
           // Initial workspace navigation happens in routes.tsx via IndexRedirect.

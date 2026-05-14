@@ -1,18 +1,18 @@
 {
   "name": "@multica/desktop",
-  "productName": "Multica",
+  "productName": "CyberAgent",
   "version": "0.1.0",
   "private": true,
-  "description": "Multica Desktop — native desktop client for the Multica platform.",
-  "homepage": "https://multica.ai",
+  "description": "CyberAgent Desktop — native desktop client for the CyberAgent platform.",
+  "homepage": "https://github.com/DrOlu/CyberAgent",
   "repository": {
     "type": "git",
     "url": "https://github.com/multica-ai/multica.git",
     "directory": "apps/desktop"
   },
   "author": {
-    "name": "Multica",
-    "email": "support@multica.ai"
+    "name": "Hyperspace Technologies",
+    "email": "cyberagent@hyperspace.ng"
   },
   "license": "UNLICENSED",
   "main": "./out/main/index.js",

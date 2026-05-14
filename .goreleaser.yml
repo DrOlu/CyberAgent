@@ -1,6 +1,6 @@
 version: 2
 
-project_name: multica
+project_name: cyberagent
 
 builds:
   - id: multica
@@ -67,7 +67,7 @@ brews:
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
     directory: Formula
     homepage: "https://github.com/multica-ai/multica"
-    description: "Multica CLI — local agent runtime and management tool for the Multica platform"
+    description: "CyberAgent CLI — local agent runtime and management tool for the CyberAgent platform"
     license: "Apache-2.0"
     install: |
       bin.install "multica"

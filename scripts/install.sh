@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Multica installer — installs the CLI and optionally provisions a self-host server.
+# CyberAgent installer — installs the CLI and optionally provisions a self-host server.
 #
 # Install / upgrade CLI only:
 #   curl -fsSL https://raw.githubusercontent.com/multica-ai/multica/main/scripts/install.sh | bash
@@ -7,7 +7,7 @@
 # Install CLI + provision self-host server:
 #   curl -fsSL https://raw.githubusercontent.com/multica-ai/multica/main/scripts/install.sh | bash -s -- --with-server
 #
-# After installation, run `multica setup` to configure your environment.
+# After installation, run `cyberagent setup` to configure your environment.
 #
 set -euo pipefail
 
@@ -48,7 +48,7 @@ detect_os() {
     MINGW*|MSYS*|CYGWIN*)
             fail "This script does not support Windows. Use the PowerShell installer instead:
   irm https://raw.githubusercontent.com/multica-ai/multica/main/scripts/install.ps1 | iex" ;;
-    *)      fail "Unsupported operating system: $(uname -s). Multica supports macOS, Linux, and Windows." ;;
+    *)      fail "Unsupported operating system: $(uname -s). CyberAgent supports macOS, Linux, and Windows." ;;
   esac
 
   ARCH="$(uname -m)"
@@ -64,24 +64,24 @@ detect_os() {
 # CLI Installation
 # ---------------------------------------------------------------------------
 install_cli_brew() {
-  info "Installing Multica CLI via Homebrew..."
+  info "Installing CyberAgent CLI via Homebrew..."
   if ! brew tap multica-ai/tap 2>/dev/null; then
     fail "Failed to add Homebrew tap. Check your network connection."
   fi
   # brew install exits non-zero if already installed on older Homebrew versions
   if ! brew install "$BREW_PACKAGE" 2>/dev/null; then
     if brew list "$BREW_PACKAGE" >/dev/null 2>&1; then
-      ok "Multica CLI already installed via Homebrew"
+      ok "CyberAgent CLI already installed via Homebrew"
     else
       fail "Failed to install multica via Homebrew."
     fi
   else
-    ok "Multica CLI installed via Homebrew"
+    ok "CyberAgent CLI installed via Homebrew"
   fi
 }
 
 install_cli_binary() {
-  info "Installing Multica CLI from GitHub Releases..."
+  info "Installing CyberAgent CLI from GitHub Releases..."
 
   # Get latest release tag
   local latest
@@ -122,7 +122,7 @@ install_cli_binary() {
   fi
 
   rm -rf "$tmp_dir"
-  ok "Multica CLI installed to $bin_dir/multica"
+  ok "CyberAgent CLI installed to $bin_dir/multica"
 }
 
 add_to_path() {
@@ -130,7 +130,7 @@ add_to_path() {
   local line="export PATH=\"$dir:\$PATH\""
   for rc in "$HOME/.bashrc" "$HOME/.zshrc"; do
     if [ -f "$rc" ] && ! grep -qF "$dir" "$rc"; then
-      printf '\n# Added by Multica installer\n%s\n' "$line" >> "$rc"
+      printf '\n# Added by CyberAgent installer\n%s\n' "$line" >> "$rc"
     fi
   done
 }
@@ -190,13 +190,13 @@ pull_official_selfhost_images() {
 }
 
 upgrade_cli_brew() {
-  info "Upgrading Multica CLI via Homebrew..."
+  info "Upgrading CyberAgent CLI via Homebrew..."
   brew update 2>/dev/null || true
   if brew upgrade "$BREW_PACKAGE" 2>/dev/null; then
-    ok "Multica CLI upgraded via Homebrew"
+    ok "CyberAgent CLI upgraded via Homebrew"
   else
     # brew upgrade exits non-zero if already up to date
-    ok "Multica CLI is already the latest version"
+    ok "CyberAgent CLI is already the latest version"
   fi
 }
 
@@ -214,11 +214,11 @@ install_cli() {
     local latest_cmp="${latest_ver#v}"
 
     if [ -z "$latest_ver" ] || [ "$current_cmp" = "$latest_cmp" ]; then
-      ok "Multica CLI is up to date ($current_ver)"
+      ok "CyberAgent CLI is up to date ($current_ver)"
       return 0
     fi
 
-    info "Multica CLI $current_ver installed, latest is $latest_ver — upgrading..."
+    info "CyberAgent CLI $current_ver installed, latest is $latest_ver — upgrading..."
     if command_exists brew && brew list "$BREW_PACKAGE" >/dev/null 2>&1; then
       upgrade_cli_brew
     else
@@ -227,7 +227,7 @@ install_cli() {
 
     local new_ver
     new_ver=$(multica version 2>/dev/null | awk '{print $2}' || echo "unknown")
-    ok "Multica CLI upgraded ($current_ver → $new_ver)"
+    ok "CyberAgent CLI upgraded ($current_ver → $new_ver)"
     return 0
   fi
 
@@ -249,7 +249,7 @@ install_cli() {
 check_docker() {
   if ! command_exists docker; then
     printf "\n"
-    fail "Docker is not installed. Multica self-hosting requires Docker and Docker Compose.
+    fail "Docker is not installed. CyberAgent self-hosting requires Docker and Docker Compose.
 
 Install Docker:
   macOS:  https://docs.docker.com/desktop/install/mac-install/
@@ -269,7 +269,7 @@ After installing Docker, re-run this script with --with-server."
 # Server setup (self-host / --with-server)
 # ---------------------------------------------------------------------------
 setup_server() {
-  info "Setting up Multica server..."
+  info "Setting up CyberAgent server..."
   local server_ref
   server_ref=$(get_selfhost_ref)
   info "Using self-host assets from ${server_ref}..."
@@ -278,7 +278,7 @@ setup_server() {
     info "Updating existing installation at $INSTALL_DIR..."
     cd "$INSTALL_DIR"
   else
-    info "Cloning Multica repository..."
+    info "Cloning CyberAgent repository..."
     if ! command_exists git; then
       fail "Git is not installed. Please install git and re-run."
     fi
@@ -313,9 +313,9 @@ setup_server() {
   fi
 
   # Start Docker Compose
-  info "Pulling official Multica images..."
+  info "Pulling official CyberAgent images..."
   pull_official_selfhost_images
-  info "Starting Multica services (this may take a few minutes on first run)..."
+  info "Starting CyberAgent services (this may take a few minutes on first run)..."
   docker compose -f docker-compose.selfhost.yml up -d
 
   # Wait for health check
@@ -330,7 +330,7 @@ setup_server() {
   done
 
   if [ "$ready" = true ]; then
-    ok "Multica server is running"
+    ok "CyberAgent server is running"
   else
     warn "Server is still starting. You can check logs with:"
     echo "  cd $INSTALL_DIR && docker compose -f docker-compose.selfhost.yml logs"
@@ -344,7 +344,7 @@ setup_server() {
 # ---------------------------------------------------------------------------
 run_default() {
   printf "\n"
-  printf "${BOLD}  Multica — Installer${RESET}\n"
+  printf "${BOLD}  CyberAgent — Installer${RESET}\n"
   printf "\n"
 
   detect_os
@@ -352,13 +352,13 @@ run_default() {
 
   printf "\n"
   printf "${BOLD}${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}\n"
-  printf "${BOLD}${GREEN}  ✓ Multica CLI is ready!${RESET}\n"
+  printf "${BOLD}${GREEN}  ✓ CyberAgent CLI is ready!${RESET}\n"
   printf "${BOLD}${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}\n"
   printf "\n"
   printf "  ${BOLD}Next: configure your environment${RESET}\n"
   printf "\n"
-  printf "     ${CYAN}multica setup${RESET}                # Connect to Multica Cloud (multica.ai)\n"
-  printf "     ${CYAN}multica setup self-host${RESET}       # Connect to a self-hosted server\n"
+  printf "     ${CYAN}cyberagent setup${RESET}                # Connect to CyberAgent Cloud\n"
+  printf "     ${CYAN}cyberagent setup self-host${RESET}       # Connect to a self-hosted server\n"
   printf "\n"
   printf "  ${BOLD}Self-hosting?${RESET} Install the server first:\n"
   printf "     curl -fsSL https://raw.githubusercontent.com/multica-ai/multica/main/scripts/install.sh | bash -s -- --with-server\n"
@@ -370,7 +370,7 @@ run_default() {
 # ---------------------------------------------------------------------------
 run_with_server() {
   printf "\n"
-  printf "${BOLD}  Multica — Self-Host Installer${RESET}\n"
+  printf "${BOLD}  CyberAgent — Self-Host Installer${RESET}\n"
   printf "  Provisioning server infrastructure + installing CLI\n"
   printf "\n"
 
@@ -381,7 +381,7 @@ run_with_server() {
 
   printf "\n"
   printf "${BOLD}${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}\n"
-  printf "${BOLD}${GREEN}  ✓ Multica server is running and CLI is ready!${RESET}\n"
+  printf "${BOLD}${GREEN}  ✓ CyberAgent server is running and CLI is ready!${RESET}\n"
   printf "${BOLD}${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${RESET}\n"
   printf "\n"
   printf "  ${BOLD}Frontend:${RESET}  http://localhost:3000\n"
@@ -390,7 +390,7 @@ run_with_server() {
   printf "\n"
   printf "  ${BOLD}Next: configure your CLI to connect${RESET}\n"
   printf "\n"
-  printf "     ${CYAN}multica setup self-host${RESET}   # Configure + authenticate + start daemon\n"
+  printf "     ${CYAN}cyberagent setup self-host${RESET}   # Configure + authenticate + start daemon\n"
   printf "\n"
   printf "  ${BOLD}Login:${RESET} configure ${CYAN}RESEND_API_KEY${RESET} in .env for email codes,\n"
   printf "  or read the generated code from backend logs when Resend is unset.\n"
@@ -405,7 +405,7 @@ run_with_server() {
 # ---------------------------------------------------------------------------
 run_stop() {
   printf "\n"
-  info "Stopping Multica services..."
+  info "Stopping CyberAgent services..."
 
   if [ -d "$INSTALL_DIR" ]; then
     cd "$INSTALL_DIR"
@@ -416,7 +416,7 @@ run_stop() {
       warn "No docker-compose.selfhost.yml found at $INSTALL_DIR"
     fi
   else
-    warn "No Multica installation found at $INSTALL_DIR"
+    warn "No CyberAgent installation found at $INSTALL_DIR"
   fi
 
   if command_exists multica; then
@@ -440,11 +440,11 @@ main() {
       --help|-h)
         echo "Usage: install.sh [--with-server | --stop]"
         echo ""
-        echo "  (default)       Install / upgrade the Multica CLI"
+        echo "  (default)       Install / upgrade the CyberAgent CLI"
         echo "  --with-server   Install CLI + provision a self-host server (Docker)"
         echo "  --stop          Stop a self-hosted installation"
         echo ""
-        echo "After installation, run 'multica setup' to configure your environment."
+        echo "After installation, run 'cyberagent setup' to configure your environment."
         exit 0
         ;;
       *) warn "Unknown option: $1" ;;

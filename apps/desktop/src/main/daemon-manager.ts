@@ -76,7 +76,7 @@ function profileLogPath(profile: string): string {
   return join(profileDir(profile), "daemon.log");
 }
 
-// Sidecar file that records which Multica user the cached PAT in config.json
+// Sidecar file that records which CyberAgent user the cached PAT in config.json
 // was minted for. The Go CLI/daemon never read or write this file, so it
 // survives Go-side config rewrites. Used to detect user switches and mint a
 // fresh PAT instead of reusing a token that belongs to a previous user.
@@ -304,7 +304,7 @@ function findCliOnPath(): string | null {
  * - Dev (`electron-vite dev`): `app.getAppPath()` → `apps/desktop`, resolving
  *   to `apps/desktop/resources/bin/multica`. `bundle-cli.mjs` populates this
  *   before dev starts, so iterating on Go changes is "make build → restart".
- * - Packaged: `app.getAppPath()` → `<Multica.app>/Contents/Resources/app.asar`.
+ * - Packaged: `app.getAppPath()` → `<CyberAgent.app>/Contents/Resources/app.asar`.
  *   electron-builder's `asarUnpack: resources/**` extracts the binary to
  *   `app.asar.unpacked/`, so we swap the path segment to execute it.
  */
@@ -511,7 +511,7 @@ async function mintPat(jwt: string): Promise<string> {
       Authorization: `Bearer ${jwt}`,
     },
     // Omit expires_in_days → server treats as null → non-expiring PAT.
-    body: JSON.stringify({ name: "Multica Desktop" }),
+    body: JSON.stringify({ name: "CyberAgent Desktop" }),
   });
   if (!res.ok) {
     const body = await res.text().catch(() => "");

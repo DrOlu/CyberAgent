@@ -51,7 +51,7 @@ if (process.platform !== "win32") {
   process.env.PATH = `${fallbackPaths.join(":")}:${process.env.PATH ?? ""}`;
 }
 
-const PROTOCOL = "multica";
+const PROTOCOL = "cyberagent";
 
 let mainWindow: BrowserWindow | null = null;
 let runtimeConfigResult: RuntimeConfigResult = {
@@ -154,7 +154,7 @@ function createWindow(): void {
       // the PDF viewer in a dedicated BrowserView with `plugins: true` scoped
       // to that view, keeping the main renderer plugin-free.
       plugins: true,
-      additionalArguments: [`--multica-locale=${systemLocale}`],
+      additionalArguments: [`--cyberagent-locale=${systemLocale}`],
     },
   });
 
@@ -225,10 +225,10 @@ function createWindow(): void {
 // without fighting for the shared single-instance lock. The suffix is
 // appended to the app name + userData path, so each worktree gets its own
 // lock file. Default (no env var) keeps behavior unchanged — the common
-// single-worktree case still lands at "Multica Canary".
+// single-worktree case still lands at "CyberAgent Canary".
 const DEV_APP_NAME = process.env.DESKTOP_APP_SUFFIX
-  ? `Multica Canary ${process.env.DESKTOP_APP_SUFFIX}`
-  : "Multica Canary";
+  ? `CyberAgent Canary ${process.env.DESKTOP_APP_SUFFIX}`
+  : "CyberAgent Canary";
 
 if (is.dev) {
   app.setName(DEV_APP_NAME);
@@ -237,10 +237,10 @@ if (is.dev) {
   // Pin the production app name in code. Electron's Linux WM_CLASS is set
   // from app.getName() when the first BrowserWindow is realized; the
   // packaged ASAR's package.json `productName` already steers app.getName()
-  // to "Multica", but anchoring it here makes WM_CLASS ↔ StartupWMClass
+  // to "CyberAgent", but anchoring it here makes WM_CLASS ↔ StartupWMClass
   // (declared in electron-builder.yml) survive a regression in
   // productName / the build pipeline. Must run before requestSingleInstanceLock().
-  app.setName("Multica");
+  app.setName("CyberAgent");
 }
 
 // --- Protocol registration -----------------------------------------------
@@ -293,7 +293,7 @@ if (!gotTheLock) {
     });
 
     electronApp.setAppUserModelId(
-      is.dev ? "ai.multica.desktop.dev" : "ai.multica.desktop",
+      is.dev ? "ng.hyperspace.cyberagent.dev" : "ng.hyperspace.cyberagent",
     );
 
     // macOS: replace the default Electron dock icon with the bundled logo

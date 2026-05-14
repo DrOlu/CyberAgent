@@ -1,6 +1,6 @@
 # Self-Hosting Guide
 
-Deploy Multica on your own infrastructure in minutes.
+Deploy CyberAgent on your own infrastructure in minutes.
 
 ## Architecture
 
@@ -24,7 +24,7 @@ curl -fsSL https://raw.githubusercontent.com/multica-ai/multica/main/scripts/ins
 multica setup self-host
 ```
 
-This installs the `multica` CLI, checks out the latest self-host assets, pulls the official Multica images from GHCR, and configures everything for localhost.
+This installs the `multica` CLI, checks out the latest self-host assets, pulls the official CyberAgent images from GHCR, and configures everything for localhost.
 
 Open http://localhost:3000. To log in, configure `RESEND_API_KEY` in `.env` for email-based codes (recommended), or leave Resend unset and copy the generated code from the backend logs. See [Step 2 — Log In](#step-2--log-in) for details.
 
@@ -153,9 +153,9 @@ make selfhost-stop
 multica daemon stop
 ```
 
-## Switching to Multica Cloud
+## Switching to CyberAgent Cloud
 
-If you've been self-hosting and want to switch your CLI to [Multica Cloud](https://multica.ai):
+If you've been self-hosting and want to switch your CLI to [CyberAgent Cloud](https://multica.ai):
 
 ```bash
 multica setup
