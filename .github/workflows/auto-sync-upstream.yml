@@ -68,53 +68,19 @@ jobs:
           rm -rf "$SNAP"
           mkdir -p "$SNAP"
 
-          # ── CyberAgent-owned files to preserve across merges ──────────
-          # These are either binary assets (icons, images) or files with
-          # structural customisations that cannot be handled by sed.
-          FILES=(
-            # Agent config
-            AGENTS.md
-            CLAUDE.md
-            .github/PULL_REQUEST_TEMPLATE.md
-
-            # Icons and images (binary — can't sed)
-            apps/desktop/build/icon.icns
-            apps/desktop/build/icon.ico
-            apps/desktop/build/icon.png
-            apps/desktop/build/icons
-            apps/desktop/resources/icon.png
-            apps/web/public/favicon.svg
-            apps/web/public/og-image.png
-
-            # Workflows — we manage our own copies with CyberAgent branding
-            .github/workflows/auto-sync-upstream.yml
-            .github/workflows/release.yml
-            .github/workflows/ci.yml
-
-            # Rebrand script itself
-            scripts/rebrand.sh
-
-            # GoReleaser — project_name changed, brews section removed
-            .goreleaser.yml
-
-            # Desktop config — appId, productName, protocol differ
-            apps/desktop/electron-builder.yml
-            apps/desktop/package.json
-
-            # Docker compose — hardcoded drolu/ image paths
-            docker-compose.yml
-            docker-compose.selfhost.yml
-
-            # LICENSE — author line changed
-            LICENSE
-          )
-
-          for f in "${FILES[@]}"; do
+          # Read the manifest of CyberAgent-owned files. These files are
+          # snapshotted before merge and restored verbatim after, ensuring
+          # our branding never gets overwritten by upstream. The rebrand
+          # script then handles any NEW upstream files that still carry
+          # "Multica" strings.
+          while IFS= read -r f; do
+            # Skip blank lines and comments
+            [[ -z "$f" || "$f" == "#"* ]] && continue
             if [ -e "$f" ]; then
               mkdir -p "$SNAP/$(dirname "$f")"
               cp -a "$f" "$SNAP/$f"
             fi
-          done
+          done < scripts/rebrand-manifest.txt
 
           echo "Snapshotted $(find "$SNAP" -type f | wc -l) file(s)."
 
@@ -125,14 +91,36 @@ jobs:
           git config user.name "CyberAgent Sync Bot"
           git config user.email "cyberagent-bot@hyperspace.ng"
 
-          # Merge upstream/main, preferring ours on conflict for snapshotted
-          # files. Any conflicts in non-snapshotted files will fail the job
-          # and need manual resolution.
-          git merge upstream/main --no-edit --no-ff || {
-            echo "::error::Merge conflict — manual resolution required"
-            git merge --abort
-            exit 1
-          }
+          # Merge upstream/main. Conflicts in snapshotted files are
+          # harmless because we restore our versions afterwards. Any
+          # conflicts in NON-snapshotted files will fail the job and
+          # require manual resolution (add them to the manifest).
+          if ! git merge upstream/main --no-edit --no-ff 2>&1; then
+            # Check if all conflicts are in snapshotted files
+            CONFLICTS=$(git diff --name-only --diff-filter=U)
+            echo "Conflicts in: $CONFLICTS"
+
+            # Check each conflict against the manifest
+            ALL_IN_MANIFEST=true
+            while IFS= read -r cf; do
+              if ! grep -qx "$cf" scripts/rebrand-manifest.txt 2>/dev/null; then
+                echo "::error::Unresolved conflict in non-snapshotted file: $cf"
+                ALL_IN_MANIFEST=false
+              fi
+            done <<< "$CONFLICTS"
+
+            if [ "$ALL_IN_MANIFEST" = "true" ]; then
+              # All conflicts are in snapshotted files — resolve with ours
+              git checkout --ours $CONFLICTS
+              git add $CONFLICTS
+              git commit --no-edit
+              echo "Auto-resolved conflicts using CyberAgent versions."
+            else
+              git merge --abort
+              echo "::error::Merge conflict in non-snapshotted file — manual resolution required"
+              exit 1
+            fi
+          fi
 
       - name: Restore CyberAgent-specific files
         if: steps.check.outputs.has_changes == 'true'

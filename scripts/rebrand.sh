@@ -21,9 +21,9 @@ PHASE="${1:-all}"
 
 # ── Phase 1: Restore CyberAgent-owned files ──────────────────────────────────
 #
-# These files are either binary assets (icons) or contain CyberAgent-specific
-# customisations that differ structurally from upstream.  They are saved to
-# .cyberagent-snapshot/ before the upstream merge and restored verbatim.
+# Files listed in scripts/rebrand-manifest.txt are snapshotted before the
+# upstream merge and restored verbatim afterwards. This ensures our branding
+# never gets overwritten by upstream content.
 restore_files() {
   local snap=".cyberagent-snapshot"
   if [ ! -d "$snap" ]; then
