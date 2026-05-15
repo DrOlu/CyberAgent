@@ -103,6 +103,13 @@ packages/ui/styles/base.css
 packages/ui/styles/tokens.css
 packages/views/auth/login-page.test.tsx
 
+# Help-launcher + feedback modal — CyberAgent-owned destination URLs
+# (cyberagent.ng docs/changelog, feedback channel). These can't be derived
+# by sed from upstream content because cyberagent.ng has no multica.ai
+# counterpart pattern.
+packages/views/layout/help-launcher.tsx
+packages/views/modals/feedback.tsx
+
 # Root package.json
 package.json
 

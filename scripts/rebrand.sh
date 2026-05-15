@@ -174,6 +174,15 @@ open('.goreleaser.yml', 'w').write(text)
   find packages/views/locales/zh-Hans -type f -name '*.json' \
     -exec sed -i 's/Multica/CyberAgent/g' {} + 2>/dev/null || true
 
+  # Feedback modal hint: upstream points users to "GitHub" for issues; we
+  # point them to CyberAgent (cyberagent.ng) instead. The link href itself
+  # lives in packages/views/modals/feedback.tsx (snapshotted); these two
+  # sed rules rewrite the surrounding link text + lead-in across locales.
+  _sed packages/views/locales/en/modals.json 's/"github_hint_link": "GitHub"/"github_hint_link": "CyberAgent"/'
+  _sed packages/views/locales/en/modals.json 's/"github_hint_prefix": "Want faster handling and open discussion? Head to "/"github_hint_prefix": "Want faster handling and open discussion? Visit "/'
+  _sed packages/views/locales/zh-Hans/modals.json 's/"github_hint_link": "GitHub"/"github_hint_link": "CyberAgent"/'
+  _sed packages/views/locales/zh-Hans/modals.json 's/"github_hint_prefix": "想被更快处理、参与讨论？请去 "/"github_hint_prefix": "想被更快处理、参与讨论？请访问 "/'
+
   # ── Web app — user-visible strings (snapshotted files only restore brand)
   _sed apps/web/app/layout.tsx 's/Multica/CyberAgent/g' 2>/dev/null || true
   _sed apps/web/app/custom.css 's/Multica/CyberAgent/g' 2>/dev/null || true

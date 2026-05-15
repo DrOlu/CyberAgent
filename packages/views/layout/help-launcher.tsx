@@ -10,8 +10,8 @@ import {
 import { useModalStore } from "@multica/core/modals";
 import { useT } from "../i18n";
 
-const DOCS_URL = "https://multica.ai/docs";
-const CHANGELOG_URL = "https://multica.ai/changelog";
+const DOCS_URL = "https://cyberagent.ng/docs.html";
+const CHANGELOG_URL = "https://cyberagent.ng";
 
 export function HelpLauncher() {
   const { t } = useT("layout");
