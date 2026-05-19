@@ -3,7 +3,7 @@
     "step_of": "Step {{current}} of {{total}}"
   },
   "welcome": {
-    "wordmark": "Welcome to CyberAgent",
+    "wordmark": "Welcome to Multica",
     "headline_line1": "Your AI teammates,",
     "headline_line2": "in",
     "headline_emphasis": "one workspace.",
@@ -45,7 +45,7 @@
   "questions": {
     "eyebrow_about_you": "About you",
     "source": {
-      "question": "How did you hear about CyberAgent?",
+      "question": "How did you hear about Multica?",
       "friends_colleagues": "Friends or colleagues",
       "search": "Google / search",
       "social_x": "X / Twitter",
@@ -75,7 +75,7 @@
       "other_placeholder": "e.g. teacher, support lead"
     },
     "use_case": {
-      "question": "What do you want to use CyberAgent for?",
+      "question": "What do you want to use Multica for?",
       "ship_code": "Ship code with AI agents",
       "manage_team": "Manage tasks for my team",
       "personal_tasks": "Organize my own tasks",
@@ -110,19 +110,8 @@
   "cli_install": {
     "copy_aria": "Copy",
     "intro": "You'll need an agent runtime on this computer (Claude Code, Codex, Cursor, …) for it to run your agent. Also works on servers and remote dev boxes.",
-    "step1_label": "Install the CyberAgent CLI",
+    "step1_label": "Install the Multica CLI",
     "step2_label": "Start the daemon"
-  },
-  "starter_content": {
-    "title": "Welcome — add starter tasks?",
-    "description_prefix": "A ",
-    "description_term": "Getting Started",
-    "description_suffix": " project with short tasks that walk through how agents, issues, and context work in CyberAgent.",
-    "dismiss_action": "Start blank workspace",
-    "import_action": "Add starter tasks",
-    "success_toast": "Starter tasks added — check your sidebar",
-    "import_failed": "Import failed — please retry",
-    "dismiss_failed": "Could not dismiss — please retry"
   },
   "cloud_waitlist": {
     "intro_main": "Cloud runtimes aren't live yet. Leave your email and we'll reach out when they are.",
@@ -192,17 +181,17 @@
   },
   "step_teammate": {
     "eyebrow": "First teammate",
-    "headline": "Create your first teammate: CyberAgent Helper",
-    "lede": "CyberAgent Helper is a starter agent connected to {{runtime}}. It will open your first guided issue and help you learn the core workflow.",
-    "avatar_label": "CyberAgent Helper avatar",
-    "name": "CyberAgent Helper",
+    "headline": "Create your first teammate: Multica Helper",
+    "lede": "Multica Helper is a starter agent connected to {{runtime}}. It will open your first guided issue and help you learn the core workflow.",
+    "avatar_label": "Multica Helper avatar",
+    "name": "Multica Helper",
     "role": "Onboarding guide",
     "point_issue": "Starts from one onboarding issue",
     "point_context": "Uses your workspace context and issue details",
     "point_customize": "You can rename or replace it later",
     "footer_hint": "We'll create one agent and one onboarding issue.",
-    "create_action": "Create CyberAgent Helper",
-    "create_failed": "Failed to create CyberAgent Helper"
+    "create_action": "Create Multica Helper",
+    "create_failed": "Failed to create Multica Helper"
   },
   "step_workspace": {
     "eyebrow_first": "Your first workspace",
@@ -246,7 +235,7 @@
     "perk_invite": "Invite teammates — they see only this workspace",
     "perk_switch": "Switch to other workspaces anytime from the top-left",
     "next_runtime": "Connect a computer so your agents have somewhere to run",
-    "next_agent": "Create CyberAgent Helper from your connected runtime",
+    "next_agent": "Create Multica Helper from your connected runtime",
     "next_starter": "Open one onboarding issue for your next step",
     "preview": {
       "inbox_label": "Inbox",
@@ -300,7 +289,7 @@
   "step_platform": {
     "eyebrow": "Connect a computer",
     "headline": "Connect a computer to run your agent.",
-    "lede": "Your agent runs on a real computer that you connect to CyberAgent. Pick how you want to connect one.",
+    "lede": "Your agent runs on a real computer that you connect to Multica. Pick how you want to connect one.",
     "hint_default": "Pick a way to connect — or skip and connect a computer later.",
     "hint_downloaded": "Finish setup on the download page, then come back to this tab.",
     "download_title": "Use this computer",
