@@ -3,7 +3,7 @@
     "step_of": "第 {{current}} 步 / 共 {{total}} 步"
   },
   "welcome": {
-    "wordmark": "欢迎使用 Multica",
+    "wordmark": "欢迎使用 CyberAgent",
     "headline_line1": "你的 AI 队友，",
     "headline_line2": "在",
     "headline_emphasis": "同一个工作区。",
@@ -45,7 +45,7 @@
   "questions": {
     "eyebrow_about_you": "关于你",
     "source": {
-      "question": "你是从哪里了解到 Multica 的？",
+      "question": "你是从哪里了解到 CyberAgent 的？",
       "friends_colleagues": "朋友或同事",
       "search": "Google / 搜索",
       "social_x": "X / Twitter",
@@ -75,7 +75,7 @@
       "other_placeholder": "例如：教师、支持负责人"
     },
     "use_case": {
-      "question": "你打算用 Multica 做什么？",
+      "question": "你打算用 CyberAgent 做什么？",
       "ship_code": "让 AI agent 帮我写代码",
       "manage_team": "给团队做任务管理",
       "personal_tasks": "管理我自己的任务",
@@ -110,14 +110,14 @@
   "cli_install": {
     "copy_aria": "复制",
     "intro": "这台电脑上需要装一个 agent 运行时（Claude Code、Codex、Cursor 等）才能运行你的智能体。也支持服务器和远程开发机。",
-    "step1_label": "安装 Multica CLI",
+    "step1_label": "安装 CyberAgent CLI",
     "step2_label": "启动守护进程"
   },
   "starter_content": {
     "title": "欢迎 —— 要不要添加入门 task？",
     "description_prefix": "一个 ",
     "description_term": "上手指南",
-    "description_suffix": " 项目，包含若干简短 task，带你了解 Multica 中的智能体、issue 和上下文是怎么工作的。",
+    "description_suffix": " 项目，包含若干简短 task，带你了解 CyberAgent 中的智能体、issue 和上下文是怎么工作的。",
     "dismiss_action": "从空白工作区开始",
     "import_action": "添加入门 task",
     "success_toast": "入门 task 已添加，看一下侧边栏",
@@ -192,17 +192,17 @@
   },
   "step_teammate": {
     "eyebrow": "第一个队友",
-    "headline": "创建你的第一个队友：Multica Helper",
-    "lede": "Multica Helper 是连接到 {{runtime}} 的入门智能体。它会打开一个上手引导 issue，带你走完核心流程。",
-    "avatar_label": "Multica Helper 头像",
-    "name": "Multica Helper",
+    "headline": "创建你的第一个队友：CyberAgent Helper",
+    "lede": "CyberAgent Helper 是连接到 {{runtime}} 的入门智能体。它会打开一个上手引导 issue，带你走完核心流程。",
+    "avatar_label": "CyberAgent Helper 头像",
+    "name": "CyberAgent Helper",
     "role": "上手引导",
     "point_issue": "只从一个上手引导 issue 开始",
     "point_context": "读取工作区上下文和 issue 详情",
     "point_customize": "之后可以改名或替换",
     "footer_hint": "我们会创建一个智能体和一个上手引导 issue。",
-    "create_action": "创建 Multica Helper",
-    "create_failed": "创建 Multica Helper 失败"
+    "create_action": "创建 CyberAgent Helper",
+    "create_failed": "创建 CyberAgent Helper 失败"
   },
   "step_workspace": {
     "eyebrow_first": "你的第一个工作区",
@@ -246,7 +246,7 @@
     "perk_invite": "邀请同事 —— 他们只会看到这个工作区",
     "perk_switch": "随时从左上角切换到其他工作区",
     "next_runtime": "连接一台电脑，给智能体一个跑的地方",
-    "next_agent": "用你连接的运行时创建 Multica Helper",
+    "next_agent": "用你连接的运行时创建 CyberAgent Helper",
     "next_starter": "打开一个上手引导 issue，继续下一步",
     "preview": {
       "inbox_label": "收件箱",
@@ -299,7 +299,7 @@
   "step_platform": {
     "eyebrow": "连接一台电脑",
     "headline": "连接一台电脑来运行你的智能体。",
-    "lede": "你的智能体运行在你连接到 Multica 的一台真实电脑上。选一种你想要的连接方式。",
+    "lede": "你的智能体运行在你连接到 CyberAgent 的一台真实电脑上。选一种你想要的连接方式。",
     "hint_default": "在上方选一种方式 —— 或先跳过，之后再连接电脑。",
     "hint_downloaded": "在下载页完成安装，然后回到此标签页。",
     "download_title": "使用这台电脑",
