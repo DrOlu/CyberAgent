@@ -45,7 +45,7 @@
   "questions": {
     "eyebrow_about_you": "About you",
     "source": {
-      "question": "How did you hear about Multica?",
+      "question": "How did you hear about CyberAgent?",
       "friends_colleagues": "Friends or colleagues",
       "search": "Google / search",
       "social_x": "X / Twitter",
@@ -75,7 +75,7 @@
       "other_placeholder": "e.g. teacher, support lead"
     },
     "use_case": {
-      "question": "What do you want to use Multica for?",
+      "question": "What do you want to use CyberAgent for?",
       "ship_code": "Ship code with AI agents",
       "manage_team": "Manage tasks for my team",
       "personal_tasks": "Organize my own tasks",
@@ -192,17 +192,17 @@
   },
   "step_teammate": {
     "eyebrow": "First teammate",
-    "headline": "Create your first teammate: Multica Helper",
-    "lede": "Multica Helper is a starter agent connected to {{runtime}}. It will open your first guided issue and help you learn the core workflow.",
-    "avatar_label": "Multica Helper avatar",
-    "name": "Multica Helper",
+    "headline": "Create your first teammate: CyberAgent Helper",
+    "lede": "CyberAgent Helper is a starter agent connected to {{runtime}}. It will open your first guided issue and help you learn the core workflow.",
+    "avatar_label": "CyberAgent Helper avatar",
+    "name": "CyberAgent Helper",
     "role": "Onboarding guide",
     "point_issue": "Starts from one onboarding issue",
     "point_context": "Uses your workspace context and issue details",
     "point_customize": "You can rename or replace it later",
     "footer_hint": "We'll create one agent and one onboarding issue.",
-    "create_action": "Create Multica Helper",
-    "create_failed": "Failed to create Multica Helper"
+    "create_action": "Create CyberAgent Helper",
+    "create_failed": "Failed to create CyberAgent Helper"
   },
   "step_workspace": {
     "eyebrow_first": "Your first workspace",
@@ -246,7 +246,7 @@
     "perk_invite": "Invite teammates — they see only this workspace",
     "perk_switch": "Switch to other workspaces anytime from the top-left",
     "next_runtime": "Connect a computer so your agents have somewhere to run",
-    "next_agent": "Create Multica Helper from your connected runtime",
+    "next_agent": "Create CyberAgent Helper from your connected runtime",
     "next_starter": "Open one onboarding issue for your next step",
     "preview": {
       "inbox_label": "Inbox",

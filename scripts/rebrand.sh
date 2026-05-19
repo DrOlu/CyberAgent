@@ -167,11 +167,61 @@ open('.goreleaser.yml', 'w').write(text)
       -e 's/Let Multica know/Let CyberAgent know/g' \
       -e 's/Multica knows/CyberAgent knows/g' \
       -e 's/Multica drives/CyberAgent drives/g' \
+      -e 's/Welcome to Multica/Welcome to CyberAgent/g' \
+      -e 's/about Multica/about CyberAgent/g' \
+      -e 's/use Multica/use CyberAgent/g' \
+      -e 's/Install the Multica CLI/Install the CyberAgent CLI/g' \
+      -e 's/Multica will generate/CyberAgent will generate/g' \
+      -e 's/inside Multica/inside CyberAgent/g' \
+      -e 's/connect to Multica/connect to CyberAgent/g' \
+      -e 's/Multica CLI/CyberAgent CLI/g' \
+      -e 's/Multica Helper/CyberAgent Helper/g' \
       {} + 2>/dev/null || true
 
   # zh-Hans locales: standalone "Multica" word in Chinese text — safe to
   # blanket-replace because there are no English code identifiers nearby.
   find packages/views/locales/zh-Hans -type f -name '*.json' \
+    -exec sed -i 's/Multica/CyberAgent/g' {} + 2>/dev/null || true
+
+  # ── Onboarding starter content (TS files with template literals that
+  #    render directly into user-visible issue descriptions). These hold
+  #    the "Welcome to Multica" / "Agents in Multica are triggered..." etc.
+  #    strings that ship as the first-run guided issues. Brand name only;
+  #    URLs (https://multica.ai/docs/...) remain functional.
+  find packages/views/onboarding -type f -name '*.ts' \
+    ! -path '*/node_modules/*' \
+    -exec sed -i \
+      -e 's/Welcome to Multica/Welcome to CyberAgent/g' \
+      -e 's/about Multica/about CyberAgent/g' \
+      -e 's/use Multica/use CyberAgent/g' \
+      -e 's/in Multica/in CyberAgent/g' \
+      -e 's/inside Multica/inside CyberAgent/g' \
+      -e 's/from Multica/from CyberAgent/g' \
+      -e 's/using Multica/using CyberAgent/g' \
+      -e 's/with Multica/with CyberAgent/g' \
+      -e 's/connect to Multica/connect to CyberAgent/g' \
+      -e 's/Multica works best/CyberAgent works best/g' \
+      -e 's/How Multica triggers/How CyberAgent triggers/g' \
+      -e 's/Agents in Multica/Agents in CyberAgent/g' \
+      -e 's/Multica! 👋/CyberAgent! 👋/g' \
+      -e 's/Multica — let/CyberAgent — let/g' \
+      -e 's/欢迎来到 Multica/欢迎来到 CyberAgent/g' \
+      -e 's/Multica 里/CyberAgent 里/g' \
+      -e 's/Multica 的/CyberAgent 的/g' \
+      -e 's/Multica 中/CyberAgent 中/g' \
+      -e 's/用 Multica/用 CyberAgent/g' \
+      -e 's/在 Multica/在 CyberAgent/g' \
+      -e 's/Multica 能/CyberAgent 能/g' \
+      -e 's/Multica。/CyberAgent。/g' \
+      -e 's/Multica ——/CyberAgent ——/g' \
+      {} + 2>/dev/null || true
+
+  # ── Docs site (.mdx) — CyberAgent's docs site (apps/docs/), so any
+  #    "Multica" brand reference here is user-visible. URLs stay as-is
+  #    (the .mdx files don't contain functional multica.ai URLs anyway,
+  #    they use relative paths like /cli, /agents). Blanket replace is
+  #    safe because there are no code identifiers in .mdx prose.
+  find apps/docs/content -type f '(' -name '*.mdx' -o -name '*.md' ')' \
     -exec sed -i 's/Multica/CyberAgent/g' {} + 2>/dev/null || true
 
   # Feedback modal hint: upstream points users to "GitHub" for issues; we
@@ -189,6 +239,9 @@ open('.goreleaser.yml', 'w').write(text)
   _sed apps/web/app/not-found.tsx 's/Multica/CyberAgent/g' 2>/dev/null || true
 
   # Landing pages (user-facing). NO URL rewriting — multica.ai stays.
+  # Twitter handle https://x.com/MulticaAI is intentionally untouched
+  # (functional account, owned by upstream brand). We rebrand only the
+  # surrounding display text.
   find apps/web -type f '(' -name '*.tsx' -o -name '*.ts' ')' \
     ! -path '*/node_modules/*' ! -path './.cyberagent-snapshot/*' \
     -exec sed -i \
@@ -197,6 +250,8 @@ open('.goreleaser.yml', 'w').write(text)
       -e 's/Multica Cloud/CyberAgent Cloud/g' \
       -e 's/Multica Self-Hosted/CyberAgent Self-Hosted/g' \
       -e 's/Multica CLI/CyberAgent CLI/g' \
+      -e 's/inside Multica/inside CyberAgent/g' \
+      -e 's/在 Multica/在 CyberAgent/g' \
       {} + 2>/dev/null || true
 
   # ── Server Go files — prompt strings and user-visible text only.
@@ -212,6 +267,7 @@ open('.goreleaser.yml', 'w').write(text)
       -e 's|Multica API|CyberAgent API|g' \
       -e 's|Multica AI|CyberAgent|g' \
       -e 's|Your Multica verification code|Your CyberAgent verification code|g' \
+      -e 's|open Multica resource URLs|open CyberAgent resource URLs|g' \
       {} + 2>/dev/null || true
 
   # ── Desktop renderer / main process — user-visible strings + protocol ──

@@ -53,13 +53,13 @@ multica autopilot trigger <autopilot-id>
 ## 通过 Webhook 触发
 
 Autopilot 也可以由入站 HTTP webhook 触发。在详情页添加一个 **Webhook**
-触发器，Multica 会生成一个唯一的 URL：
+触发器，CyberAgent 会生成一个唯一的 URL：
 
 ```
-https://<你的 Multica host>/api/webhooks/autopilots/awt_…
+https://<你的 CyberAgent host>/api/webhooks/autopilots/awt_…
 ```
 
-向这个 URL POST 任意 JSON——Multica 会记录一条 `source = webhook` 的
+向这个 URL POST 任意 JSON——CyberAgent 会记录一条 `source = webhook` 的
 run，把请求体保存为 run 的 `trigger_payload`，然后按和 schedule 触发器
 完全一致的方式派发给智能体。
 
@@ -80,7 +80,7 @@ curl -X POST "$MULTICA_WEBHOOK_URL" \
 { "event": "github.pull_request.opened", "eventPayload": { } }
 ```
 
-也可以直接发任意 JSON 对象 / 数组。Multica 会规范化为内部封装：
+也可以直接发任意 JSON 对象 / 数组。CyberAgent 会规范化为内部封装：
 
 ```json
 {
@@ -90,7 +90,7 @@ curl -X POST "$MULTICA_WEBHOOK_URL" \
 }
 ```
 
-不带 `event` 字段时，Multica 会按以下顺序从常见 header 和 body 字段
+不带 `event` 字段时，CyberAgent 会按以下顺序从常见 header 和 body 字段
 推断：`X-GitHub-Event` + body `action`，`X-Gitlab-Event`、
 `X-Event-Type`、body 里的 `event` / `type` / `action`。都不命中时事件
 名退化为 `webhook.received`。
@@ -136,7 +136,7 @@ curl -X POST "$MULTICA_WEBHOOK_URL" \
 服务端设置 `MULTICA_PUBLIC_URL`（例如 `https://multica.example.com`）后，
 触发器响应里会带绝对的 `webhook_url`，UI 直接显示可复制的 URL。没设
 时 UI 会用客户端的 API origin 拼出 URL——desktop 和同源 web 没问题，
-但自定义反向代理就不行了。Multica **故意不**从 `Host` /
+但自定义反向代理就不行了。CyberAgent **故意不**从 `Host` /
 `X-Forwarded-Host` header 推断公开主机，避免反代配置失误时被诱导生成
 指向攻击者域名的 webhook URL。
 

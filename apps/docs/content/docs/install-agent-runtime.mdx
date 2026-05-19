@@ -1,6 +1,6 @@
 ---
 title: Install an agent runtime
-description: Multica drives whichever AI coding tools you have on your machine. This page shows you how to install each of the 11 supported tools so the daemon can detect them.
+description: CyberAgent drives whichever AI coding tools you have on your machine. This page shows you how to install each of the 11 supported tools so the daemon can detect them.
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
@@ -20,7 +20,7 @@ The CyberAgent server never sees your API keys or the tools themselves. Everythi
 
 Two prerequisites apply to **every** tool below:
 
-1. **The CyberAgent daemon must be running.** Either run `multica daemon start` after installing the [CyberAgent CLI](/cli), or use the [Multica desktop app](/desktop-app), which launches the daemon automatically. Without a running daemon there is nothing to detect tools.
+1. **The CyberAgent daemon must be running.** Either run `multica daemon start` after installing the [CyberAgent CLI](/cli), or use the [CyberAgent desktop app](/desktop-app), which launches the daemon automatically. Without a running daemon there is nothing to detect tools.
 2. **The tool's binary must be reachable on `PATH`.** The daemon shells out to each tool by name (see the **Daemon looks for** column in each section). If `which <name>` doesn't find it in your terminal, the daemon won't find it either. After installing, open a fresh terminal (or restart the daemon) so the new `PATH` entry is picked up.
 
 After installing a tool, restart the daemon:

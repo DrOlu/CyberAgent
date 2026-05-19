@@ -53,13 +53,13 @@ A manual trigger goes through the exact same execution flow as a `schedule` trig
 ## Trigger from a webhook
 
 Autopilots can also fire on inbound HTTP webhooks. Add a **Webhook** trigger
-on the autopilot detail page; Multica generates a unique URL of the shape:
+on the autopilot detail page; CyberAgent generates a unique URL of the shape:
 
 ```
 https://<your-multica-host>/api/webhooks/autopilots/awt_…
 ```
 
-POST any JSON to that URL — Multica records a run with `source = webhook`,
+POST any JSON to that URL — CyberAgent records a run with `source = webhook`,
 stores the body as the run's `trigger_payload`, and dispatches the agent
 exactly the way a schedule trigger would.
 
@@ -81,7 +81,7 @@ You can send your own envelope:
 { "event": "github.pull_request.opened", "eventPayload": { } }
 ```
 
-…or any JSON object/array. Multica normalizes it into an internal envelope:
+…or any JSON object/array. CyberAgent normalizes it into an internal envelope:
 
 ```json
 {
@@ -91,7 +91,7 @@ You can send your own envelope:
 }
 ```
 
-When you don't provide an `event` field, Multica infers it from common
+When you don't provide an `event` field, CyberAgent infers it from common
 headers and body fields (`X-GitHub-Event` + body `action`,
 `X-Gitlab-Event`, `X-Event-Type`, body `event`/`type`/`action`). When
 nothing matches, the event is `webhook.received`.
@@ -115,7 +115,7 @@ autopilot. Treat it like a token:
 
 ### Status-code semantics
 
-Multica returns `200 OK` with a `status` field for normal no-op outcomes so
+CyberAgent returns `200 OK` with a `status` field for normal no-op outcomes so
 your provider's webhook-retry machinery doesn't keep hammering the URL:
 
 - `{"status":"accepted","run_id":"…","autopilot_id":"…","trigger_id":"…"}`
@@ -139,7 +139,7 @@ When `MULTICA_PUBLIC_URL` is set on the server (e.g. `https://multica.example.co
 the trigger response includes an absolute `webhook_url` and the UI shows a
 ready-to-copy URL. Without it, the UI composes the URL from the client's
 API origin — which is fine for desktop and same-origin web, but not for
-custom self-hosted reverse proxies. Multica deliberately does not derive
+custom self-hosted reverse proxies. CyberAgent deliberately does not derive
 the public host from `Host` / `X-Forwarded-Host` headers so a misconfigured
 reverse proxy cannot trick the server into minting webhook URLs pointing at
 an attacker-controlled host.

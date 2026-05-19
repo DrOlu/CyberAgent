@@ -298,7 +298,7 @@ export function createZhDict(allowSignup: boolean): LandingDict {
         ],
         improvements: [
           "Issue 操作失败时会显示更明确的错误原因，团队不用翻日志也能理解发生了什么",
-          "关联 GitHub 的 Pull Request 会在 Multica 内展示 CI 和合并冲突状态",
+          "关联 GitHub 的 Pull Request 会在 CyberAgent 内展示 CI 和合并冲突状态",
           "自托管部署获得更安全的默认配置，并补充反向代理、登录限制和本地服务的说明",
           "搜索结果排序更准确，也会展示更有帮助的摘要片段",
         ],
