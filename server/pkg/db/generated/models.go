@@ -41,6 +41,7 @@ type Agent struct {
 	CustomArgs         []byte             `json:"custom_args"`
 	McpConfig          []byte             `json:"mcp_config"`
 	Model              pgtype.Text        `json:"model"`
+	ThinkingLevel      pgtype.Text        `json:"thinking_level"`
 }
 
 type AgentRuntime struct {
@@ -128,6 +129,7 @@ type Autopilot struct {
 	CreatedAt          pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt          pgtype.Timestamptz `json:"updated_at"`
 	AssigneeType       string             `json:"assignee_type"`
+	ProjectID          pgtype.UUID        `json:"project_id"`
 }
 
 type AutopilotRun struct {
