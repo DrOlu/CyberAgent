@@ -3,7 +3,7 @@
     "step_of": "Step {{current}} of {{total}}"
   },
   "welcome": {
-    "wordmark": "Welcome to CyberAgent",
+    "wordmark": "Welcome to Multica",
     "headline_line1": "Your AI teammates,",
     "headline_line2": "in",
     "headline_emphasis": "one workspace.",
@@ -45,7 +45,7 @@
   "questions": {
     "eyebrow_about_you": "About you",
     "source": {
-      "question": "How did you hear about CyberAgent?",
+      "question": "How did you hear about Multica?",
       "friends_colleagues": "Friends or colleagues",
       "search": "Google / search",
       "social_x": "X / Twitter",
@@ -75,7 +75,7 @@
       "other_placeholder": "e.g. teacher, support lead"
     },
     "use_case": {
-      "question": "What do you want to use CyberAgent for?",
+      "question": "What do you want to use Multica for?",
       "ship_code": "Ship code with AI agents",
       "manage_team": "Manage tasks for my team",
       "personal_tasks": "Organize my own tasks",
@@ -110,7 +110,7 @@
   "cli_install": {
     "copy_aria": "Copy",
     "intro": "You'll need an agent runtime on this computer (Claude Code, Codex, Cursor, …) for it to run your agent. Also works on servers and remote dev boxes.",
-    "step1_label": "Install the CyberAgent CLI",
+    "step1_label": "Install the Multica CLI",
     "step2_label": "Start the daemon"
   },
   "cloud_waitlist": {
@@ -179,19 +179,61 @@
     "add_more_hint": "Add more agents anytime. A small team of specialized agents beats one jack-of-all-trades.",
     "docs_link": "Creating your first agent →"
   },
-  "step_teammate": {
-    "eyebrow": "First teammate",
-    "headline": "Create your first teammate: CyberAgent Helper",
-    "lede": "CyberAgent Helper is a starter agent connected to {{runtime}}. It will open your first guided issue and help you learn the core workflow.",
-    "avatar_label": "CyberAgent Helper avatar",
-    "name": "CyberAgent Helper",
-    "role": "Onboarding guide",
-    "point_issue": "Starts from one onboarding issue",
-    "point_context": "Uses your workspace context and issue details",
-    "point_customize": "You can rename or replace it later",
-    "footer_hint": "We'll create one agent and one onboarding issue.",
-    "create_action": "Create CyberAgent Helper",
-    "create_failed": "Failed to create CyberAgent Helper"
+  "welcome_after_onboarding": {
+    "loading_helper": "Preparing your Helper…",
+    "error_title": "Couldn't finish setup",
+    "error_generic": "Something went wrong. Try again.",
+    "retry": "Try again",
+    "dismiss_error": "Dismiss",
+    "error_close": "Close",
+    "user_context_heading": "About me",
+    "user_context_role_label": "Role",
+    "user_context_use_case_label": "What I want to do with Multica",
+    "runtime": {
+      "greeting": "Hi, welcome to Multica",
+      "subtitle": "I'm your first Agent assistant.",
+      "capabilities": "Ask me anything about how to use Multica. You can also have me get things done in your workspace — create issues, set up cron tasks, build new agents…",
+      "section_label": "Pick one or more tasks to start with:",
+      "assign_empty": "Pick one or more",
+      "assign_count": "Assign {{count}} task to me →",
+      "assign_count_plural": "Assign {{count}} tasks to me →",
+      "cards": {
+        "intro": {
+          "subtitle": "Let me explain in 1–2 paragraphs what Multica is and what it can do."
+        },
+        "tour": {
+          "subtitle": "I'll walk you through how issue, agent, squad, autopilot fit together."
+        },
+        "welcome_page": {
+          "subtitle": "I'll write you a small HTML welcome page to celebrate the kickoff."
+        }
+      },
+      "success": {
+        "title": "All set!",
+        "subtitle": "Sit tight — your {{agentName}} is on it ☕",
+        "tip_inbox": "When there's progress, you'll see it in your Inbox.",
+        "tip_chat": "Want to chat live? Click the chat bubble at the bottom-right.",
+        "got_it": "Got it →"
+      }
+    },
+    "skip": {
+      "loading": "Setting up your workspace…",
+      "title": "Welcome to Multica!",
+      "subtitle": "We've added two tasks to help you with the next step.",
+      "got_it": "Got it",
+      "status_in_progress": "In progress",
+      "status_todo": "Todo",
+      "cards": {
+        "install_runtime": {
+          "title": "Connect a runtime",
+          "subtitle": "Install Codex or Kimi to bring agents online."
+        },
+        "create_agent": {
+          "title": "Create your first agent",
+          "subtitle": "Once a runtime is online, build your first Multica agent."
+        }
+      }
+    }
   },
   "step_workspace": {
     "eyebrow_first": "Your first workspace",
@@ -235,7 +277,7 @@
     "perk_invite": "Invite teammates — they see only this workspace",
     "perk_switch": "Switch to other workspaces anytime from the top-left",
     "next_runtime": "Connect a computer so your agents have somewhere to run",
-    "next_agent": "Create CyberAgent Helper from your connected runtime",
+    "next_agent": "Create Multica Helper from your connected runtime",
     "next_starter": "Open one onboarding issue for your next step",
     "preview": {
       "inbox_label": "Inbox",
@@ -284,12 +326,13 @@
     "hint_selected": "Selected: {{name}}",
     "hint_pick": "Pick an agent runtime above to continue.",
     "hint_waiting": "Waiting for the first result…",
-    "hint_skip_or_refresh": "Refresh after installing one, or skip to enter your workspace."
+    "hint_skip_or_refresh": "Refresh after installing one, or skip to enter your workspace.",
+    "start_exploring": "Start exploring"
   },
   "step_platform": {
     "eyebrow": "Connect a computer",
     "headline": "Connect a computer to run your agent.",
-    "lede": "Your agent runs on a real computer that you connect to CyberAgent. Pick how you want to connect one.",
+    "lede": "Your agent runs on a real computer that you connect to Multica. Pick how you want to connect one.",
     "hint_default": "Pick a way to connect — or skip and connect a computer later.",
     "hint_downloaded": "Finish setup on the download page, then come back to this tab.",
     "download_title": "Use this computer",
