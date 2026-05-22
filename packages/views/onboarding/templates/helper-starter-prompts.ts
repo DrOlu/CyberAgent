@@ -39,7 +39,7 @@ export const HELPER_STARTER_PROMPTS: Record<StarterCardId, StarterPrompt> = {
     },
     prompt: {
       en: "Walk me through Multica's core features — issue, agent, squad, autopilot, chat. Pick one realistic scenario I might run into and explain how all these pieces fit together.",
-      zh: "陪我熟悉 Multica 的每个核心功能 —— issue、agent、squad、autopilot、chat。挑一个我可能用得上的真实场景,讲讲这几个东西是怎么配合的。",
+      zh: "陪我熟悉 CyberAgent 的每个核心功能 —— issue、agent、squad、autopilot、chat。挑一个我可能用得上的真实场景,讲讲这几个东西是怎么配合的。",
     },
   },
   welcome_page: {
@@ -49,7 +49,7 @@ export const HELPER_STARTER_PROMPTS: Record<StarterCardId, StarterPrompt> = {
     },
     prompt: {
       en: "Make a small HTML page (with some CSS, maybe a touch of animation) that welcomes me to Multica. Paste the full HTML in a comment on this issue so I can copy it straight from there.",
-      zh: "用 HTML + 简单 CSS 给我做一个欢迎页,庆祝我刚加入 Multica。可以加点小动效。做完后把完整 HTML 贴到这个 issue 的评论里,我直接复制就能用。",
+      zh: "用 HTML + 简单 CSS 给我做一个欢迎页,庆祝我刚加入 CyberAgent。可以加点小动效。做完后把完整 HTML 贴到这个 issue 的评论里,我直接复制就能用。",
     },
   },
 };

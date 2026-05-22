@@ -25,9 +25,9 @@ export const INSTALL_RUNTIME_ISSUE_TITLE = {
   zh: "第 1 步 —— 连接运行时,开始使用 agent",
 } as const;
 
-const en = `Welcome to Multica.
+const en = `Welcome to CyberAgent.
 
-Agents need a runtime before they can execute work. You can still use Multica as a lightweight project-management workspace while you install one.
+Agents need a runtime before they can execute work. You can still use CyberAgent as a lightweight project-management workspace while you install one.
 
 ## Try Multica first
 
@@ -64,7 +64,7 @@ Codex reference: https://developers.openai.com/codex/cli
 
 When the runtime is connected, you can create Multica Helper for a guided first run.`;
 
-const zh = `欢迎来到 Multica。
+const zh = `欢迎来到 CyberAgent。
 
 智能体需要先连上运行时才能执行工作。运行时还没准备好时,你也可以先把 Multica 当作轻量项目管理工具体验起来。
 
