@@ -23,7 +23,31 @@ export default defineConfig({
       alias: {
         "@": resolve("src/renderer/src"),
       },
-      dedupe: ["react", "react-dom"],
+      // Force every workspace package + nested dep to resolve these to a
+      // single instance at bundle time. Without this, pnpm's per-package
+      // peer-resolution can materialize two copies of a context-carrying
+      // library when the workspace contains apps with different React
+      // pins (e.g. apps/mobile's react-native pulls react@19.2.0 while
+      // apps/desktop/web use 19.2.3). Vite then bundles both copies; the
+      // QueryClient set by Provider A is invisible to useQueryClient()
+      // from copy B, and the renderer crashes at module load with
+      //   Uncaught Error: No QueryClient set, use QueryClientProvider...
+      // (Reproduced in v1.5.0–v1.5.2 desktop builds — blank window on
+      // launch.) The same hazard affects zustand stores and any other
+      // React-context-based library. Keep this list in sync with the
+      // React-state libraries the renderer consumes from @multica/*.
+      dedupe: [
+        "react",
+        "react-dom",
+        "@tanstack/react-query",
+        "@tanstack/react-query-devtools",
+        "@tanstack/react-table",
+        "zustand",
+        "react-router-dom",
+        "react-router",
+        "i18next",
+        "react-i18next",
+      ],
     },
   },
 });
