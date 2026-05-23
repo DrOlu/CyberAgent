@@ -46,6 +46,12 @@ apps/web/public/og-image.png
 scripts/rebrand.sh
 scripts/rebrand-manifest.txt
 
+# Sync-safety guardrails. These scripts are CyberAgent-specific; upstream
+# does not have a snapshot-based rebrand pipeline and so does not need
+# them. See the v1.5.0 release post-mortem for context.
+scripts/check-landing-i18n.mjs
+scripts/check-renderer-dedupe.mjs
+
 # Install scripts — upstream URLs changed
 scripts/install.sh
 scripts/install.ps1

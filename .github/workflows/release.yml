@@ -54,6 +54,15 @@ jobs:
       - name: Run tests
         run: cd server && go test ./...
 
+      # Pre-flight: catch the same kind of i18n / dedupe drift the CI
+      # workflow runs against every push to main, before this release
+      # workflow spins up the expensive docker / goreleaser / desktop
+      # jobs. v1.5.0 hit a TypeScript error in `docker-web-build` after
+      # the entire CLI binary pipeline had already published. The
+      # landing-i18n check is zero-dep so it runs in ~100ms.
+      - name: Verify landing i18n dictionaries match the LandingDict type
+        run: node scripts/check-landing-i18n.mjs
+
   release:
     needs: verify
     # Only run on the canonical upstream repo. Forks don't have the

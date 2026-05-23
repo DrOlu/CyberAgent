@@ -38,8 +38,31 @@ jobs:
           pnpm generate:reserved-slugs
           git diff --exit-code -- packages/core/paths/reserved-slugs.ts
 
+      # Catch landing-i18n drift early — the same check the upstream sync
+      # workflow runs before pushing. See scripts/check-landing-i18n.mjs
+      # and the v1.5.0 release post-mortem (missing hero.talkToSales +
+      # contactSales caused the docker-web-build to fail at release time
+      # with a confusing TypeScript error). Running it in CI as well as
+      # in the sync workflow defends against manual edits that bypass
+      # the sync bot.
+      - name: Verify landing i18n dictionaries match the LandingDict type
+        run: node scripts/check-landing-i18n.mjs
+
       - name: Build, type check, lint, and test
         run: pnpm exec turbo build typecheck lint test --filter='!@multica/docs'
+
+      # Post-build assertion: scan the desktop renderer bundle for
+      # rolldown-emitted $N duplicate-identifier suffixes on
+      # React-context-carrying libraries (react-query, zustand, etc.).
+      # The dedupe whitelist in apps/desktop/electron.vite.config.ts
+      # has to stay in sync with whatever the workspace currently
+      # pulls in — a transitive dep update can reintroduce the dual-
+      # instance hazard that crashed the v1.5.0–v1.5.2 desktop releases
+      # with `Uncaught Error: No QueryClient set, use QueryClientProvider`.
+      # The turbo build above must produce
+      # apps/desktop/out/renderer/assets/index-*.js for this to run.
+      - name: Verify desktop renderer is single-instance for React contexts
+        run: node scripts/check-renderer-dedupe.mjs
 
   backend:
     runs-on: ubuntu-latest

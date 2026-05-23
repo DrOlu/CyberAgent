@@ -135,6 +135,20 @@ jobs:
         run: |
           ./scripts/rebrand.sh --rebrand
 
+      # Run a fast, zero-dep guardrail BEFORE pushing the sync commit.
+      # If upstream added a new top-level field to the landing-page
+      # LandingDict type (apps/web/features/landing/i18n/types.ts) that
+      # did not flow into the snapshotted dictionaries (en.ts / zh.ts),
+      # fail the sync here. This is what bit us in v1.5.0: hero.talkToSales
+      # + the entire contactSales section landed in types.ts, but the
+      # snapshot pipeline dropped them from the dictionaries, and the web
+      # build only blew up at release time. Catching it during sync means
+      # `main` stays green and we get a workflow failure notification
+      # pointing at the missing keys.
+      - name: Verify landing i18n dictionaries are in sync with the LandingDict type
+        if: steps.check.outputs.has_changes == 'true'
+        run: node scripts/check-landing-i18n.mjs
+
       - name: Commit and push
         if: steps.check.outputs.has_changes == 'true'
         run: |
