@@ -161,7 +161,7 @@ describe("WelcomeAfterOnboarding", () => {
       expect(screen.getByText(/Preparing your Helper/i)).toBeInTheDocument();
 
       await waitFor(() => {
-        expect(screen.getByText(/welcome to Multica/i)).toBeInTheDocument();
+        expect(screen.getByText(/welcome to CyberAgent/i)).toBeInTheDocument();
       });
 
       expect(mockCreateAgent).toHaveBeenCalledTimes(1);
@@ -202,7 +202,7 @@ describe("WelcomeAfterOnboarding", () => {
 
       renderWelcome();
       await waitFor(() => {
-        expect(screen.getByText(/welcome to Multica/i)).toBeInTheDocument();
+        expect(screen.getByText(/welcome to CyberAgent/i)).toBeInTheDocument();
       });
 
       expect(mockCreateAgent).not.toHaveBeenCalled();
@@ -317,7 +317,7 @@ describe("WelcomeAfterOnboarding", () => {
 
       // Modal appears once all 3 API calls succeed.
       await waitFor(() => {
-        expect(screen.getByText(/Welcome to Multica/i)).toBeInTheDocument();
+        expect(screen.getByText(/Welcome to CyberAgent/i)).toBeInTheDocument();
       });
 
       expect(mockCreateIssue).toHaveBeenCalledTimes(2);
@@ -365,7 +365,7 @@ describe("WelcomeAfterOnboarding", () => {
       await waitFor(() =>
         expect(useWelcomeStore.getState().dismissed).toBe(true),
       );
-      expect(screen.queryByText(/Welcome to Multica/i)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Welcome to CyberAgent/i)).not.toBeInTheDocument();
     });
   });
 });

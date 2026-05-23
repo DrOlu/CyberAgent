@@ -216,6 +216,24 @@ open('.goreleaser.yml', 'w').write(text)
       -e 's/Multica ——/CyberAgent ——/g' \
       {} + 2>/dev/null || true
 
+  # ── Test files in packages/views that assert on rebranded i18n strings ──
+  # The locale JSON sed pass above rewrites user-visible copy
+  # ("Welcome to Multica" → "Welcome to CyberAgent" etc.). Tests rendered
+  # through React Testing Library look up that same copy via getByText,
+  # so the brand-name expectations in test regexes must follow. We restrict
+  # the substitutions to the same narrow set used for JSON locales above —
+  # NOT a blanket 'Multica' rewrite — so identifiers like the
+  # "Multica Helper" agent-name constant (defined in
+  # packages/views/workspace/welcome-after-onboarding.tsx and asserted as a
+  # literal string) stay intact.
+  find packages/views -type f '(' -name '*.test.ts' -o -name '*.test.tsx' ')' \
+    ! -path '*/node_modules/*' \
+    -exec sed -i \
+      -e 's|Welcome to Multica|Welcome to CyberAgent|g' \
+      -e 's|welcome to Multica|welcome to CyberAgent|g' \
+      {} + 2>/dev/null || true
+
+
   # ── Docs site (.mdx) — CyberAgent's docs site (apps/docs/), so any
   #    "Multica" brand reference here is user-visible. URLs stay as-is
   #    (the .mdx files don't contain functional multica.ai URLs anyway,
