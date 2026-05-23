@@ -7,13 +7,19 @@ import { app, BrowserWindow, ipcMain } from "electron";
 autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
 
-// Windows arm64 ships its own update metadata channel because
-// electron-builder's `latest.yml` is not arch-suffixed on Windows — both
-// arches would otherwise collide on the same file in the GitHub Release.
-// See scripts/package.mjs (builderArgsForTarget) for the publish-side half
-// of this pact. Pin the channel here so arm64 clients fetch
-// `latest-arm64.yml` instead of the x64 metadata.
-if (process.platform === "win32" && process.arch === "arm64") {
+// Windows and macOS arm64 builds ship their own update metadata channel
+// because electron-builder's `latest.yml` (Windows) and `latest-mac.yml`
+// (macOS) are not arch-suffixed — both arches would otherwise collide on
+// the same file in the GitHub Release, and on macOS the second upload
+// can hard-fail the release job with a 422 already_exists race. See
+// scripts/package.mjs (builderArgsForTarget) for the publish-side half
+// of this pact. Pin the channel here so arm64 clients fetch the
+// arm64-suffixed yaml (`latest-arm64.yml` on Windows,
+// `latest-arm64-mac.yml` on macOS) instead of the x64 metadata.
+if (
+  (process.platform === "win32" || process.platform === "darwin") &&
+  process.arch === "arm64"
+) {
   autoUpdater.channel = "latest-arm64";
 }
 

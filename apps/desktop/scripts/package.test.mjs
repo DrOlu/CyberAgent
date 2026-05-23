@@ -215,6 +215,62 @@ describe("builderArgsForTarget", () => {
     ]);
   });
 
+  // The macOS arm64 channel override is the publish-side half of the
+  // pact with apps/desktop/src/main/updater.ts. Without it both arches
+  // race to upload `latest-mac.yml`, which on a fresh tag has hard-failed
+  // the desktop job with a 422 already_exists from GitHub's assets API
+  // (see release runs #13 / #14 against v1.5.0 / v1.5.1). Routing arm64
+  // to its own channel produces `latest-arm64-mac.yml` so the two files
+  // never collide.
+  it("routes macOS arm64 to its own publish channel to avoid latest-mac.yml collisions", () => {
+    expect(
+      builderArgsForTarget(
+        { platform: "mac", arch: "arm64" },
+        {
+          allPlatforms: false,
+          sharedArgs: ["--publish", "always"],
+          platformTargets: { mac: [], win: [], linux: [] },
+          requestedPlatforms: ["mac"],
+          requestedArchs: ["arm64"],
+        },
+        "1.2.3",
+        { hostPlatform: "darwin", useScopedOutputDir: true },
+      ),
+    ).toEqual([
+      "-c.extraMetadata.version=1.2.3",
+      "--mac",
+      "--arm64",
+      "--publish",
+      "always",
+      "-c.directories.output=dist/mac-arm64",
+      "-c.publish.channel=latest-arm64",
+    ]);
+  });
+
+  it("does not override the publish channel for macOS x64 (default latest-mac.yml)", () => {
+    expect(
+      builderArgsForTarget(
+        { platform: "mac", arch: "x64" },
+        {
+          allPlatforms: false,
+          sharedArgs: ["--publish", "always"],
+          platformTargets: { mac: [], win: [], linux: [] },
+          requestedPlatforms: ["mac"],
+          requestedArchs: ["x64"],
+        },
+        "1.2.3",
+        { hostPlatform: "darwin", useScopedOutputDir: true },
+      ),
+    ).toEqual([
+      "-c.extraMetadata.version=1.2.3",
+      "--mac",
+      "--x64",
+      "--publish",
+      "always",
+      "-c.directories.output=dist/mac-x64",
+    ]);
+  });
+
   it("defaults linux cross-builds to AppImage on non-Linux hosts", () => {
     expect(
       builderArgsForTarget(
