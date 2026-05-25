@@ -183,4 +183,4 @@ make start
 
 ## 开源协议
 
-[Apache 2.0](LICENSE)
+[Modified Apache 2.0 (with commercial restrictions)](LICENSE)
