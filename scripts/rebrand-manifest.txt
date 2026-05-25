@@ -81,7 +81,6 @@ apps/web/app/not-found.tsx
 apps/web/next-env.d.ts
 apps/web/features/landing/i18n/en.ts
 apps/web/features/landing/i18n/zh.ts
-apps/web/features/landing/components/landing-header.tsx
 
 # Docs — fully rebranded
 apps/docs/lib/site.ts

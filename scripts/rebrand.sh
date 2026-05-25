@@ -272,6 +272,20 @@ open('.goreleaser.yml', 'w').write(text)
       -e 's/在 Multica/在 CyberAgent/g' \
       {} + 2>/dev/null || true
 
+  # Landing header: the brand wordmark is rendered as the lowercase JSX
+  # text "multica" on a line by itself (see apps/web/features/landing/
+  # components/landing-header.tsx). We can't put this file in the snapshot
+  # manifest because upstream actively redesigns the header (nav links,
+  # mobile drawer, type-shape churn) and a stale snapshot breaks the
+  # TypeScript build. Instead we let upstream's file flow through and
+  # rewrite only the wordmark line here.
+  #
+  # The whole-line anchors (^...$) are deliberate: this pattern must NOT
+  # match the @multica/* import specifiers on lines 6-8 of the same file,
+  # nor any other "multica" occurrence in URLs, comments, or identifiers.
+  _sed apps/web/features/landing/components/landing-header.tsx \
+    's/^\([[:space:]]*\)multica$/\1cyberagent/'
+
   # ── Server Go files — prompt strings and user-visible text only.
   # NO URL or import-path rewrites here. The release-upgrade redirect to
   # DrOlu/CyberAgent in server/internal/cli/update.go is preserved via
