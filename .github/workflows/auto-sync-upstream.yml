@@ -95,29 +95,51 @@ jobs:
           # harmless because we restore our versions afterwards. Any
           # conflicts in NON-snapshotted files will fail the job and
           # require manual resolution (add them to the manifest).
+          #
+          # Special case: pnpm-lock.yaml is never snapshotted (it changes
+          # too often) — instead we auto-resolve it with --theirs (take
+          # upstream's lockfile) and then regenerate it from package.json
+          # in a follow-up step. This keeps our dep graph in sync with
+          # upstream without polluting the manifest.
           if ! git merge upstream/main --no-edit --no-ff 2>&1; then
-            # Check if all conflicts are in snapshotted files
             CONFLICTS=$(git diff --name-only --diff-filter=U)
             echo "Conflicts in: $CONFLICTS"
 
-            # Check each conflict against the manifest
+            # First pass: auto-resolve pnpm-lock.yaml with --theirs (upstream
+            # wins; we'll regenerate it below from our package.json).
+            if echo "$CONFLICTS" | grep -qx "pnpm-lock.yaml"; then
+              echo "Auto-resolving pnpm-lock.yaml with upstream version (will regenerate)."
+              git checkout --theirs pnpm-lock.yaml
+              git add pnpm-lock.yaml
+              # Refresh conflict list after resolving the lockfile
+              CONFLICTS=$(git diff --name-only --diff-filter=U)
+            fi
+
+            # Second pass: any remaining conflicts must be in the manifest.
             ALL_IN_MANIFEST=true
-            while IFS= read -r cf; do
-              if ! grep -qx "$cf" scripts/rebrand-manifest.txt 2>/dev/null; then
-                echo "::error::Unresolved conflict in non-snapshotted file: $cf"
-                ALL_IN_MANIFEST=false
-              fi
-            done <<< "$CONFLICTS"
+            UNRESOLVED=""
+            if [ -n "$CONFLICTS" ]; then
+              while IFS= read -r cf; do
+                if ! grep -qx "$cf" scripts/rebrand-manifest.txt 2>/dev/null; then
+                  echo "::error::Unresolved conflict in non-snapshotted file: $cf"
+                  ALL_IN_MANIFEST=false
+                  UNRESOLVED="$UNRESOLVED $cf"
+                fi
+              done <<< "$CONFLICTS"
+            fi
 
             if [ "$ALL_IN_MANIFEST" = "true" ]; then
-              # All conflicts are in snapshotted files — resolve with ours
-              git checkout --ours $CONFLICTS
-              git add $CONFLICTS
+              # All remaining conflicts are in snapshotted files — resolve with ours.
+              if [ -n "$CONFLICTS" ]; then
+                git checkout --ours $CONFLICTS
+                git add $CONFLICTS
+              fi
               git commit --no-edit
               echo "Auto-resolved conflicts using CyberAgent versions."
             else
               git merge --abort
               echo "::error::Merge conflict in non-snapshotted file — manual resolution required"
+              echo "::error::Unresolved files:$UNRESOLVED"
               exit 1
             fi
           fi
@@ -134,6 +156,32 @@ jobs:
         if: steps.check.outputs.has_changes == 'true'
         run: |
           ./scripts/rebrand.sh --rebrand
+
+      - name: Set up pnpm
+        if: steps.check.outputs.has_changes == 'true'
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node
+        if: steps.check.outputs.has_changes == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+
+      - name: Regenerate pnpm-lock.yaml from merged package.json
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          # After merge, package.json may have new dependencies from
+          # upstream. Regenerate the lockfile so it matches the merged
+          # manifests exactly. --lockfile-only avoids running install
+          # scripts and is fast.
+          pnpm install --lockfile-only
+          if ! git diff --quiet pnpm-lock.yaml; then
+            git add pnpm-lock.yaml
+            echo "Lockfile regenerated."
+          else
+            echo "Lockfile already in sync."
+          fi
 
       # Run a fast, zero-dep guardrail BEFORE pushing the sync commit.
       # If upstream added a new top-level field to the landing-page
