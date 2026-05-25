@@ -5,9 +5,14 @@ export function createZhDict(allowSignup: boolean): LandingDict {
   return {
   header: {
     github: "GitHub",
-    login: "\u767b\u5f55",
-    dashboard: "\u8fdb\u5165\u5de5\u4f5c\u53f0",
-    changelog: "\u66f4\u65b0\u65e5\u5fd7",
+    cta: "开始使用",
+    dashboard: "进入工作台",
+    docs: "文档",
+    changelog: "更新日志",
+    useCases: "案例",
+    navigation: "主导航",
+    openMenu: "打开导航菜单",
+    closeMenu: "关闭导航菜单",
   },
 
   hero: {
