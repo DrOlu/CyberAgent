@@ -2334,7 +2334,7 @@ func (d *Daemon) runTask(ctx context.Context, task Task, provider string, slot i
 	// per-agent. When one daemon hosts multiple agents, slots index shared
 	// daemon-level resources such as GPUs.
 	// MULTICA_TOKEN is the credential the agent process will use to call the
-	// Multica API. Prefer the task-scoped token the server minted at claim
+	// CyberAgent API. Prefer the task-scoped token the server minted at claim
 	// time — that token is bound to (agent, task) and the auth middleware
 	// rejects it on owner-only endpoints (e.g. `/api/agents/{id}/env`), so
 	// the agent cannot use it to read another agent's secrets. Falls back
