@@ -3,7 +3,7 @@
   "productName": "CyberAgent",
   "version": "0.1.0",
   "private": true,
-  "description": "CyberAgent Desktop — native desktop client for the CyberAgent platform.",
+  "description": "CyberAgent Desktop \u2014 native desktop client for the CyberAgent platform.",
   "homepage": "https://github.com/DrOlu/CyberAgent",
   "repository": {
     "type": "git",
@@ -54,6 +54,7 @@
   },
   "devDependencies": {
     "@electron-toolkit/tsconfig": "^2.0.0",
+    "@multica/eslint-config": "workspace:*",
     "@multica/tsconfig": "workspace:*",
     "@tailwindcss/vite": "^4",
     "@testing-library/jest-dom": "catalog:",
@@ -65,6 +66,7 @@
     "electron": "^39.2.6",
     "electron-builder": "^26.0.12",
     "electron-vite": "^5.0.0",
+    "globals": "^16.0.0",
     "jsdom": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
