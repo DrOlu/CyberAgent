@@ -98,6 +98,8 @@ apps/docs/content/docs/agents-create.mdx
 apps/docs/content/docs/agents-create.zh.mdx
 apps/docs/content/docs/self-host-quickstart.mdx
 apps/docs/content/docs/self-host-quickstart.zh.mdx
+apps/docs/content/docs/troubleshooting.mdx
+apps/docs/content/docs/troubleshooting.zh.mdx
 
 # Locale glossary (we maintain our own glossary; per-key locale JSON files
 # are NOT snapshotted — they're rebranded purely by sed against upstream so
