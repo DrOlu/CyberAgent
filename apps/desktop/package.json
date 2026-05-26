@@ -3,7 +3,7 @@
   "productName": "CyberAgent",
   "version": "0.1.0",
   "private": true,
-  "description": "CyberAgent Desktop \u2014 native desktop client for the CyberAgent platform.",
+  "description": "CyberAgent Desktop — native desktop client for the CyberAgent platform.",
   "homepage": "https://github.com/DrOlu/CyberAgent",
   "repository": {
     "type": "git",
