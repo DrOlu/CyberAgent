@@ -321,13 +321,48 @@ open('.goreleaser.yml', 'w').write(text)
   echo "Rebrand substitutions complete."
 }
 
+# ── Phase 3: Reconcile apps/desktop/package.json ─────────────────────────────
+# This file is INTENTIONALLY NOT snapshotted so upstream's dep changes flow
+# through every sync. Only the 3 brand-identity fields need overwriting.
+# Using node (already on CI) for JSON-safe edits — never sed on JSON.
+reconcile_desktop_pkg() {
+  local pkg="apps/desktop/package.json"
+  if [ ! -f "$pkg" ]; then
+    echo "::warning::$pkg not found — skipping reconcile"
+    return 0
+  fi
+  if ! command -v node >/dev/null 2>&1; then
+    echo "::warning::node not available — skipping desktop package.json reconcile"
+    return 0
+  fi
+
+  echo "Reconciling brand fields in $pkg..."
+  node -e '
+    const fs = require("node:fs");
+    const path = "apps/desktop/package.json";
+    const pkg = JSON.parse(fs.readFileSync(path, "utf8"));
+
+    // Brand-only overrides. If upstream renames any of these keys, the
+    // override is harmlessly added as a new key — we never drop upstream
+    // fields, we only overwrite these three.
+    pkg.productName = "CyberAgent";
+    pkg.description = "CyberAgent Desktop — native desktop client for the CyberAgent platform.";
+    pkg.homepage = "https://github.com/DrOlu/CyberAgent";
+
+    fs.writeFileSync(path, JSON.stringify(pkg, null, 2) + "\n");
+    console.log("[reconcile_desktop_pkg] applied: productName, description, homepage");
+  '
+}
+
 # ── Main ─────────────────────────────────────────────────────────────────────
 case "$PHASE" in
   --restore) restore_files ;;
   --rebrand) rebrand_substitutions ;;
+  --reconcile-desktop-pkg) reconcile_desktop_pkg ;;
   all)
     restore_files
     rebrand_substitutions
+    reconcile_desktop_pkg
     ;;
-  *) echo "Usage: $0 [--restore|--rebrand|all]" >&2; exit 1 ;;
+  *) echo "Usage: $0 [--restore|--rebrand|--reconcile-desktop-pkg|all]" >&2; exit 1 ;;
 esac

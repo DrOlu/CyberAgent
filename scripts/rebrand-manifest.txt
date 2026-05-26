@@ -61,7 +61,10 @@ scripts/install.ps1
 
 # Desktop config — appId, productName, protocol differ
 apps/desktop/electron-builder.yml
-apps/desktop/package.json
+# NOTE: apps/desktop/package.json is NOT snapshotted. Upstream changes
+# to dependencies and scripts must flow through, but the 3 brand fields
+# (productName, description, homepage) are re-applied after merge by
+# scripts/rebrand.sh's reconcile_desktop_pkg step.
 apps/desktop/electron.vite.config.ts
 apps/desktop/scripts/brand-dev-electron.mjs
 apps/desktop/src/main/daemon-manager.ts
