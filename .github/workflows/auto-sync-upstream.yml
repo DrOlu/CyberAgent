@@ -140,6 +140,13 @@ jobs:
               git merge --abort
               echo "::error::Merge conflict in non-snapshotted file — manual resolution required"
               echo "::error::Unresolved files:$UNRESOLVED"
+              echo "::error::"
+              echo "::error::Two ways to resolve:"
+              echo "::error::  1. If the file should always win with our version (brand strings, icons,"
+              echo "::error::     CyberAgent-specific config), add its path to scripts/rebrand-manifest.txt."
+              echo "::error::  2. If the file is mostly upstream content but with a few brand fields"
+              echo "::error::     (like apps/desktop/package.json), don't snapshot it — instead add a"
+              echo "::error::     reconcile step in scripts/rebrand.sh that patches just those fields."
               exit 1
             fi
           fi
@@ -156,6 +163,17 @@ jobs:
         if: steps.check.outputs.has_changes == 'true'
         run: |
           ./scripts/rebrand.sh --rebrand
+
+      - name: Reconcile apps/desktop/package.json
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          # apps/desktop/package.json is intentionally NOT snapshotted so
+          # upstream dep changes (e.g. new eslint rules requiring deps in
+          # `dependencies` instead of `devDependencies`) flow through. The
+          # rebrand script re-applies just the 3 brand-identity fields
+          # (productName, description, homepage). Everything else — deps,
+          # devDeps, scripts — is taken straight from upstream.
+          ./scripts/rebrand.sh --reconcile-desktop-pkg
 
       - name: Set up pnpm
         if: steps.check.outputs.has_changes == 'true'
@@ -182,6 +200,36 @@ jobs:
           else
             echo "Lockfile already in sync."
           fi
+
+      - name: Pre-flight — lint apps/desktop
+        if: steps.check.outputs.has_changes == 'true'
+        continue-on-error: false
+        run: |
+          # Run the desktop lint that has historically been the first
+          # thing to break on upstream syncs (new eslint rules,
+          # devDeps -> deps moves, new imports). Catching it here means
+          # we never push a sync commit that's known-broken.
+          #
+          # We do a focused install for just this package's lint graph,
+          # not a full repo install, to keep this fast (~30s).
+          set +e
+          pnpm install --frozen-lockfile --filter=@multica/desktop... 2>&1 | tail -20
+          INSTALL_EXIT=$?
+          if [ $INSTALL_EXIT -ne 0 ]; then
+            echo "::warning::Focused install failed — falling back to full install"
+            pnpm install --frozen-lockfile 2>&1 | tail -20 || true
+          fi
+          set -e
+          pnpm --filter=@multica/desktop lint 2>&1 | tee /tmp/desktop-lint.log
+          LINT_EXIT=${PIPESTATUS[0]}
+          if [ $LINT_EXIT -ne 0 ]; then
+            echo "::error::apps/desktop lint failed during sync pre-flight"
+            echo "::error::This usually means upstream changed dependency placement (deps vs devDeps)"
+            echo "::error::or introduced new imports that aren't in apps/desktop/package.json."
+            echo "::error::See /tmp/desktop-lint.log above for the specific rule violations."
+            exit 1
+          fi
+          echo "✅ apps/desktop lint passed."
 
       # Run a fast, zero-dep guardrail BEFORE pushing the sync commit.
       # If upstream added a new top-level field to the landing-page
@@ -216,12 +264,24 @@ jobs:
           echo "Pushed sync commit."
 
       - name: Create tag (optional)
-        if: >
-          steps.check.outputs.has_changes == 'true' &&
-          github.event.inputs.create_tag != ''
+        # Runs whenever create_tag is provided, regardless of has_changes.
+        # When changes were merged in this run, the tag points at the new
+        # sync commit. When there were no upstream changes (e.g. because
+        # a previous sync already merged them), the tag points at current
+        # main — useful for cutting a release after a manual fix without
+        # forcing a re-sync.
+        if: github.event.inputs.create_tag != ''
         run: |
           set -e
           TAG="${{ github.event.inputs.create_tag }}"
+          if git rev-parse "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "::warning::Tag $TAG already exists locally — skipping creation."
+            exit 0
+          fi
+          if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+            echo "::warning::Tag $TAG already exists on origin — skipping creation."
+            exit 0
+          fi
           git tag "$TAG"
           git push origin "$TAG"
           echo "Created tag $TAG — this will trigger the Release workflow."
