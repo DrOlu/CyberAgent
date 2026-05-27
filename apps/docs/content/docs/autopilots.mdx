@@ -111,7 +111,7 @@ history with `status = ignored` and `reason = event_filtered`, and no
 run or issue is created.
 
 Each row is one rule: an **event name** plus an optional
-comma-separated **actions** list. Multica allows a webhook if **any**
+comma-separated **actions** list. CyberAgent allows a webhook if **any**
 row matches; leave the section empty to accept everything (the
 pre-filter behavior).
 
@@ -125,7 +125,7 @@ Examples:
 
 #### Where the event name and action come from
 
-Multica derives the `event` name and `action` from the inbound request
+CyberAgent derives the `event` name and `action` from the inbound request
 in this order — **the first match wins**.
 
 **1. Body envelope.** If the body is a JSON object with a string
@@ -140,7 +140,7 @@ curl -X POST "$MULTICA_WEBHOOK_URL" \
 # inferred: event = trigger, action candidate = true
 ```
 
-**2. Headers.** When no body envelope is present, Multica reads the
+**2. Headers.** When no body envelope is present, CyberAgent reads the
 following well-known provider headers:
 
 - `X-GitHub-Event: <event>` — combined with the top-level body
@@ -166,7 +166,7 @@ curl -X POST "$MULTICA_WEBHOOK_URL" \
 ```
 
 **3. Body fallback.** If neither a body envelope nor a known header is
-present, Multica falls back to top-level body string fields in this
+present, CyberAgent falls back to top-level body string fields in this
 order: `event` → `type` → `action`.
 
 ```bash
@@ -179,7 +179,7 @@ curl -X POST "$MULTICA_WEBHOOK_URL" \
 **4. Default.** If nothing above matches, the event is
 `webhook.received` and there are no action candidates.
 
-**Action candidates, in full.** Once the event is determined, Multica
+**Action candidates, in full.** Once the event is determined, CyberAgent
 considers every value below as a possible action match:
 
 - The event-name suffix, when the event has the form

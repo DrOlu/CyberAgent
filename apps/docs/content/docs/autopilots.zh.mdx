@@ -120,7 +120,7 @@ curl -X POST "$MULTICA_WEBHOOK_URL" \
 
 #### 事件名和 action 从哪来
 
-Multica 按下面的顺序从入站请求里推断 `event` 和 `action`，**先命中先用**。
+CyberAgent 按下面的顺序从入站请求里推断 `event` 和 `action`，**先命中先用**。
 
 **1. Body envelope。** 如果 body 是一个 JSON 对象、且带字符串字段
 `event`，就直接用它作为事件名。可选的 `eventPayload` 对象再
