@@ -263,17 +263,45 @@ jobs:
           git push origin main
           echo "Pushed sync commit."
 
-      - name: Create tag (optional)
-        # Runs whenever create_tag is provided, regardless of has_changes.
-        # When changes were merged in this run, the tag points at the new
-        # sync commit. When there were no upstream changes (e.g. because
-        # a previous sync already merged them), the tag points at current
-        # main — useful for cutting a release after a manual fix without
-        # forcing a re-sync.
-        if: github.event.inputs.create_tag != ''
+      - name: Create or auto-bump release tag
+        # Runs when:
+        #   a) create_tag input is provided (manual override — use exact tag), OR
+        #   b) has_changes is true and no create_tag was given (scheduled sync
+        #      with new upstream commits) — auto-bump the patch version.
+        #
+        # Auto-bump logic:
+        #   1. Find the latest vMAJOR.MINOR.PATCH tag on origin.
+        #   2. Increment PATCH by 1.
+        #   3. Tag the new sync commit and push.
+        #
+        # This means every scheduled sync that pulls in upstream changes
+        # automatically cuts a new release without any manual input.
+        if: >
+          github.event.inputs.create_tag != '' ||
+          steps.check.outputs.has_changes == 'true'
         run: |
           set -e
-          TAG="${{ github.event.inputs.create_tag }}"
+
+          if [ -n "${{ github.event.inputs.create_tag }}" ]; then
+            # Manual override — use the exact tag provided.
+            TAG="${{ github.event.inputs.create_tag }}"
+            echo "Using manually specified tag: $TAG"
+          else
+            # Auto-bump: read latest semver tag, increment patch.
+            LATEST=$(git tag --list 'v*.*.*' | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1)
+            if [ -z "$LATEST" ]; then
+              LATEST="v1.0.0"
+              echo "No existing semver tag found — starting at $LATEST"
+            fi
+            MAJOR=$(echo "$LATEST" | cut -d. -f1 | tr -d 'v')
+            MINOR=$(echo "$LATEST" | cut -d. -f2)
+            PATCH=$(echo "$LATEST" | cut -d. -f3)
+            PATCH=$((PATCH + 1))
+            TAG="v${MAJOR}.${MINOR}.${PATCH}"
+            echo "Auto-bumped: $LATEST → $TAG"
+          fi
+
+          # Idempotency guard — skip if tag already exists.
           if git rev-parse "refs/tags/$TAG" >/dev/null 2>&1; then
             echo "::warning::Tag $TAG already exists locally — skipping creation."
             exit 0
@@ -282,9 +310,10 @@ jobs:
             echo "::warning::Tag $TAG already exists on origin — skipping creation."
             exit 0
           fi
+
           git tag "$TAG"
           git push origin "$TAG"
-          echo "Created tag $TAG — this will trigger the Release workflow."
+          echo "✅ Created tag $TAG — Release workflow will trigger automatically."
 
       - name: Summary
         if: always()
