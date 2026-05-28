@@ -116,11 +116,24 @@ jobs:
             fi
 
             # Second pass: any remaining conflicts must be in the manifest.
+            # A file is covered if its exact path is listed OR if it lives
+            # under a directory that is listed (prefix match). This allows
+            # entire directories like apps/docs/content/docs to be snapshotted
+            # without listing every file individually.
             ALL_IN_MANIFEST=true
             UNRESOLVED=""
             if [ -n "$CONFLICTS" ]; then
               while IFS= read -r cf; do
-                if ! grep -qx "$cf" scripts/rebrand-manifest.txt 2>/dev/null; then
+                COVERED=false
+                while IFS= read -r entry; do
+                  [[ -z "$entry" || "$entry" == "#"* ]] && continue
+                  # Exact match OR the conflict path starts with the entry as a directory prefix
+                  if [ "$cf" = "$entry" ] || [[ "$cf" == "$entry/"* ]]; then
+                    COVERED=true
+                    break
+                  fi
+                done < scripts/rebrand-manifest.txt
+                if [ "$COVERED" = "false" ]; then
                   echo "::error::Unresolved conflict in non-snapshotted file: $cf"
                   ALL_IN_MANIFEST=false
                   UNRESOLVED="$UNRESOLVED $cf"
