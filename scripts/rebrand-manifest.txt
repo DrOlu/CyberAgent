@@ -94,15 +94,11 @@ apps/docs/app/layout.config.tsx
 apps/docs/components/architecture-diagram.tsx
 apps/docs/components/mermaid.tsx
 
-# Docs content — CyberAgent-rebranded user-facing docs. These contain
-# product name references, clone URLs, and CyberAgent-specific guidance
-# that can't be safely derived from upstream by sed alone.
-apps/docs/content/docs/agents-create.mdx
-apps/docs/content/docs/agents-create.zh.mdx
-apps/docs/content/docs/self-host-quickstart.mdx
-apps/docs/content/docs/self-host-quickstart.zh.mdx
-apps/docs/content/docs/troubleshooting.mdx
-apps/docs/content/docs/troubleshooting.zh.mdx
+# Docs content — ALL user-facing docs are CyberAgent-rebranded (product
+# name, GitHub URLs, CLI command examples). Upstream updates them frequently
+# and every file conflicts. Snapshot the entire directory so the merge
+# resolver auto-resolves all of them with our version in one go.
+apps/docs/content/docs
 
 # Locale glossary (we maintain our own glossary; per-key locale JSON files
 # are NOT snapshotted — they're rebranded purely by sed against upstream so
