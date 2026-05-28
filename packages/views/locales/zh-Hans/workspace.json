@@ -23,7 +23,7 @@
   },
   "creation_disabled": {
     "title": "已禁用创建工作区",
-    "description": "该 Multica 实例不允许创建新的工作区，请联系管理员邀请你加入已有工作区。"
+    "description": "该 CyberAgent 实例不允许创建新的工作区，请联系管理员邀请你加入已有工作区。"
   },
   "no_access": {
     "title": "工作区不可用",
