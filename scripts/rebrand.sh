@@ -233,6 +233,17 @@ open('.goreleaser.yml', 'w').write(text)
       -e 's|welcome to Multica|welcome to CyberAgent|g' \
       {} + 2>/dev/null || true
 
+  # ── Go server tests — patch brand-name string literals in test assertions.
+  #    The server runtime injects "CyberAgent Agent Runtime" (rebranded from
+  #    "Multica Agent Runtime") into agent config files. Go tests that assert
+  #    on this string must check for the rebranded value, not the upstream one.
+  #    We restrict to the specific string to avoid touching functional identifiers.
+  find server -type f -name '*_test.go' \
+    ! -path '*/node_modules/*' \
+    -exec sed -i \
+      -e 's|Multica Agent Runtime|CyberAgent Agent Runtime|g' \
+      {} + 2>/dev/null || true
+
 
   # ── Docs site (.mdx) — CyberAgent's docs site (apps/docs/), so any
   #    "Multica" brand reference here is user-visible. URLs stay as-is
