@@ -119,6 +119,7 @@ function isSupportedLocale(value: string | null): value is SupportedLocale {
 const HTML_LANG: Record<SupportedLocale, string> = {
   en: "en",
   "zh-Hans": "zh-CN",
+  ko: "ko-KR",
 };
 
 export default async function RootLayout({
