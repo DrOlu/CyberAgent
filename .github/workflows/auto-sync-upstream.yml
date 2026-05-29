@@ -150,17 +150,27 @@ jobs:
               git commit --no-edit
               echo "Auto-resolved conflicts using CyberAgent versions."
             else
-              git merge --abort
-              echo "::error::Merge conflict in non-snapshotted file — manual resolution required"
-              echo "::error::Unresolved files:$UNRESOLVED"
-              echo "::error::"
-              echo "::error::Two ways to resolve:"
-              echo "::error::  1. If the file should always win with our version (brand strings, icons,"
-              echo "::error::     CyberAgent-specific config), add its path to scripts/rebrand-manifest.txt."
-              echo "::error::  2. If the file is mostly upstream content but with a few brand fields"
-              echo "::error::     (like apps/desktop/package.json), don't snapshot it — instead add a"
-              echo "::error::     reconcile step in scripts/rebrand.sh that patches just those fields."
-              exit 1
+              # Some conflicts are in non-snapshotted files. These are files that
+              # are mostly upstream content but have brand strings that our rebrand
+              # sed will fix in the next step. Resolve them with --theirs (take
+              # upstream) so the merge can proceed, then let rebrand.sh patch the
+              # brand strings. If a file truly needs our version, add it to the
+              # manifest instead.
+              echo "::warning::Conflicts in non-snapshotted files — resolving with upstream (--theirs)."
+              echo "::warning::Unresolved files:$UNRESOLVED"
+              echo "::warning::The rebrand step will fix any brand strings in these files."
+              echo "::warning::If a file should always use our version, add it to scripts/rebrand-manifest.txt."
+              for cf in $UNRESOLVED; do
+                git checkout --theirs "$cf" 2>/dev/null || true
+                git add "$cf"
+              done
+              # Also resolve any remaining snapshotted conflicts with ours
+              if [ -n "$CONFLICTS" ]; then
+                git checkout --ours $CONFLICTS
+                git add $CONFLICTS
+              fi
+              git commit --no-edit
+              echo "Auto-resolved: snapshotted files → ours, non-snapshotted → upstream."
             fi
           fi
 

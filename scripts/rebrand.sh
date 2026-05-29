@@ -311,6 +311,8 @@ open('.goreleaser.yml', 'w').write(text)
       -e 's|Multica AI|CyberAgent|g' \
       -e 's|Your Multica verification code|Your CyberAgent verification code|g' \
       -e 's|open Multica resource URLs|open CyberAgent resource URLs|g' \
+      -e 's|Log in to Multica|Log in to CyberAgent|g' \
+      -e 's|Logged in to Multica|Logged in to CyberAgent|g' \
       {} + 2>/dev/null || true
 
   # ── Desktop renderer / main process — user-visible strings + protocol ──
