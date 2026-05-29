@@ -21,9 +21,6 @@ const inter = Inter({
     "PingFang SC",
     "Microsoft YaHei",
     "Noto Sans CJK SC",
-    "Apple SD Gothic Neo",
-    "Malgun Gothic",
-    "Noto Sans CJK KR",
     "sans-serif",
   ],
 });

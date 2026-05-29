@@ -42,14 +42,14 @@ export const HELPER_STARTER_PROMPTS: Record<StarterCardId, StarterPrompt> = {
     },
     prompt: {
       en: "Walk me through Multica's core features — issue, agent, squad, autopilot, chat. Pick one realistic scenario I might run into and explain how all these pieces fit together.",
-      zh: "陪我熟悉 Multica 的每个核心功能 —— issue、agent、squad、autopilot、chat。挑一个我可能用得上的真实场景,讲讲这几个东西是怎么配合的。",
+      zh: "陪我熟悉 CyberAgent 的每个核心功能 —— issue、agent、squad、autopilot、chat。挑一个我可能用得上的真实场景,讲讲这几个东西是怎么配合的。",
       ko: "Multica의 핵심 기능인 issue, agent, squad, autopilot, chat을 안내해 주세요. 제가 실제로 겪을 만한 상황 하나를 골라 이 요소들이 어떻게 함께 작동하는지 설명해 주세요.",
     },
   },
   welcome_page: {
     title: {
       en: "Show me what Multica can do for me — as slides",
-      zh: "用 slides 介绍 Multica 能为我做什么",
+      zh: "用 slides 介绍 CyberAgent 能为我做什么",
       ko: "Multica가 저에게 무엇을 해줄 수 있는지 슬라이드로 보여 주세요",
     },
     prompt: {
@@ -79,12 +79,12 @@ export const HELPER_STARTER_PROMPTS: Record<StarterCardId, StarterPrompt> = {
 - ArrowLeft / ArrowRight and Space to advance. Small page indicator in a corner.
 
 When done, also reply with a one-sentence summary of which scenarios you picked for me and why.`,
-      zh: `给我做一份单文件 HTML 演示稿,介绍 Multica 能为我做什么。根据我的角色和使用场景定制(见下面"关于我")。把完整 HTML 贴到这条 issue 的评论里的 \`\`\`html 代码块中,我直接复制下来存成 \`multica-intro.html\` 双击就能在浏览器里打开。
+      zh: `给我做一份单文件 HTML 演示稿,介绍 CyberAgent 能为我做什么。根据我的角色和使用场景定制(见下面"关于我")。把完整 HTML 贴到这条 issue 的评论里的 \`\`\`html 代码块中,我直接复制下来存成 \`multica-intro.html\` 双击就能在浏览器里打开。
 
 **产出格式**
 - 一个自包含 .html,CSS / JS 全部 inline。零依赖、不用打包、不引外部图片(视觉用纯 CSS 生成 —— 渐变、几何形状、内联 SVG)。
 - 5-8 张 slide:
-  1. 标题页 —— "Multica 能为 [我的角色] 做什么"
+  1. 标题页 —— "CyberAgent 能为 [我的角色] 做什么"
   2. 四个核心概念 —— workspace / issue / agent / runtime,一张
   3-6. 3-4 个针对我使用场景的具体例子,形如"当你想做 X → Multica 是这样处理的"
   7. 收尾页 —— 一个具体的下一步动作

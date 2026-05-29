@@ -110,7 +110,7 @@
   "cli_install": {
     "copy_aria": "복사",
     "intro": "이 컴퓨터에서 에이전트를 실행하려면 에이전트 런타임(Claude Code, Codex, Cursor 등)이 필요합니다. 서버와 원격 개발 환경에서도 사용할 수 있습니다.",
-    "step1_label": "Multica CLI 설치",
+    "step1_label": "CyberAgent CLI 설치",
     "step2_label": "데몬 시작"
   },
   "cloud_waitlist": {
@@ -277,7 +277,7 @@
     "perk_invite": "팀원 초대 — 이 워크스페이스만 보입니다",
     "perk_switch": "왼쪽 위에서 언제든 다른 워크스페이스로 전환",
     "next_runtime": "에이전트를 실행할 컴퓨터 연결",
-    "next_agent": "연결된 런타임에서 Multica Helper 만들기",
+    "next_agent": "연결된 런타임에서 CyberAgent Helper 만들기",
     "next_starter": "다음 단계를 위한 온보딩 이슈 열기",
     "preview": {
       "inbox_label": "인박스",
