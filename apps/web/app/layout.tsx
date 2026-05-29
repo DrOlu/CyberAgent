@@ -19,10 +19,12 @@ import "./globals.css";
 // differs by design: next/font produces `__Inter_xxx` (with a synthetic size-adjusted
 // fallback face to prevent FOUT layout shift); desktop uses fontsource's "Inter Variable".
 // Both resolve to Inter glyphs, so rendering is identical in practice.
-// Currently covers English + Simplified Chinese. When ja/ko i18n lands, extend
-// the tail with Hiragino Kaku Gothic ProN / Yu Gothic / Apple SD Gothic Neo / Malgun Gothic.
+// Currently covers English, Simplified Chinese, and Korean. Keep the CJK fallback
+// tail in sync with apps/desktop/src/renderer/src/globals.css.
 // Per-character fallback: Latin chars render with Inter, Chinese chars with
-// PingFang SC (macOS) / Microsoft YaHei (Windows) / Noto Sans CJK SC (Linux).
+// PingFang SC (macOS) / Microsoft YaHei (Windows) / Noto Sans CJK SC (Linux),
+// Korean chars with Apple SD Gothic Neo (macOS) / Malgun Gothic (Windows) /
+// Noto Sans CJK KR (Linux).
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
@@ -33,6 +35,9 @@ const inter = Inter({
     "PingFang SC",
     "Microsoft YaHei",
     "Noto Sans CJK SC",
+    "Apple SD Gothic Neo",
+    "Malgun Gothic",
+    "Noto Sans CJK KR",
     "sans-serif",
   ],
 });
