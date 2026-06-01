@@ -51,6 +51,12 @@ jobs:
           go-version-file: server/go.mod
           cache-dependency-path: server/go.sum
 
+      - name: Tidy Go modules
+        run: |
+          cd server
+          go mod tidy
+          cd ..
+
       - name: Run tests
         run: cd server && go test ./...
 
@@ -82,6 +88,12 @@ jobs:
         with:
           go-version-file: server/go.mod
           cache-dependency-path: server/go.sum
+
+      - name: Tidy Go modules
+        run: |
+          cd server
+          go mod tidy
+          cd ..
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
