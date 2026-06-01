@@ -209,6 +209,22 @@ jobs:
           node-version: "20"
           cache: pnpm
 
+      - name: Tidy Go modules after upstream merge
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          # upstream may add/remove Go deps between syncs. Running go mod tidy
+          # keeps server/go.mod and server/go.sum in sync so `go test ./...`
+          # doesn't fail with "updates to go.mod needed".
+          cd server
+          go mod tidy
+          cd ..
+          if ! git diff --quiet server/go.mod server/go.sum; then
+            git add server/go.mod server/go.sum
+            echo "go.mod / go.sum updated by go mod tidy"
+          else
+            echo "go.mod / go.sum already in sync"
+          fi
+
       - name: Regenerate pnpm-lock.yaml from merged package.json
         if: steps.check.outputs.has_changes == 'true'
         run: |

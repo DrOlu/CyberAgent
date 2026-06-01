@@ -128,7 +128,8 @@ packages/views/modals/feedback.tsx
 # Root package.json
 package.json
 
-# Go module files — must not be rebranded (import paths are code identifiers)
-server/go.mod
-server/go.sum
+# Go module files — NOT snapshotted so upstream dep changes flow through.
+# Import paths are protected by the Go sed exclusions in rebrand.sh (no
+# blanket Multica→CyberAgent rewrite on server/*.go import paths).
+# sqlc.yaml is snapshotted because it references our DB schema config.
 server/sqlc.yaml
