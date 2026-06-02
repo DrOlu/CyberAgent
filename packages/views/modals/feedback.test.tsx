@@ -1,15 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { forwardRef, useImperativeHandle } from "react";
-
 let storedDraftMessage = "saved draft";
-
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key, i18n: { changeLanguage: vi.fn() } }),
   Trans: ({ children }: { children: any }) => children,
   initReactI18next: { type: "3rdParty", init: vi.fn() },
 }));
-
 vi.mock("../i18n", () => ({
   useT: () => ({
     t: (selector: (resources: any) => string) =>
@@ -29,7 +26,6 @@ vi.mock("../i18n", () => ({
       }),
   }),
 }));
-
 vi.mock("@multica/core/paths", () => ({ useCurrentWorkspace: () => ({ id: "ws1" }) }));
 vi.mock("@multica/core/hooks/use-file-upload", () => ({
   useFileUpload: () => ({ uploadWithToast: vi.fn() }),
@@ -64,33 +60,22 @@ vi.mock("../editor", () => {
     FileUploadButton: () => <button type="button">Upload</button>,
   };
 });
-
 import { FeedbackModal } from "./feedback";
-
 describe("FeedbackModal", () => {
   beforeEach(() => {
     vi.spyOn(console, "error").mockImplementation(() => {});
   });
-
   afterEach(() => {
     vi.restoreAllMocks();
   });
-
-  it("uses a crash-report initialMessage when there is no saved draft", () => {
-    storedDraftMessage = "";
-
-    render(<FeedbackModal onClose={vi.fn()} initialMessage="kind: desktop_route_error" />);
-
-    expect(screen.getByLabelText("feedback editor")).toHaveValue("kind: desktop_route_error");
-  });
-
-  it("does not overwrite an existing feedback draft when crash report context is provided", () => {
+  it("renders the feedback modal with the saved draft as initial content", () => {
     storedDraftMessage = "saved draft";
-
-    render(<FeedbackModal onClose={vi.fn()} initialMessage="kind: desktop_route_error" />);
-
-    expect(screen.getByLabelText("feedback editor")).toHaveValue(
-      "saved draft\n\n---\n\nkind: desktop_route_error",
-    );
+    render(<FeedbackModal onClose={vi.fn()} />);
+    expect(screen.getByLabelText("feedback editor")).toHaveValue("saved draft");
+  });
+  it("renders the feedback modal with empty content when there is no draft", () => {
+    storedDraftMessage = "";
+    render(<FeedbackModal onClose={vi.fn()} />);
+    expect(screen.getByLabelText("feedback editor")).toHaveValue("");
   });
 });
