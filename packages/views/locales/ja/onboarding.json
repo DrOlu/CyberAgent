@@ -118,7 +118,7 @@
   "cli_install": {
     "copy_aria": "コピー",
     "intro": "エージェントを実行するには、このコンピュータにエージェントランタイム(Claude Code、Codex、Cursor など)が必要です。サーバーやリモート開発環境でも動作します。",
-    "step1_label": "Multica CLI をインストール",
+    "step1_label": "CyberAgent CLI をインストール",
     "step2_label": "デーモンを起動"
   },
   "cloud_waitlist": {
@@ -285,7 +285,7 @@
     "perk_invite": "チームメイトを招待 — 招待した人にはこのワークスペースだけが見えます",
     "perk_switch": "左上からいつでも他のワークスペースに切り替え",
     "next_runtime": "エージェントが動く場所を用意するためにコンピュータを接続",
-    "next_agent": "接続したランタイムから Multica Helper を作成",
+    "next_agent": "接続したランタイムから CyberAgent Helper を作成",
     "next_starter": "次のステップのためにオンボーディングイシューを 1 つ開く",
     "preview": {
       "inbox_label": "インボックス",

@@ -26,28 +26,7 @@ import { formatShortcut, modKey, enterKey } from "@multica/core/platform";
 
 const MAX_MESSAGE_LEN = 10000;
 
-function composeFeedbackInitialMessage(draftMessage: string, incomingInitialMessage: string) {
-  const draft = draftMessage.trim();
-  const incoming = incomingInitialMessage.trim();
-  if (!incoming) return draftMessage;
-  if (!draft) return incomingInitialMessage;
-  if (draft.includes(incoming)) return draftMessage;
-  return `${draftMessage}
-
----
-
-${incomingInitialMessage}`;
-}
-
-export function FeedbackModal({
-  onClose,
-  data,
-  initialMessage,
-}: {
-  onClose: () => void;
-  data?: Record<string, unknown> | null;
-  initialMessage?: string;
-}) {
+export function FeedbackModal({ onClose }: { onClose: () => void }) {
   const { t } = useT("modals");
   const workspace = useCurrentWorkspace();
   const draft = useFeedbackDraftStore((s) => s.draft);
@@ -55,10 +34,7 @@ export function FeedbackModal({
   const clearDraft = useFeedbackDraftStore((s) => s.clearDraft);
 
   const editorRef = useRef<ContentEditorRef>(null);
-  const incomingInitialMessage =
-    initialMessage ?? (typeof data?.initialMessage === "string" ? data.initialMessage : "");
-  const seededMessage = composeFeedbackInitialMessage(draft.message, incomingInitialMessage);
-  const [message, setMessage] = useState(seededMessage);
+  const [message, setMessage] = useState(draft.message);
   const { isDragOver, dropZoneProps } = useFileDropZone({
     onDrop: (files) => files.forEach((f) => editorRef.current?.uploadFile(f)),
   });
@@ -137,7 +113,7 @@ export function FeedbackModal({
           >
             <ContentEditor
               ref={editorRef}
-              defaultValue={seededMessage}
+              defaultValue={draft.message}
               placeholder={t(($) => $.feedback.placeholder)}
               onUpdate={(md) => { setMessage(md); setDraft({ message: md }); }}
               onUploadFile={uploadWithToast}
