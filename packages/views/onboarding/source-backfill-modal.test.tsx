@@ -202,7 +202,7 @@ describe("SourceBackfillModal", () => {
     });
     renderModal();
     expect(
-      screen.queryByText(/How did you hear about Multica/i),
+      screen.queryByText(/How did you hear about/i),
     ).not.toBeInTheDocument();
   });
 
