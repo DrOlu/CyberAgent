@@ -7,7 +7,7 @@ allowed-tools: Bash(multica *)
 
 # Creating Multica agents
 
-This is the contract for Multica's agent-creation path: what the create entry
+This is the contract for CyberAgent's agent-creation path: what the create entry
 points accept, what the server validates and rejects, how each field is
 persisted, and which fields the daemon actually reads at claim time. It is
 not a parameter manual — it states source-traced facts, and every claim is

@@ -32,7 +32,7 @@ to test. These can mutate workspace state or trigger agent runs.
 
 ## Core model
 
-A Multica squad is a workspace routing and coordination object.
+A CyberAgent squad is a workspace routing and coordination object.
 
 A squad is not an agent. It does not run work by itself. Current behavior:
 squad-routed work runs through the squad's `leader_id` agent.

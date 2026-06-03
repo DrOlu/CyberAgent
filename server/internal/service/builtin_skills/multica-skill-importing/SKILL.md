@@ -5,7 +5,7 @@ user-invocable: false
 allowed-tools: Bash(multica *)
 ---
 
-# Importing skills into Multica
+# Importing skills into CyberAgent
 
 Use this skill when the user already provided a skill URL, slug, or a clear intent
 to import a specific skill into the current Multica workspace.
@@ -20,7 +20,7 @@ Every claim below is traced to source in
 
 ## The invariant
 
-A skill is installed for Multica only when it exists in the current workspace's
+A skill is installed for CyberAgent only when it exists in the current workspace's
 skill database. The single supported path that puts it there is the workspace
 import endpoint, driven by this CLI:
 
@@ -36,7 +36,7 @@ body: { "url": "<url>" }
 ```
 
 Do not finish with `npx skills add`. That installs into an external/local skill
-environment, not the Multica workspace DB, so Multica cannot manage or bind it.
+environment, not the CyberAgent workspace DB, so Multica cannot manage or bind it.
 
 ## Supported URL source families
 

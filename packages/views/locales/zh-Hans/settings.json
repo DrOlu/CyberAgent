@@ -219,7 +219,7 @@
   },
   "lark": {
     "section_title": "飞书",
-    "page_description": "将每个 Multica 智能体绑定到飞书 PersonalAgent Bot。成员可在飞书私聊 Bot、群聊 @ Bot，或输入 /issue 直接创建 Multica issue。",
+    "page_description": "将每个 CyberAgent 智能体绑定到飞书 PersonalAgent Bot。成员可在飞书私聊 Bot、群聊 @ Bot，或输入 /issue 直接创建 CyberAgent issue。",
     "not_enabled_title": "未启用飞书集成",
     "not_enabled_description_prefix": "需要在服务器上设置",
     "not_enabled_description_suffix": "才能启用飞书 Bot 绑定。",
@@ -260,7 +260,7 @@
     "install_error_expired": "二维码过期，请重新扫码。",
     "install_error_access_denied": "已在飞书内取消安装。",
     "install_error_protocol": "飞书拒绝了安装请求，请重试。",
-    "install_error_bot_info": "授权完成，但 Multica 无法获取 Bot 身份信息，请重试。",
+    "install_error_bot_info": "授权完成，但 CyberAgent 无法获取 Bot 身份信息，请重试。",
     "install_error_conflict": "未能保存安装信息：该智能体可能已绑定其他 Bot。",
     "install_error_installer_bind": "已安装 Bot，但未能绑定你的飞书身份。请重试或联系管理员。",
     "install_error_session_lost": "安装会话已失效或丢失，请重新扫码。",

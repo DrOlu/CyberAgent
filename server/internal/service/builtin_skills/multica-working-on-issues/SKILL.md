@@ -5,7 +5,7 @@ user-invocable: false
 allowed-tools: Bash(multica *), Bash(git *), Bash(gh *)
 ---
 
-# Working on Multica issues
+# Working on CyberAgent issues
 
 Product contracts the runtime brief does not fully encode: PR linking vs close
 intent, reading linked-PR state, metadata keys, status side effects, and
