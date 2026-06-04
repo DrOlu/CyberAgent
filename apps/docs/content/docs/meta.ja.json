@@ -31,7 +31,6 @@
     "inbox",
     "---連携---",
     "github-integration",
-    "lark-bot-integration",
     "---セルフホスト & 運用---",
     "environment-variables",
     "auth-setup",
