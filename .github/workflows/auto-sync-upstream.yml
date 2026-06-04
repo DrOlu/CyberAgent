@@ -40,25 +40,56 @@ jobs:
 
       - name: Check for upstream changes
         id: check
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           set -e
           FORCE="${{ github.event.inputs.force }}"
           if [ "$FORCE" = "true" ]; then
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "new_upstream_release=false" >> "$GITHUB_OUTPUT"
             echo "Force sync requested."
             exit 0
           fi
 
-          # Count new commits on upstream/main that aren't on origin/main
-          MERGE_BASE=$(git merge-base origin/main upstream/main)
-          NEW_COMMITS=$(git rev-list --count "$MERGE_BASE"..upstream/main)
+          # Use the SHA recorded in the last sync commit message as the baseline.
+          # The merge-base approach over-counts because CyberAgent rebrand commits
+          # diverge the history, causing it to always find "new" commits.
+          LAST_SYNCED_SHA=$(git log origin/main --oneline --grep="^sync: merge upstream" -1             | grep -oE "[0-9a-f]{8,40}" | tail -1 || echo "")
+          UPSTREAM_HEAD=$(git rev-parse upstream/main)
 
-          if [ "$NEW_COMMITS" -gt 0 ]; then
+          echo "Last synced upstream SHA: ${LAST_SYNCED_SHA:-none}"
+          echo "Upstream HEAD:            ${UPSTREAM_HEAD}"
+
+          if [ -z "$LAST_SYNCED_SHA" ] || [ "$UPSTREAM_HEAD" != "$LAST_SYNCED_SHA" ]; then
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
-            echo "Found $NEW_COMMITS new upstream commit(s)."
+            NEW_COUNT=$(git rev-list --count "${LAST_SYNCED_SHA:-$(git rev-parse origin/main)}..upstream/main" 2>/dev/null || echo "?")
+            echo "Found ${NEW_COUNT} new upstream commit(s) since last sync."
           else
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            echo "No new upstream commits."
+            echo "No new upstream commits since last sync."
+          fi
+
+          # Check if upstream has cut a NEW RELEASE since we last tagged.
+          # Only bump our version tag when upstream releases — not on every commit.
+          # This prevents CyberAgent from releasing 18+ times/day for trivial commits.
+          LAST_UPSTREAM_RELEASE=$(gh release list --repo multica-ai/multica --limit 1             --json tagName --jq ".[0].tagName" 2>/dev/null || echo "")
+
+          LAST_SYNCED_RELEASE=""
+          if [ -f .upstream-release ]; then
+            LAST_SYNCED_RELEASE=$(cat .upstream-release)
+          fi
+
+          echo "Last upstream release:        ${LAST_UPSTREAM_RELEASE:-none}"
+          echo "Last synced upstream release: ${LAST_SYNCED_RELEASE:-none}"
+          echo "last_upstream_release=${LAST_UPSTREAM_RELEASE}" >> "$GITHUB_OUTPUT"
+
+          if [ -n "$LAST_UPSTREAM_RELEASE" ] && [ "$LAST_UPSTREAM_RELEASE" != "$LAST_SYNCED_RELEASE" ]; then
+            echo "new_upstream_release=true" >> "$GITHUB_OUTPUT"
+            echo "New upstream release detected: $LAST_UPSTREAM_RELEASE (was: ${LAST_SYNCED_RELEASE:-none})"
+          else
+            echo "new_upstream_release=false" >> "$GITHUB_OUTPUT"
+            echo "No new upstream release (current: ${LAST_UPSTREAM_RELEASE:-none})"
           fi
 
       - name: Snapshot CyberAgent-specific files
@@ -298,6 +329,12 @@ jobs:
           fi
 
           UPSTREAM_SHA=$(git rev-parse --short upstream/main)
+          # Record the upstream release we synced against
+          UPSTREAM_RELEASE="${{ steps.check.outputs.last_upstream_release }}"
+          if [ -n "$UPSTREAM_RELEASE" ]; then
+            echo "$UPSTREAM_RELEASE" > .upstream-release
+            git add .upstream-release
+          fi
           git commit -m "sync: merge upstream multica-ai/multica@${UPSTREAM_SHA} + rebrand"
           git push origin main
           echo "Pushed sync commit."
@@ -317,7 +354,7 @@ jobs:
         # automatically cuts a new release without any manual input.
         if: >
           github.event.inputs.create_tag != '' ||
-          steps.check.outputs.has_changes == 'true'
+          steps.check.outputs.new_upstream_release == 'true'
         run: |
           set -e
 
