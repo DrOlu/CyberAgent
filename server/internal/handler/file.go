@@ -15,7 +15,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
-	"github.com/multica-ai/multica/server/internal/auth"
 	"github.com/multica-ai/multica/server/internal/storage"
 	db "github.com/multica-ai/multica/server/pkg/db/generated"
 )
@@ -29,67 +28,6 @@ var extContentTypes = map[string]string{
 	".mjs":  "application/javascript",
 	".json": "application/json",
 	".wasm": "application/wasm",
-}
-
-// uploadDeniedExtensions are file types the upload endpoint rejects outright.
-//
-// The defense is layered: the SVG-XSS chain documented in the
-// security-findings-2026-06-02 disclosure is already broken by the
-// Content-Disposition: attachment fix shipped in PR #3023 — every entry
-// here would be served as an attachment download anyway, never inline.
-// We still reject these at the upload edge because:
-//
-//   - HTML-family content has no legitimate use case as an issue
-//     attachment in this product (no rich-text export targets it),
-//     yet it is the highest-leverage primitive an attacker would
-//     reach for if a future regression weakens the disposition path.
-//   - Rejecting at upload time gives operators a clean, auditable
-//     "we don't accept this" signal in the request log instead of
-//     silently storing the bytes and relying on the serve path to
-//     stay safe forever.
-//
-// We intentionally do NOT reject .js / .svg here. Source-code
-// attachments preview as text/plain via /api/attachments/{id}/content
-// (see isTextPreviewable), and SVG logos / diagrams remain a common
-// legitimate upload — the existing SVG fix neutralizes them. Adding
-// either to this list would break those flows without adding meaningful
-// security on top of the disposition fix.
-var uploadDeniedExtensions = map[string]struct{}{
-	".html":  {},
-	".htm":   {},
-	".xhtml": {},
-	".shtml": {},
-	".xht":   {},
-	".phtml": {},
-}
-
-// uploadDeniedContentTypes mirrors uploadDeniedExtensions for the cases
-// where the extension is benign but the sniffed media type is not. Keeping
-// both gates means a renamed payload (logo.png that sniffs as text/html)
-// is still refused.
-var uploadDeniedContentTypes = map[string]struct{}{
-	"text/html":             {},
-	"application/xhtml+xml": {},
-}
-
-// isUploadDenied reports whether a multipart upload should be rejected based
-// on its filename extension or sniffed content type. Both gates are checked
-// because either alone is bypassable (rename a .html to .png and the
-// extension passes; ship literal HTML in a .png and the sniffer catches it).
-func isUploadDenied(filename, contentType string) bool {
-	ext := strings.ToLower(path.Ext(filename))
-	if _, denied := uploadDeniedExtensions[ext]; denied {
-		return true
-	}
-	// Strip parameters (e.g. "text/html; charset=utf-8") before lookup.
-	mediaType := strings.ToLower(strings.TrimSpace(contentType))
-	if i := strings.IndexByte(mediaType, ';'); i >= 0 {
-		mediaType = strings.TrimSpace(mediaType[:i])
-	}
-	if _, denied := uploadDeniedContentTypes[mediaType]; denied {
-		return true
-	}
-	return false
 }
 
 const maxUploadSize = 100 << 20 // 100 MB
@@ -127,9 +65,35 @@ type AttachmentResponse struct {
 	Filename      string  `json:"filename"`
 	URL           string  `json:"url"`
 	DownloadURL   string  `json:"download_url"`
-	ContentType   string  `json:"content_type"`
-	SizeBytes     int64   `json:"size_bytes"`
-	CreatedAt     string  `json:"created_at"`
+	// MarkdownURL is the durable, absolute-when-possible URL the client
+	// SHOULD persist into markdown bodies (issue descriptions, comments,
+	// chat messages). It is computed per deployment policy by
+	// buildMarkdownURL — preferring the storage URL when it is already a
+	// public, durable absolute URL (public CDN / LocalStorage with
+	// MULTICA_LOCAL_UPLOAD_BASE_URL), and otherwise prefixing
+	// MULTICA_PUBLIC_URL onto the stable per-attachment endpoint that the
+	// server self-resigns / proxies on every request.
+	//
+	// Why a separate field from URL / DownloadURL:
+	//   - URL is the raw storage object URL — fine for avatar/logo
+	//     surfaces but may be private (S3 + CloudFront-signed mode) or
+	//     site-relative (LocalStorage with no base URL configured).
+	//   - DownloadURL is the URL the renderer uses for THIS response — it
+	//     can be a short-lived signed URL (CloudFront, S3 presign) and
+	//     therefore must NOT be persisted. It expires.
+	//   - MarkdownURL is contracted to be persistable: it never carries a
+	//     TTL, and on every supported deployment shape it is loadable as
+	//     a native browser resource fetch (no Authorization header required
+	//     beyond the cookies/credentials the client already has on the
+	//     resolved host).
+	//
+	// MUL-3192 — fixes the Desktop / mobile-webview regression where the
+	// previous site-relative `/api/attachments/<id>/download` link only
+	// resolved when the document origin proxied /api to the API host.
+	MarkdownURL string `json:"markdown_url"`
+	ContentType string `json:"content_type"`
+	SizeBytes   int64  `json:"size_bytes"`
+	CreatedAt   string `json:"created_at"`
 }
 
 func (h *Handler) attachmentToResponse(a db.Attachment) AttachmentResponse {
@@ -142,33 +106,13 @@ func (h *Handler) attachmentToResponse(a db.Attachment) AttachmentResponse {
 		Filename:     a.Filename,
 		URL:          a.Url,
 		DownloadURL:  attachmentDownloadPath(id),
+		MarkdownURL:  h.buildMarkdownURL(a, id),
 		ContentType:  a.ContentType,
 		SizeBytes:    a.SizeBytes,
 		CreatedAt:    a.CreatedAt.Time.Format("2006-01-02T15:04:05Z07:00"),
 	}
 	if h.CFSigner != nil {
 		resp.DownloadURL = h.CFSigner.SignedURL(a.Url, time.Now().Add(h.attachmentDownloadURLTTL()))
-	}
-	// LocalStorage backend: append HMAC signed-query params so the URL is
-	// directly fetchable by native <img>/<video>/<iframe> resource loads
-	// from token-auth clients (Desktop, legacy-token Web, mobile). After
-	// MUL-3132 hardened /uploads/* with middleware.Auth, those clients
-	// would otherwise see 401 on inline image rendering — they cannot
-	// attach Authorization headers to native resource loads. We sign
-	// over the storage key (not the URL host) so the value matches what
-	// ServeLocalUpload re-derives from the request path. TTL mirrors
-	// CloudFront mode (defaultAttachmentDownloadURLTTL = 30 min).
-	if local, ok := h.Storage.(*storage.LocalStorage); ok {
-		key := local.KeyFromURL(a.Url)
-		expiry := time.Now().Add(h.attachmentDownloadURLTTL())
-		signed := storage.SignLocalUploadURL(a.Url, key, auth.JWTSecret(), expiry)
-		resp.URL = signed
-		// /api/attachments/{id}/download still goes through the
-		// authenticated proxy path, so we don't sign DownloadURL —
-		// it requires Bearer/cookie like every other JSON API
-		// endpoint. The signed URL above is what unblocks resource
-		// loads; explicit downloads still use the authenticated
-		// route.
 	}
 	if a.IssueID.Valid {
 		s := uuidToString(a.IssueID)
@@ -191,6 +135,104 @@ func (h *Handler) attachmentToResponse(a db.Attachment) AttachmentResponse {
 
 func attachmentDownloadPath(id string) string {
 	return "/api/attachments/" + id + "/download"
+}
+
+// buildMarkdownURL chooses the durable URL the client persists into
+// markdown bodies. The contract is "absolute, no TTL, loadable as a native
+// browser resource fetch on every supported client" (MUL-3192).
+//
+// Decision:
+//
+//  1. Persist `a.Url` only when the deployment has signaled the storage
+//     backend serves URLs publicly without per-request auth:
+//       - `Storage.CdnDomain()` is non-empty (operator configured a
+//         public-facing base URL — `S3_CDN_DOMAIN` for the S3 backend or
+//         `LOCAL_UPLOAD_BASE_URL` for LocalStorage), AND
+//       - `h.CFSigner` is nil (no per-request CloudFront signing — when
+//         signing is on, the same CDN domain serves PRIVATE content via
+//         time-bounded signed URLs and the raw `a.Url` is unauth-deny),
+//         AND
+//       - `a.Url` is itself an absolute http(s) URL with no signature
+//         query — defends against legacy rows backfilled while baseURL
+//         was unset, and against a freshly-signed `download_url` ever
+//         leaking into `a.Url` (the original MUL-3130 bug).
+//
+//  2. Every other shape — CloudFront-signed mode, S3 presign /proxy
+//     against a private bucket without a CDN domain, raw S3 / R2 /
+//     MinIO, LocalStorage with no `LOCAL_UPLOAD_BASE_URL` — uses the
+//     stable per-attachment endpoint that the server self-signs /
+//     proxies on every request, anchored on `MULTICA_PUBLIC_URL` so the
+//     persisted URL keeps working for clients that don't share the
+//     document origin (Desktop / mobile webview).
+//
+//  3. Last-resort fallback (no `MULTICA_PUBLIC_URL` configured): emit
+//     the site-relative path. Web's Next.js rewrite handles this; non-
+//     web clients on a deployment without `PublicURL` configured were
+//     already broken before MUL-3192 and stay broken here, but we
+//     don't make them worse.
+func (h *Handler) buildMarkdownURL(a db.Attachment, id string) string {
+	relPath := attachmentDownloadPath(id)
+	publicURL := strings.TrimRight(h.cfg.PublicURL, "/")
+
+	if h.storageURLIsPubliclyReadable(a.Url) {
+		return a.Url
+	}
+
+	if publicURL != "" {
+		return publicURL + relPath
+	}
+	return relPath
+}
+
+// storageURLIsPubliclyReadable returns true when the deployment has signaled
+// that `a.Url` can be loaded directly by an unauthenticated native browser
+// fetch — the only case where it is safe to persist `a.Url` into a markdown
+// body that will outlive the current session.
+func (h *Handler) storageURLIsPubliclyReadable(rawURL string) bool {
+	if h.Storage == nil || h.CFSigner != nil {
+		// CFSigner != nil is per-request signing; the CDN domain serves
+		// private content via signed URLs and `a.Url` is the raw S3 URL.
+		return false
+	}
+	if h.Storage.CdnDomain() == "" {
+		// No public-facing base URL configured — the storage's URL is
+		// the raw private object URL (S3 / R2 / MinIO) or a site-relative
+		// LocalStorage path that doesn't carry an origin.
+		return false
+	}
+	return isDurablePublicURL(rawURL)
+}
+
+// isDurablePublicURL is true when `rawURL` is an absolute http(s) URL that
+// is safe to persist into long-lived markdown bodies — i.e. it carries no
+// CloudFront / S3 signature query that would make it expire.
+func isDurablePublicURL(rawURL string) bool {
+	if rawURL == "" {
+		return false
+	}
+	u, err := url.Parse(rawURL)
+	if err != nil {
+		return false
+	}
+	if u.Scheme != "http" && u.Scheme != "https" {
+		return false
+	}
+	if u.Host == "" {
+		return false
+	}
+	q := u.Query()
+	for _, k := range []string{
+		"Signature",
+		"X-Amz-Signature",
+		"Key-Pair-Id",
+		"Expires",
+		"X-Amz-Expires",
+	} {
+		if q.Get(k) != "" {
+			return false
+		}
+	}
+	return true
 }
 
 func normalizeAttachmentDownloadMode(raw string) (attachmentDownloadMode, bool) {
@@ -309,18 +351,6 @@ func (h *Handler) UploadFile(w http.ResponseWriter, r *http.Request) {
 	// Override with extension-based type when the sniffer gets it wrong.
 	if ct, ok := extContentTypes[strings.ToLower(path.Ext(header.Filename))]; ok {
 		contentType = ct
-	}
-
-	// Reject HTML-family uploads at the edge. The existing
-	// Content-Disposition: attachment fix already prevents these from
-	// rendering as documents, but there's no legitimate use for an
-	// uploaded .html as an attachment in this product, so we refuse the
-	// bytes outright rather than store them and rely on the serve path
-	// staying perfectly correct forever. See uploadDeniedExtensions for
-	// the full rationale.
-	if isUploadDenied(header.Filename, contentType) {
-		writeError(w, http.StatusUnsupportedMediaType, "this file type is not allowed")
-		return
 	}
 	// Seek back so the full file is uploaded.
 	if _, err := file.Seek(0, io.SeekStart); err != nil {
