@@ -391,7 +391,6 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Package Desktop installers (${{ matrix.target }})
-        shell: bash
         working-directory: apps/desktop
         env:
           GH_TOKEN: ${{ secrets.PAT_TOKEN }}
@@ -402,11 +401,4 @@ jobs:
           # trust boundary. Set CSC_LINK in repo secrets to enable
           # Windows signing later.
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
-        run: |
-          ARCH_FLAG=""
-          if [ -n "${{ matrix.arch }}" ]; then
-            ARCH_FLAG="--${{ matrix.arch }}"
-          else
-            ARCH_FLAG="--x64 --arm64"
-          fi
-          node scripts/package.mjs --${{ matrix.target }} $ARCH_FLAG --publish always
+        run: node scripts/package.mjs --${{ matrix.target }} ${{ matrix.arch && format('--{0}', matrix.arch) || '--x64 --arm64' }} --publish always
