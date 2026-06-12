@@ -360,6 +360,10 @@ jobs:
             target: win
           - os: macos-latest
             target: mac
+            arch: arm64
+          - os: macos-13
+            target: mac
+            arch: x64
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -400,4 +404,11 @@ jobs:
           # trust boundary. Set CSC_LINK in repo secrets to enable
           # Windows signing later.
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
-        run: node scripts/package.mjs --${{ matrix.target }} --x64 --arm64 --publish always
+        run: |
+          ARCH_FLAG=""
+          if [ -n "${{ matrix.arch }}" ]; then
+            ARCH_FLAG="--${{ matrix.arch }}"
+          else
+            ARCH_FLAG="--x64 --arm64"
+          fi
+          node scripts/package.mjs --${{ matrix.target }} $ARCH_FLAG --publish always
