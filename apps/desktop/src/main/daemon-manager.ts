@@ -25,6 +25,7 @@ const POLL_INTERVAL_MS = 5_000;
 const PREFS_PATH = join(homedir(), ".multica", "desktop_prefs.json");
 const LOG_TAIL_RETRY_MS = 2_000;
 const LOG_TAIL_MAX_RETRIES = 5;
+const DAEMON_START_EXEC_TIMEOUT_MS = 60_000;
 
 const DEFAULT_PREFS: DaemonPrefs = { autoStart: true, autoStop: false };
 
@@ -665,7 +666,7 @@ async function startDaemon(): Promise<{ success: boolean; error?: string }> {
     execFile(
       bin,
       args,
-      { timeout: 20_000, env: desktopSpawnEnv() },
+      { timeout: DAEMON_START_EXEC_TIMEOUT_MS, env: desktopSpawnEnv() },
       (err) => {
         if (err) {
           currentState = "stopped";
