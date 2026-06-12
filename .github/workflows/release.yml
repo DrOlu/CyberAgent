@@ -361,9 +361,6 @@ jobs:
           - os: macos-latest
             target: mac
             arch: arm64
-          - os: macos-13
-            target: mac
-            arch: x64
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
