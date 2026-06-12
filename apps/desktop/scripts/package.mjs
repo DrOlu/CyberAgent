@@ -25,6 +25,7 @@
 // version-derivation logic without shelling out.
 
 import { execFileSync, spawnSync, execSync } from "node:child_process";
+import { rmSync } from "node:fs";
 import { delimiter, dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -383,7 +384,13 @@ function main() {
 
   // Step 3: for each requested target, build the matching CLI into
   // resources/bin/ and package that target in isolation.
+  const resourcesBinDir = resolve(desktopRoot, "resources", "bin");
   for (const target of buildMatrix) {
+    // Clean resources/bin/ before each arch iteration so a prior build's
+    // binary never leaks into the current target's bundle. This guards
+    // against CI cache hits, partial runs, and cross-arch contamination
+    // (e.g. x64 multica surviving into the arm64 .app).
+    rmSync(resourcesBinDir, { recursive: true, force: true });
     console.log(`[package] bundling CLI → ${formatTarget(target)}`);
     execFileSync(
       "node",

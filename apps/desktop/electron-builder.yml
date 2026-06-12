@@ -13,7 +13,12 @@ protocols:
     schemes:
       - cyberagent
 asarUnpack:
-  - resources/**
+  # Only unpack the CLI binary directory — Go executables must run directly
+  # from disk and cannot be executed from within the ASAR archive. Scoping
+  # to resources/bin/** (rather than resources/**) avoids extracting static
+  # assets (icons, etc.) to disk a second time, keeping the on-disk bundle
+  # size tight.
+  - resources/bin/**
 mac:
   entitlementsInherit: build/entitlements.mac.plist
   target:
