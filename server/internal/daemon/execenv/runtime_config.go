@@ -360,12 +360,13 @@ func CleanupRuntimeConfig(workDir, provider string) error {
 }
 
 // buildMetaSkillContent generates the meta skill markdown that teaches the agent
-// about the CyberAgent runtime environment and available CLI tools.
+// about the Multica runtime environment and available CLI tools.
 func buildMetaSkillContent(provider string, ctx TaskContextForEnv) string {
 	var b strings.Builder
 
-	b.WriteString("# CyberAgent Agent Runtime\n\n")
-	b.WriteString("You are a coding agent in the CyberAgent platform. Use the `multica` CLI to interact with the platform.\n\n")
+	b.WriteString("# Multica Agent Runtime\n\n")
+	b.WriteString("You are a coding agent in the Multica platform. Use the `multica` CLI to interact with the platform.\n\n")
+	writeBackgroundTaskSafetyInstructions(&b)
 
 	// Always emit agent identity so the agent knows who it is, even when
 	// dispatched via @mention on an issue assigned to a different agent.
@@ -618,7 +619,7 @@ func buildMetaSkillContent(provider string, ctx TaskContextForEnv) string {
 		// that doesn't propagate the user message into its working context
 		// (or a resumed session) still avoids the assignment-task workflow
 		// pointing at an empty issue id.
-		b.WriteString("**This task was triggered by quick-create.** There is NO existing CyberAgent issue. Follow the field and output rules in the user message you just received; ignore the default assignment-task workflow.\n\n")
+		b.WriteString("**This task was triggered by quick-create.** There is NO existing Multica issue. Follow the field and output rules in the user message you just received; ignore the default assignment-task workflow.\n\n")
 		b.WriteString("Hard guardrails (apply even if the user message is missing):\n")
 		b.WriteString("- Run exactly one `multica issue create` invocation, then exit.\n")
 		b.WriteString("- Do NOT call `multica issue get`, `multica issue status`, or `multica issue comment add` for this task — there is no issue to query, transition, or comment on. The platform writes the user's success/failure inbox notification automatically based on whether `multica issue create` succeeded.\n")
@@ -626,7 +627,7 @@ func buildMetaSkillContent(provider string, ctx TaskContextForEnv) string {
 	} else if ctx.AutopilotRunID != "" {
 		// Autopilot run_only task: no issue exists, so the agent must not
 		// follow the assignment/comment workflow.
-		b.WriteString("**This task was triggered by an Autopilot in run-only mode.** There is no assigned CyberAgent issue for this run.\n\n")
+		b.WriteString("**This task was triggered by an Autopilot in run-only mode.** There is no assigned Multica issue for this run.\n\n")
 		fmt.Fprintf(&b, "- Autopilot run ID: `%s`\n", ctx.AutopilotRunID)
 		if ctx.AutopilotID != "" {
 			fmt.Fprintf(&b, "- Autopilot ID: `%s`\n", ctx.AutopilotID)
@@ -762,12 +763,12 @@ func buildMetaSkillContent(provider string, ctx TaskContextForEnv) string {
 
 	b.WriteString("## Attachments\n\n")
 	b.WriteString("Issues and comments may include file attachments (images, documents, etc.).\n")
-	b.WriteString("When a task includes attachment IDs and you need the files, inspect `multica attachment --help` and use the authenticated CLI path. Do not open CyberAgent resource URLs directly.\n\n")
+	b.WriteString("When a task includes attachment IDs and you need the files, inspect `multica attachment --help` and use the authenticated CLI path. Do not open Multica resource URLs directly.\n\n")
 
 	b.WriteString("## Important: Always Use the `multica` CLI\n\n")
-	b.WriteString("All interactions with CyberAgent platform resources — including issues, comments, attachments, images, files, and any other platform data — **must** go through the `multica` CLI. ")
-	b.WriteString("Do NOT use `curl`, `wget`, or any other HTTP client to access CyberAgent URLs or APIs directly. ")
-	b.WriteString("CyberAgent resource URLs require authenticated access that only the `multica` CLI can provide.\n\n")
+	b.WriteString("All interactions with Multica platform resources — including issues, comments, attachments, images, files, and any other platform data — **must** go through the `multica` CLI. ")
+	b.WriteString("Do NOT use `curl`, `wget`, or any other HTTP client to access Multica URLs or APIs directly. ")
+	b.WriteString("Multica resource URLs require authenticated access that only the `multica` CLI can provide.\n\n")
 	b.WriteString("If you need to perform an operation that is not covered by any existing `multica` command, ")
 	b.WriteString("do NOT attempt to work around it. Instead, post a comment mentioning the workspace owner to request the missing functionality.\n\n")
 
@@ -793,4 +794,14 @@ func buildMetaSkillContent(provider string, ctx TaskContextForEnv) string {
 	}
 
 	return b.String()
+}
+
+func writeBackgroundTaskSafetyInstructions(b *strings.Builder) {
+	b.WriteString("## Background Task Safety\n\n")
+	b.WriteString("Multica marks this task terminal when your top-level agent process/turn exits. Any background work you started but did not collect before exiting can be orphaned: its result may be lost, and the user may see a completed/failed task even though the delegated work was never synthesized.\n\n")
+	b.WriteString("- Do NOT end your turn while background tasks, async subagents, background shell commands, or detached tool calls are still running.\n")
+	b.WriteString("- If a tool or runtime offers a background mode, use it only when you can explicitly wait for completion and collect the result before your final response.\n")
+	b.WriteString("- If a tool response says to wait for a future notification/reminder instead of collecting now, do not rely on that in Multica-managed runs. Block on the appropriate wait/output/collect operation before exiting.\n")
+	b.WriteString("- If you cannot observe or collect a background task's result, do not spawn it in the background; run the work synchronously instead.\n")
+	b.WriteString("- Before posting your final result or exiting silently, account for every background task you started and incorporate its output or failure into your response.\n\n")
 }
