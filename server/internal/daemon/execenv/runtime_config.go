@@ -364,7 +364,7 @@ func CleanupRuntimeConfig(workDir, provider string) error {
 func buildMetaSkillContent(provider string, ctx TaskContextForEnv) string {
 	var b strings.Builder
 
-	b.WriteString("# Multica Agent Runtime\n\n")
+	b.WriteString("# CyberAgent Agent Runtime\n\n")
 	b.WriteString("You are a coding agent in the CyberAgent platform. Use the `multica` CLI to interact with the platform.\n\n")
 	writeBackgroundTaskSafetyInstructions(&b)
 

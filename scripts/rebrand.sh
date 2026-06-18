@@ -304,6 +304,7 @@ open('.goreleaser.yml', 'w').write(text)
   find server -type f -name '*.go' \
     ! -path '*/node_modules/*' ! -path './.cyberagent-snapshot/*' \
     -exec sed -i \
+      -e 's|Multica Agent Runtime|CyberAgent Agent Runtime|g' \
       -e 's|Multica platform|CyberAgent platform|g' \
       -e 's|Multica CLI|CyberAgent CLI|g' \
       -e 's|Multica Desktop|CyberAgent Desktop|g' \
