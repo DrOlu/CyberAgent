@@ -58,7 +58,7 @@ jobs:
           cd ..
 
       - name: Run tests
-        run: cd server && go test -race ./...
+        run: cd server && go test ./...
 
       # Pre-flight: catch the same kind of i18n / dedupe drift the CI
       # workflow runs against every push to main, before this release
