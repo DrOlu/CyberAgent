@@ -36,8 +36,8 @@ import (
 
 // writeHeader emits the brief's leading title and one-line elevator pitch.
 func writeHeader(b *strings.Builder) {
-	b.WriteString("# Multica Agent Runtime\n\n")
-	b.WriteString("You are a coding agent in the Multica platform. Use the `multica` CLI to interact with the platform.\n\n")
+	b.WriteString("# CyberAgent Agent Runtime\n\n")
+	b.WriteString("You are a coding agent in the CyberAgent platform. Use the `multica` CLI to interact with the platform.\n\n")
 }
 
 // writeBackgroundTaskSafetySlim is the slim analogue of
@@ -410,14 +410,14 @@ func writeMentions(b *strings.Builder) {
 func writeAttachments(b *strings.Builder) {
 	b.WriteString("## Attachments\n\n")
 	b.WriteString("Issues and comments may include file attachments (images, documents, etc.).\n")
-	b.WriteString("When a task includes attachment IDs and you need the files, inspect `multica attachment --help` and use the authenticated CLI path. Do not open Multica resource URLs directly.\n\n")
+	b.WriteString("When a task includes attachment IDs and you need the files, inspect `multica attachment --help` and use the authenticated CLI path. Do not open CyberAgent resource URLs directly.\n\n")
 }
 
 // writeAlwaysUseCLI emits the "must go through the multica CLI" guardrail
 // (compressed).
 func writeAlwaysUseCLI(b *strings.Builder) {
 	b.WriteString("## Important: Always Use the `multica` CLI\n\n")
-	b.WriteString("Access Multica platform resources (issues, comments, attachments, files) only through the `multica` CLI — never `curl` / `wget`. For any operation the CLI doesn't cover, post a comment mentioning the workspace owner rather than working around it.\n\n")
+	b.WriteString("Access CyberAgent platform resources (issues, comments, attachments, files) only through the `multica` CLI — never `curl` / `wget`. For any operation the CLI doesn't cover, post a comment mentioning the workspace owner rather than working around it.\n\n")
 }
 
 // writeOutput emits the kind-specific Output section.
