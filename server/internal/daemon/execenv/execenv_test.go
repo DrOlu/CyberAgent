@@ -794,7 +794,7 @@ func TestInjectRuntimeConfigClaude(t *testing.T) {
 
 	s := string(content)
 	for _, want := range []string{
-		"CyberAgent Agent Runtime",
+		"Multica Agent Runtime",
 		"multica issue get",
 		"multica issue comment list",
 		"Go Conventions",
@@ -817,7 +817,6 @@ func TestInjectRuntimeConfigBackgroundTaskSafetyProviderAgnostic(t *testing.T) {
 		{"claude", "CLAUDE.md"},
 		{"codex", "AGENTS.md"},
 		{"opencode", "AGENTS.md"},
-		{"gemini", "GEMINI.md"},
 		{"hermes", "AGENTS.md"},
 	}
 
@@ -915,44 +914,6 @@ func TestInjectRuntimeConfigAvailableCommandsCoreOnly(t *testing.T) {
 	}
 }
 
-func TestInjectRuntimeConfigGemini(t *testing.T) {
-	t.Parallel()
-	dir := t.TempDir()
-
-	ctx := TaskContextForEnv{
-		IssueID:     "test-issue-id",
-		AgentSkills: []SkillContextForEnv{{Name: "Writing", Content: "Write clearly."}},
-	}
-
-	if _, err := InjectRuntimeConfig(dir, "gemini", ctx); err != nil {
-		t.Fatalf("InjectRuntimeConfig failed: %v", err)
-	}
-
-	content, err := os.ReadFile(filepath.Join(dir, "GEMINI.md"))
-	if err != nil {
-		t.Fatalf("failed to read GEMINI.md: %v", err)
-	}
-
-	s := string(content)
-	for _, want := range []string{
-		"CyberAgent Agent Runtime",
-		"multica issue get",
-		"Writing",
-	} {
-		if !strings.Contains(s, want) {
-			t.Errorf("GEMINI.md missing %q", want)
-		}
-	}
-
-	// Should not write CLAUDE.md or AGENTS.md for gemini provider.
-	if _, err := os.Stat(filepath.Join(dir, "CLAUDE.md")); !os.IsNotExist(err) {
-		t.Error("gemini provider should not create CLAUDE.md")
-	}
-	if _, err := os.Stat(filepath.Join(dir, "AGENTS.md")); !os.IsNotExist(err) {
-		t.Error("gemini provider should not create AGENTS.md")
-	}
-}
-
 func TestInjectRuntimeConfigCodex(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
@@ -972,7 +933,7 @@ func TestInjectRuntimeConfigCodex(t *testing.T) {
 	}
 
 	s := string(content)
-	if !strings.Contains(s, "CyberAgent Agent Runtime") {
+	if !strings.Contains(s, "Multica Agent Runtime") {
 		t.Error("AGENTS.md missing meta skill header")
 	}
 	if !strings.Contains(s, "Coding") {
@@ -1246,7 +1207,6 @@ func TestWriteContextFilesOpenclawNativeSkills(t *testing.T) {
 	}
 }
 
-
 func TestWriteContextFilesKiroNativeSkills(t *testing.T) {
 	t.Parallel()
 	dir := t.TempDir()
@@ -1321,7 +1281,7 @@ func TestInjectRuntimeConfigOpencode(t *testing.T) {
 	}
 
 	s := string(content)
-	if !strings.Contains(s, "CyberAgent Agent Runtime") {
+	if !strings.Contains(s, "Multica Agent Runtime") {
 		t.Error("AGENTS.md missing meta skill header")
 	}
 	if !strings.Contains(s, "Coding") {
@@ -1356,7 +1316,7 @@ func TestInjectRuntimeConfigKiro(t *testing.T) {
 	}
 
 	s := string(content)
-	if !strings.Contains(s, "CyberAgent Agent Runtime") {
+	if !strings.Contains(s, "Multica Agent Runtime") {
 		t.Error("AGENTS.md missing meta skill header")
 	}
 	if !strings.Contains(s, "Coding") {
@@ -1386,7 +1346,7 @@ func TestInjectRuntimeConfigQoder(t *testing.T) {
 	}
 
 	s := string(content)
-	if !strings.Contains(s, "CyberAgent Agent Runtime") {
+	if !strings.Contains(s, "Multica Agent Runtime") {
 		t.Error("AGENTS.md missing meta skill header")
 	}
 	if !strings.Contains(s, "Coding") {
@@ -1419,7 +1379,7 @@ func TestInjectRuntimeConfigAntigravity(t *testing.T) {
 	}
 
 	s := string(content)
-	if !strings.Contains(s, "CyberAgent Agent Runtime") {
+	if !strings.Contains(s, "Multica Agent Runtime") {
 		t.Error("AGENTS.md missing meta skill header")
 	}
 	if !strings.Contains(s, "Coding") {
@@ -1594,7 +1554,7 @@ func TestInjectRuntimeConfigCommentGuardrailIsProviderAgnostic(t *testing.T) {
 	t.Cleanup(func() { runtimeGOOS = saved })
 
 	for _, host := range []string{"linux", "darwin", "windows"} {
-		for _, provider := range []string{"claude", "opencode", "openclaw", "hermes", "kimi", "kiro", "cursor", "gemini"} {
+		for _, provider := range []string{"claude", "opencode", "openclaw", "hermes", "kimi", "kiro", "cursor"} {
 			t.Run(provider+"/"+host, func(t *testing.T) {
 				runtimeGOOS = host
 				dir := t.TempDir()
@@ -1605,9 +1565,6 @@ func TestInjectRuntimeConfigCommentGuardrailIsProviderAgnostic(t *testing.T) {
 				configFile := "CLAUDE.md"
 				if provider != "claude" {
 					configFile = "AGENTS.md"
-				}
-				if provider == "gemini" {
-					configFile = "GEMINI.md"
 				}
 				data, err := os.ReadFile(filepath.Join(dir, configFile))
 				if err != nil {
@@ -1871,7 +1828,7 @@ func TestInjectRuntimeConfigHermes(t *testing.T) {
 	}
 
 	s := string(content)
-	if !strings.Contains(s, "CyberAgent Agent Runtime") {
+	if !strings.Contains(s, "Multica Agent Runtime") {
 		t.Error("AGENTS.md missing meta skill header")
 	}
 	if !strings.Contains(s, "Coding") {
@@ -2871,7 +2828,7 @@ func TestReuseUpdatesCodexWorkspaceSkills(t *testing.T) {
 
 // TestPrepareCodexSeedsUserSkills covers the fix for #1922: skills the user
 // installs under ~/.codex/skills/ must be discoverable by the codex CLI
-// inside a CyberAgent task, despite the daemon redirecting CODEX_HOME to a
+// inside a Multica task, despite the daemon redirecting CODEX_HOME to a
 // per-task directory.
 func TestPrepareCodexSeedsUserSkills(t *testing.T) {
 	// Cannot use t.Parallel() with t.Setenv.

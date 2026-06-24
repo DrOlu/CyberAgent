@@ -13,6 +13,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/multica-ai/multica/server/internal/analytics"
+	"github.com/multica-ai/multica/server/internal/daemon/execenv"
 	"github.com/multica-ai/multica/server/internal/daemonws"
 	"github.com/multica-ai/multica/server/internal/events"
 	"github.com/multica-ai/multica/server/internal/handler"
@@ -22,6 +23,7 @@ import (
 	"github.com/multica-ai/multica/server/internal/scheduler"
 	"github.com/multica-ai/multica/server/internal/service"
 	db "github.com/multica-ai/multica/server/pkg/db/generated"
+	"github.com/multica-ai/multica/server/pkg/featureflag"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -140,6 +142,27 @@ func main() {
 	if port == "" {
 		port = "8080"
 	}
+
+	// Feature flags: loaded once at startup from MULTICA_FEATURE_FLAGS_FILE
+	// (a YAML rule set) with FF_<KEY> env overrides layered on top.
+	// See docs/feature-flags.md for the schema and lifecycle rules.
+	//
+	// Booting the server without any flag config is intentional: when the
+	// env var is unset, every IsEnabled call falls through to the caller's
+	// default, so existing code paths are unchanged until someone adds a
+	// rule. A misconfigured (malformed / missing) file surfaces as a hard
+	// error so operators see misconfig the same way they do for any other
+	// MULTICA_*_FILE knob.
+	flags, err := featureflag.NewServiceFromEnv(featureflag.WithLogger(slog.Default()))
+	if err != nil {
+		slog.Error("feature flag configuration failed to load", "error", err)
+		os.Exit(1)
+	}
+	// MUL-3560: execenv consults `runtime_brief_slim` to decide between
+	// the legacy and slim runtime brief. Default-off everywhere; staging
+	// YAML opts in, prod stays on legacy until staging burns in.
+	execenv.SetFeatureFlags(flags)
+	_ = flags // remaining call sites adopt flags as needed; see docs/feature-flags.md
 
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
@@ -318,6 +341,7 @@ func main() {
 		BusinessMetrics:    businessMetrics,
 		DaemonHub:          daemonHub,
 		DaemonWakeup:       daemonWakeup,
+		FeatureFlags:       flags,
 		HeartbeatScheduler: heartbeatScheduler,
 	})
 
