@@ -131,7 +131,7 @@ Current coverage: **82.2 %**.
 
 ## Design notes
 
-- **Standalone.** Zero coupling to Multica internals — depend on this package
+- **Standalone.** Zero coupling to CyberAgent internals — depend on this package
   from `server/internal/integrations/composio` (Stage 2 integration glue) or
   anywhere else without circular-import risk.
 - **`x-api-key`, not Bearer.** Composio's v3.1 REST API authenticates with an
