@@ -23,10 +23,12 @@ import (
 	"github.com/multica-ai/multica/server/internal/featureflagdispatch"
 	"github.com/multica-ai/multica/server/internal/integrations/channel/engine"
 	"github.com/multica-ai/multica/server/internal/integrations/lark"
+	"github.com/multica-ai/multica/server/internal/integrations/slack"
 	obsmetrics "github.com/multica-ai/multica/server/internal/metrics"
 	"github.com/multica-ai/multica/server/internal/middleware"
 	"github.com/multica-ai/multica/server/internal/realtime"
 	"github.com/multica-ai/multica/server/internal/service"
+	"github.com/multica-ai/multica/server/internal/sourcebeacon"
 	"github.com/multica-ai/multica/server/internal/storage"
 	"github.com/multica-ai/multica/server/internal/util"
 	db "github.com/multica-ai/multica/server/pkg/db/generated"
@@ -135,6 +137,11 @@ type Handler struct {
 	WebhookRateLimiter   WebhookRateLimiter
 	WebhookIPRateLimiter WebhookRateLimiter
 	CloudRuntime         cloudRuntimeProxy
+	// SourceBeacon ships the self-host onboarding source beacon (MUL-3708).
+	// Nil-safe: nil / disabled is a silent no-op, so tests and official
+	// cloud / non-production deployments need no wiring. Set post-New in
+	// cmd/server/router.go.
+	SourceBeacon *sourcebeacon.Sender
 	// Lark integration. All three are nil when the Lark master key
 	// (MULTICA_LARK_SECRET_KEY) is unset; the corresponding HTTP
 	// handlers return 503 in that case so a misconfigured self-host
@@ -176,7 +183,15 @@ type Handler struct {
 	// delivering events, to flush debounced run triggers and join in-flight
 	// reply goroutines. Built unconditionally (even without Lark).
 	ChannelRouter *engine.Router
-	cfg           Config
+	// SlackInstall owns the bring-your-own-app Slack install lifecycle (register
+	// pasted tokens / list / revoke) and the at-rest encryption of each app's bot
+	// + app tokens (MUL-3666). Nil unless MULTICA_SLACK_SECRET_KEY is set.
+	SlackInstall *slack.InstallService
+	// SlackBindingTokens mints/redeems the user-binding tokens behind the
+	// "link your Slack account" prompt (MUL-3666). Nil unless Slack is
+	// configured (MULTICA_SLACK_SECRET_KEY set).
+	SlackBindingTokens *slack.BindingTokenService
+	cfg                Config
 }
 
 func New(queries *db.Queries, txStarter txStarter, hub *realtime.Hub, bus *events.Bus, emailService *service.EmailService, store storage.Storage, cfSigner *auth.CloudFrontSigner, analyticsClient analytics.Client, cfg Config, daemonHubs ...*daemonws.Hub) *Handler {
