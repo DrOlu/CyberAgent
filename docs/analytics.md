@@ -1,10 +1,10 @@
 # Product Analytics
 
-This document is the source of truth for the analytics events CyberAgent ships
+This document is the source of truth for the analytics events Multica ships
 to PostHog. Events feed the acquisition → activation → expansion funnel that
 drives our weekly Active Workspaces (WAW) north-star metric.
 
-See [MUL-1122](https://github.com/cyberagent-ai/cyberagent) for the design context.
+See [MUL-1122](https://github.com/multica-ai/multica) for the design context.
 
 > **PostHog is reserved for user/product-behaviour events.** High-volume
 > operational / execution-lifecycle telemetry — runtime lifecycle
@@ -36,7 +36,7 @@ events leave the process unless the operator explicitly opts in**.
 
 ### Self-hosted instances
 
-Self-hosters should **never inherit a CyberAgent-issued `POSTHOG_API_KEY`** —
+Self-hosters should **never inherit a Multica-issued `POSTHOG_API_KEY`** —
 that would route their users' behavior to our analytics project. The
 defaults guarantee this:
 
@@ -51,53 +51,6 @@ defaults guarantee this:
 - The frontend receives the key via `/api/config` (planned for PR 2), so
   self-hosts' blank server config also disables frontend event shipping
   automatically — no separate frontend opt-out plumbing required.
-
-### Self-host onboarding source beacon (MUL-3708)
-
-There is exactly **one** thing a self-host instance ships to CyberAgent's own
-analytics, independent of the PostHog key above: the anonymous onboarding
-**source** ("how did you hear about us") channel.
-
-- **Why.** The PostHog `onboarding_questionnaire_submitted` event never
-  reaches us from self-host (no key → NoopClient), so the self-host source
-  distribution is otherwise invisible. This beacon recovers just that one
-  dimension.
-- **What fires it.** When a user first fills in their source, the server
-  POSTs once to CyberAgent's public, write-only ingest
-  (`POST /api/telemetry/self-host-source`). It is **not** a background job,
-  reads no history, and a failed send never blocks onboarding. See
-  `server/internal/sourcebeacon`.
-- **Who fires it.** Only a **production self-host**:
-  `sourcebeacon.ShouldSend` requires `environment == production`, a non-empty
-  non-localhost app host (`MULTICA_APP_URL` → `FRONTEND_ORIGIN`), and a host
-  that is **not** `multica.ai` / any `*.multica.ai` (so official prod,
-  staging, preview and internal envs never fire — they keep their normal
-  PostHog capture). Judging by the app/frontend host, not the backend URL,
-  is deliberate: the official cloud reliably configures its frontend domain
-  even when `MULTICA_PUBLIC_URL` is unset (see
-  `TestGetConfigOmitsCloudDaemonSetupWithoutPublicURL`), so keying on the
-  backend URL would misclassify official as self-host.
-- **What is sent.** Only `{ v, channels[], uid_hash, instance_hash }`:
-  - `channels[]` — the source enum value(s) (`social_youtube`, … `other`).
-  - `uid_hash = sha256(instance_salt + user_id)`, `instance_hash =
-    sha256(instance_salt)`, both truncated. `instance_salt`
-    (`system_settings.instance_salt`) never leaves the box, so Multica
-    cannot reverse a hash to a `user_id`, and the same user on two instances
-    hashes differently.
-- **What is never sent.** Real `user_id` / email / name / workspace / org /
-  domain / `role` / `use_case` / the `source_other` free-text / IP. The
-  ingest rejects any payload carrying an unknown field.
-- **How to disable.** Set `ANALYTICS_DISABLED=true` (the first gate in
-  `ShouldSend`). On self-host that is the only outbound telemetry, so it is
-  the off switch.
-- **Where it lands.** One PostHog event per channel,
-  `self_host_source_channel`, with `deployment: self_host`, a deterministic
-  event `uuid` (PostHog dedups, best-effort), and
-  `$process_person_profile: false` (no PostHog person is created for the
-  anonymous hash). A deliberately distinct event name from
-  `onboarding_questionnaire_submitted` so it never pollutes the official
-  onboarding funnel; compare the two series side by side, split by
-  `deployment`.
 
 ## Architecture
 
@@ -140,7 +93,7 @@ handler → analytics.Client.Capture(Event)   ← non-blocking, returns immediat
   (role, use_case, team_size, platform_preference) that a user can
   legitimately change during onboarding. `Event.Set` on the backend
   maps to `$set`; the frontend helper is
-  `setPersonProperties()` in `@cyberagent/core/analytics`. Use
+  `setPersonProperties()` in `@multica/core/analytics`. Use
   `$set_once` only for values that must never be overwritten (email,
   initial attribution, first-completion timestamp).
 
@@ -201,7 +154,7 @@ OAuth entry points (`findOrCreateUser` is the single emission site).
 | Property | Type | Description |
 |---|---|---|
 | `email_domain` | string | Lower-cased domain portion of the user's email. |
-| `signup_source` | string | Opaque attribution bundle from the frontend cookie `cyberagent_signup_source` (UTM + referrer). Empty when the cookie is absent. |
+| `signup_source` | string | Opaque attribution bundle from the frontend cookie `multica_signup_source` (UTM + referrer). Empty when the cookie is absent. |
 | `auth_method` | string | Optional. `"google"` for Google OAuth signups. Absent for verification-code signups. |
 
 Person properties set with `$set_once`:
@@ -248,7 +201,7 @@ extra query, no race.
 | `runtime_mode` | string | Currently `local`; reserved for cloud runtimes. |
 | `provider` | string | e.g. `"codex"`, `"claude"`. |
 | `runtime_version` | string | Version of the agent runtime binary. |
-| `cli_version` | string | Version of the `cyberagent` CLI that registered it. |
+| `cli_version` | string | Version of the `multica` CLI that registered it. |
 
 `distinct_id` is the authenticated owner's user id when the daemon was
 registered via a member's JWT/PAT; daemon-token registrations fall back to
@@ -462,19 +415,15 @@ not have a workspace yet.
 
 Fires on the first PatchOnboarding that transitions the user's
 questionnaire JSONB from "at least one slot empty" to "all three
-filled" (source, role, use_case). Revisions past that point don't
-re-emit — the funnel counts users, not edits. See
-`OnboardingQuestionnaireSubmitted` in `server/internal/analytics/events.go`.
+filled" (team_size, role, use_case). Revisions past that point don't
+re-emit — the funnel counts users, not edits.
 
 | Property | Type | Description |
 |---|---|---|
-| `source` | string[] | Acquisition channels (`friends_colleagues` / `search` / `social_youtube` / `ai_assistant` / … / `other`). Array for back-compat; the UI commits one element. |
-| `role` | string | `engineer` / `product` / `founder` / `writer` / … / `other`. |
-| `use_case` | string[] | `ship_code` / `manage_team` / `plan_research` / … / `other`. Multi-select. |
-| `source_skipped` | bool | `true` when the user explicitly skipped Q1. |
-| `role_skipped` | bool | Ditto Q2. |
-| `use_case_skipped` | bool | Ditto Q3. |
-| `source_has_other` | bool | `true` when the user filled the Q1 free-text escape. |
+| `team_size` | string | `solo` / `team` / `other`. |
+| `role` | string | `developer` / `product_lead` / `writer` / `founder` / `other`. |
+| `use_case` | string | `coding` / `planning` / `writing_research` / `explore` / `other`. |
+| `team_size_has_other` | bool | `true` when the user filled the Q1 free-text escape. |
 | `role_has_other` | bool | Ditto Q2. |
 | `use_case_has_other` | bool | Ditto Q3. |
 
@@ -483,14 +432,9 @@ change answers before submitting again):
 
 | Property | Type | Description |
 |---|---|---|
-| `source` | string[] | Mirrors the event property for cohort queries. |
+| `team_size` | string | Mirrors the event property for cohort queries. |
 | `role` | string | Same. |
-| `use_case` | string[] | Same. |
-
-> Note: the self-reported `source` here is per-user and only reaches PostHog
-> from deployments with a configured key. Self-host source is recovered
-> separately and anonymously via the `self_host_source_channel` beacon — see
-> "Self-host onboarding source beacon" above.
+| `use_case` | string | Same. |
 
 `distinct_id` is the user's id. No workspace_id — the questionnaire is
 per-user, not per-workspace.
@@ -703,7 +647,7 @@ sent from a pre-workspace surface.
     workspace. Omitted on pre-workspace surfaces.
 
 - Attribution is NOT a separate event; UTM + referrer origin are written
-  to the `cyberagent_signup_source` cookie on the first anonymous pageview
+  to the `multica_signup_source` cookie on the first anonymous pageview
   and read by the backend's `signup` emission. The cookie carries a JSON
   payload URL-encoded at write time (`encodeURIComponent`) and
   URL-decoded at read time (`url.QueryUnescape`) — the JSON is never
