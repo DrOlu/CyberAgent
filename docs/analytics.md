@@ -54,7 +54,7 @@ defaults guarantee this:
 
 ### Self-host onboarding source beacon (MUL-3708)
 
-There is exactly **one** thing a self-host instance ships to Multica's own
+There is exactly **one** thing a self-host instance ships to CyberAgent's own
 analytics, independent of the PostHog key above: the anonymous onboarding
 **source** ("how did you hear about us") channel.
 
@@ -63,7 +63,7 @@ analytics, independent of the PostHog key above: the anonymous onboarding
   distribution is otherwise invisible. This beacon recovers just that one
   dimension.
 - **What fires it.** When a user first fills in their source, the server
-  POSTs once to Multica's public, write-only ingest
+  POSTs once to CyberAgent's public, write-only ingest
   (`POST /api/telemetry/self-host-source`). It is **not** a background job,
   reads no history, and a failed send never blocks onboarding. See
   `server/internal/sourcebeacon`.

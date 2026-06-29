@@ -1,15 +1,15 @@
 ---
 title: Slack Bot integration
-description: Connect a Multica agent to your own Slack app — create the app from a manifest, install it, paste the bot + app-level tokens, then @-mention it, DM it, or type /issue from inside Slack.
+description: Connect a CyberAgent agent to your own Slack app — create the app from a manifest, install it, paste the bot + app-level tokens, then @-mention it, DM it, or type /issue from inside Slack.
 ---
 
 import { Callout } from "fumadocs-ui/components/callout";
 
-Connect any [agent](/agents) to a Slack bot and your team can work with it from inside Slack — DM the bot, @-mention it in a channel, or type `/issue` to file a [Multica issue](/issues) without opening the app.
+Connect any [agent](/agents) to a Slack bot and your team can work with it from inside Slack — DM the bot, @-mention it in a channel, or type `/issue` to file a [CyberAgent issue](/issues) without opening the app.
 
-Slack uses a **bring-your-own-app (BYO)** model: a workspace admin creates a Slack app, installs it to their Slack workspace, and pastes its tokens into Multica. Each agent gets **its own** Slack app — so several agents can each have a distinct, separately @-mentionable bot in the same Slack workspace. (This differs from [Lark](/lark-bot-integration), where binding is a scan-to-install flow.)
+Slack uses a **bring-your-own-app (BYO)** model: a workspace admin creates a Slack app, installs it to their Slack workspace, and pastes its tokens into CyberAgent. Each agent gets **its own** Slack app — so several agents can each have a distinct, separately @-mentionable bot in the same Slack workspace. (This differs from [Lark](/lark-bot-integration), where binding is a scan-to-install flow.)
 
-The whole setup is below and takes about five minutes. You'll end up with two tokens to paste into Multica:
+The whole setup is below and takes about five minutes. You'll end up with two tokens to paste into CyberAgent:
 
 - a **Bot token** — starts with `xoxb-`
 - an **App-level token** — starts with `xapp-`
@@ -25,14 +25,14 @@ The whole setup is below and takes about five minutes. You'll end up with two to
 
 ```yaml
 display_information:
-  name: Multica
+  name: CyberAgent
 features:
   app_home:
     home_tab_enabled: false
     messages_tab_enabled: true
     messages_tab_read_only_enabled: false
   bot_user:
-    display_name: Multica
+    display_name: CyberAgent
     always_online: true
 oauth_config:
   scopes:
@@ -59,7 +59,7 @@ settings:
   token_rotation_enabled: false
 ```
 
-This manifest configures everything Multica needs, so you don't set anything by hand:
+This manifest configures everything CyberAgent needs, so you don't set anything by hand:
 
 | Section | Why it's there |
 |---|---|
@@ -69,9 +69,9 @@ This manifest configures everything Multica needs, so you don't set anything by 
 | `app_mentions:read` + `app_mention` event | Receive @-mentions in channels. |
 | `im:history` + `message.im` | Receive **DMs** to the bot (every DM message is read). |
 | `channels:history` / `groups:history` / `mpim:history` + the matching `message.*` events | Receive messages in public channels, private channels, and group DMs. In these, the bot only acts on messages that **@-mention** it. |
-| `users:read` | Required so Multica can verify (via `bots.info`) that your two tokens belong to the same app. |
+| `users:read` | Required so CyberAgent can verify (via `bots.info`) that your two tokens belong to the same app. |
 | `socket_mode_enabled: true` | The bot connects out over Socket Mode — **no public URL / request URL needed**. |
-| `interactivity.is_enabled: false` | Multica's prompts are plain links, not buttons, so interactivity isn't needed. |
+| `interactivity.is_enabled: false` | CyberAgent's prompts are plain links, not buttons, so interactivity isn't needed. |
 
 There is **no OAuth redirect URL**, because BYO doesn't use OAuth.
 
@@ -94,7 +94,7 @@ The app-level token authorizes the Socket Mode connection. It can only be create
 3. Click **Add Scope** and pick **`connections:write`** from the list (it's a picker — select it, don't type it).
 4. Click **Generate**, then copy the token — it starts with `xapp-`. This is your **App-level token**.
 
-### 4. Connect it in Multica
+### 4. Connect it in CyberAgent
 
 1. Open the agent in **Agents → _your agent_** → the **Integrations** tab (or the **Integrations** section in the left sidebar).
 2. Click **Connect Slack**.
@@ -114,16 +114,16 @@ Setting this up for **multiple agents**? Repeat the whole flow once per agent �
 | Surface | Behavior |
 |---|---|
 | **Agent → Integrations** | Owners and admins see **Connect Slack**; once connected it flips to a **Connected to Slack** badge with a **Disconnect** control. |
-| **DM the bot** | A workspace member messages the bot directly. The conversation becomes a Multica [chat](/chat) session with the agent; every DM message is read. |
+| **DM the bot** | A workspace member messages the bot directly. The conversation becomes a CyberAgent [chat](/chat) session with the agent; every DM message is read. |
 | **@-mention in a channel** | Invite the bot (`/invite @your-bot`) and @-mention it. Only the mentioning message is read — the bot does not listen to the whole channel. Each @bot **thread** is its own session. |
-| **`/issue` command** | Starting a message with `/issue <title>` (optionally with a body on the next lines) creates a new Multica issue in the workspace, attributed to you. |
+| **`/issue` command** | Starting a message with `/issue <title>` (optionally with a body on the next lines) creates a new CyberAgent issue in the workspace, attributed to you. |
 | **Reply** | The agent's answer is posted back into the same DM or thread. |
 
 ## Use the bot (members)
 
 ### First message: link your account
 
-The first time you @-mention or DM the bot, it replies with a **link your account** prompt. Tap the link, sign in to Multica, and your Slack identity is bound to your Multica membership — this is what lets the agent act as you (e.g. `/issue` files under your name). The link is single-use and expires in about 15 minutes; just message the bot again for a fresh one.
+The first time you @-mention or DM the bot, it replies with a **link your account** prompt. Tap the link, sign in to CyberAgent, and your Slack identity is bound to your CyberAgent membership — this is what lets the agent act as you (e.g. `/issue` files under your name). The link is single-use and expires in about 15 minutes; just message the bot again for a fresh one.
 
 <Callout type="warning">
 Only **members of the workspace** can use the bot. If you aren't a member, or you skip the identity link, the bot won't run — your message is dropped (recorded for audit, without its contents).
@@ -150,7 +150,7 @@ Workspace-wide management lives in **Settings → Integrations**:
 
 ## Self-host setup
 
-On Multica Cloud the integration is already available — skip this section.
+On CyberAgent Cloud the integration is already available — skip this section.
 
 For self-host, Slack is **off until you set an at-rest encryption key**. The key encrypts each app's bot + app-level tokens before they touch the database. BYO needs **no** OAuth client id/secret and **no** deployment-level app token — each installation uses the tokens the admin pastes.
 
