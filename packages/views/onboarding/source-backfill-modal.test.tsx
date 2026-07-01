@@ -147,14 +147,14 @@ describe("SourceBackfillModal", () => {
     renderModal();
     expect(
       screen.queryByText(
-        "Help us understand how you heard about Multica. No extra information is sent.",
+        "Help us understand how you heard about CyberAgent. No extra information is sent.",
       ),
     ).not.toBeInTheDocument();
     await user.click(await screen.findByText("Friends or colleagues"));
 
     expect(
       screen.getByText(
-        "Help us understand how you heard about Multica. No extra information is sent.",
+        "Help us understand how you heard about CyberAgent. No extra information is sent.",
       ),
     ).toBeInTheDocument();
     expect(
@@ -174,7 +174,7 @@ describe("SourceBackfillModal", () => {
 
     expect(
       screen.queryByText(
-        "Help us understand how you heard about Multica. No extra information is sent.",
+        "Help us understand how you heard about CyberAgent. No extra information is sent.",
       ),
     ).not.toBeInTheDocument();
     expect(

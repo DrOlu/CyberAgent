@@ -75,7 +75,7 @@ describe("StepSource (single-select primary source)", () => {
 
     expect(
       screen.getByText(
-        "Help us understand how you heard about Multica. No extra information is sent.",
+        "Help us understand how you heard about CyberAgent. No extra information is sent.",
       ),
     ).toBeInTheDocument();
     expect(
@@ -91,7 +91,7 @@ describe("StepSource (single-select primary source)", () => {
 
     expect(
       screen.queryByText(
-        "Help us understand how you heard about Multica. No extra information is sent.",
+        "Help us understand how you heard about CyberAgent. No extra information is sent.",
       ),
     ).not.toBeInTheDocument();
     expect(
