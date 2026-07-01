@@ -231,7 +231,7 @@ open('.goreleaser.yml', 'w').write(text)
     -exec sed -i \
       -e 's|Welcome to Multica|Welcome to CyberAgent|g' \
       -e 's|welcome to Multica|welcome to CyberAgent|g' \
-      -e 's|heard about Multica|heard about CyberAgent|g' \
+      -e 's|hear about Multica|hear about CyberAgent|g' \
       {} + 2>/dev/null || true
 
   # ── Go server tests — patch brand-name string literals in test assertions.
