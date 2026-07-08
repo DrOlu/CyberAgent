@@ -7,6 +7,11 @@ on:
       # tags broadly at the trigger layer, then enforce strict semver below.
       - "v*.*.*"
       - "!v*-dirty*"
+      # Sync bot pushes a lightweight v0.0.0-ga<sha> marker tag onto the
+      # same commit as the real release tag. It matches v*.*.* and would
+      # otherwise fire a spurious duplicate Release run that fails with
+      # 422 already_exists (the real release already published the assets).
+      - "!v0.0.0-*"
 
 permissions:
   contents: write
