@@ -126,31 +126,47 @@ describe("deriveVersion (real git describe)", () => {
     while (repos.length) rmSync(repos.pop(), { recursive: true, force: true });
   });
 
-  it("resolves a clean semver tag to its bare version", () => {
-    const { dir, run } = initRepo();
-    run("tag", "v1.4.2");
-    expect(deriveVersion(dir)).toBe("1.4.2");
-  });
+  // These spawn real `git` subprocesses (init + config x3 + commit + tag +
+  // describe). The vitest default 5s timeout is too tight on a loaded CI
+  // runner — the first cold-start invocation has crossed it on the shared
+  // ubuntu runner — so give the whole integration block headroom.
+  it(
+    "resolves a clean semver tag to its bare version",
+    () => {
+      const { dir, run } = initRepo();
+      run("tag", "v1.4.2");
+      expect(deriveVersion(dir)).toBe("1.4.2");
+    },
+    30000,
+  );
 
-  it("selects the semver tag even when a nearer non-semver tag exists", () => {
-    // A release-train tag like `release_iteration/…` sitting closer to HEAD
-    // must not become the version. With the match pattern correctly reaching
-    // git, describe skips it and reports the real vX.Y.Z tag. If the pattern
-    // were mangled (e.g. quotes leaking through a shell) git would match
-    // nothing and the version would collapse to `0.0.0-…`.
-    const { dir, run } = initRepo();
-    run("tag", "v1.4.2");
-    run("commit", "-q", "--allow-empty", "-m", "sprint");
-    run("tag", "release_iteration/Sprint_0705");
-    const version = deriveVersion(dir);
-    expect(version).toMatch(/^1\.4\.2-1-g[0-9a-f]+$/);
-    expect(version).not.toMatch(/^0\.0\.0/);
-  });
+  it(
+    "selects the semver tag even when a nearer non-semver tag exists",
+    () => {
+      // A release-train tag like `release_iteration/…` sitting closer to HEAD
+      // must not become the version. With the match pattern correctly reaching
+      // git, describe skips it and reports the real vX.Y.Z tag. If the pattern
+      // were mangled (e.g. quotes leaking through a shell) git would match
+      // nothing and the version would collapse to `0.0.0-…`.
+      const { dir, run } = initRepo();
+      run("tag", "v1.4.2");
+      run("commit", "-q", "--allow-empty", "-m", "sprint");
+      run("tag", "release_iteration/Sprint_0705");
+      const version = deriveVersion(dir);
+      expect(version).toMatch(/^1\.4\.2-1-g[0-9a-f]+$/);
+      expect(version).not.toMatch(/^0\.0\.0/);
+    },
+    30000,
+  );
 
-  it("falls back to 0.0.0-g<hash> when no semver tag is reachable", () => {
-    const { dir } = initRepo();
-    expect(deriveVersion(dir)).toMatch(/^0\.0\.0-g[0-9a-f]+$/);
-  });
+  it(
+    "falls back to 0.0.0-g<hash> when no semver tag is reachable",
+    () => {
+      const { dir } = initRepo();
+      expect(deriveVersion(dir)).toMatch(/^0\.0\.0-g[0-9a-f]+$/);
+    },
+    30000,
+  );
 });
 
 describe("stripLeadingSeparator", () => {

@@ -338,16 +338,24 @@ export function builderArgsForTarget(
       `-c.directories.output=dist/${target.platform}-${target.arch}`,
     );
   }
-  // electron-builder's update metadata file is `latest.yml` for Windows
-  // regardless of arch (only Linux gets an arch suffix automatically — see
-  // app-builder-lib's getArchPrefixForUpdateFile). Without an explicit
-  // channel override, building Windows x64 and arm64 in two invocations
-  // makes both publish `latest.yml` to the same GitHub Release, so the
-  // second upload overwrites the first and one of the two architectures
-  // ends up with no auto-update metadata. Route Windows arm64 to its own
-  // channel so x64 keeps `latest.yml` and arm64 ships `latest-arm64.yml`;
-  // the renderer-side updater pins the matching channel per arch.
-  if (target.platform === "win" && target.arch === "arm64") {
+  // electron-builder's auto-update metadata file is arch-agnostic for
+  // Windows (`latest.yml`) and macOS (`latest-mac.yml`) — only Linux
+  // gets an arch suffix automatically (see app-builder-lib's
+  // getArchPrefixForUpdateFile). Without an explicit channel override,
+  // building x64 and arm64 in two invocations makes both publish the
+  // same file to one GitHub Release, so the second upload overwrites
+  // the first and one architecture ends up with no auto-update
+  // metadata — and on macOS a fresh tag has hard-failed the desktop
+  // job with a 422 already_exists from GitHub's assets API (release
+  // runs #13 / #14 against v1.5.0 / v1.5.1). Route arm64 to its own
+  // `latest-arm64` channel so x64 keeps the default `latest.yml` /
+  // `latest-mac.yml` and arm64 ships `latest-arm64.yml` /
+  // `latest-arm64-mac.yml`; the renderer-side updater pins the
+  // matching channel per arch.
+  if (
+    target.arch === "arm64" &&
+    (target.platform === "win" || target.platform === "mac")
+  ) {
     builderArgs.push("-c.publish.channel=latest-arm64");
   }
   return builderArgs;
