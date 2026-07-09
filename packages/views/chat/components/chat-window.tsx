@@ -220,6 +220,14 @@ export function ChatWindow() {
   const handleRestoreDraftConsumed = useCallback(() => {
     setRestoreDraftRequest(null);
   }, []);
+  // Nonce handed to ChatInput to pull focus into the compose box when a new
+  // chat starts (⊕ or switching agent). 0 is inert so opening the window on an
+  // existing session never steals focus.
+  const [focusRequest, setFocusRequest] = useState(0);
+  const requestInputFocus = useCallback(
+    () => setFocusRequest((n) => n + 1),
+    [],
+  );
 
   // Legacy archived sessions (the old soft-archive feature was removed but
   // pre-existing rows with status='archived' may still exist) are excluded
@@ -663,8 +671,9 @@ export function ChatWindow() {
       setSelectedAgentId(agent.id);
       // Reset session when switching agent
       setActiveSession(null);
+      requestInputFocus();
     },
-    [activeAgent, selectedAgentId, activeSessionId, setSelectedAgentId, setActiveSession],
+    [activeAgent, selectedAgentId, activeSessionId, setSelectedAgentId, setActiveSession, requestInputFocus],
   );
 
   const handleNewChat = useCallback(() => {
@@ -673,7 +682,8 @@ export function ChatWindow() {
       previousPendingTask: pendingTaskId,
     });
     setActiveSession(null);
-  }, [activeSessionId, pendingTaskId, setActiveSession]);
+    requestInputFocus();
+  }, [activeSessionId, pendingTaskId, setActiveSession, requestInputFocus]);
 
   const handleSelectSession = useCallback(
     (session: ChatSession) => {
@@ -864,6 +874,7 @@ export function ChatWindow() {
           />
         }
         contextItems={contextItems}
+        focusRequest={focusRequest}
       />
     </motion.div>
   );
@@ -1127,9 +1138,15 @@ function SessionDropdown({
   // bypass the "archive first, delete only from Archived" semantics.
   const handleArchive = (session: ChatSession) => {
     if (activeSessionId === session.id) {
-      // Eager local clear when archiving the session in view, so the composer
-      // doesn't keep pointing at a now read-only session until WS catches up.
-      setActiveSession(null);
+      // Archiving the session in view: advance to the next chat (fall back to
+      // the previous, clear only when none remain) instead of stranding the
+      // composer on a now read-only session — mirrors the Chat tab and the
+      // Inbox list. Routing the non-null advance through onSelectSession keeps
+      // selectedAgentId in sync when the next chat belongs to another agent.
+      const idx = historySessions.findIndex((s) => s.id === session.id);
+      const next = historySessions[idx + 1] ?? historySessions[idx - 1] ?? null;
+      if (next) onSelectSession(next);
+      else setActiveSession(null);
     }
     setArchived.mutate({ sessionId: session.id, archived: true });
   };
