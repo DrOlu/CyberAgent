@@ -3,6 +3,7 @@ import type {
   Agent,
   AgentTemplate,
   AgentTemplateSummary,
+  AgentBuilderSession,
   Attachment,
   BillingBalance,
   BillingBatchesPage,
@@ -375,6 +376,11 @@ const ProjectSchema = z.object({
   priority: z.string(),
   lead_type: z.string().nullable(),
   lead_id: z.string().nullable(),
+  // .default(null) so a project from an older backend (frontend deploys before
+  // backend) that omits these keys parses to null instead of failing the whole
+  // object — which would degrade a search/list batch to the empty fallback.
+  start_date: z.string().nullable().default(null),
+  due_date: z.string().nullable().default(null),
   created_at: z.string(),
   updated_at: z.string(),
   issue_count: z.number().default(0),
@@ -765,6 +771,18 @@ export const EMPTY_CREATE_AGENT_FROM_TEMPLATE_RESPONSE: CreateAgentFromTemplateR
   agent: { id: "" } as Agent,
   imported_skill_ids: [],
   reused_skill_ids: [],
+};
+
+export const AgentBuilderSessionSchema = z.object({
+  session_id: z.string(),
+  builder_agent_id: z.string(),
+  runtime_id: z.string(),
+}).loose();
+
+export const EMPTY_AGENT_BUILDER_SESSION: AgentBuilderSession = {
+  session_id: "",
+  builder_agent_id: "",
+  runtime_id: "",
 };
 
 // Squad list responses carry lightweight membership previews used by hover
