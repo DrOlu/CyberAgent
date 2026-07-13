@@ -21,11 +21,13 @@ import { useCurrentWorkspace } from "@multica/core/paths";
 import { useFileUpload } from "@multica/core/hooks/use-file-upload";
 import { api } from "@multica/core/api";
 import { useT } from "../i18n";
-import { formatShortcut, modKey, enterKey } from "@multica/core/platform";
+import { useShortcut } from "@multica/core/shortcuts";
+import { ShortcutKeycaps } from "../common/shortcut-keycaps";
 
 const MAX_MESSAGE_LEN = 10000;
 
 export function FeedbackModal({ onClose }: { onClose: () => void }) {
+  const sendShortcut = useShortcut("send");
   const { t } = useT("modals");
   const workspace = useCurrentWorkspace();
   const draft = useFeedbackDraftStore((s) => s.draft);
@@ -46,7 +48,7 @@ export function FeedbackModal({ onClose }: { onClose: () => void }) {
     !mutation.isPending;
 
   const handleSubmit = async () => {
-    if (!canSubmit) return;
+    if (mutation.isPending) return;
     if (editorRef.current?.hasActiveUploads()) {
       toast.info(t(($) => $.feedback.toast_uploading));
       return;
@@ -123,9 +125,14 @@ export function FeedbackModal({ onClose }: { onClose: () => void }) {
           />
           <Button size="sm" onClick={handleSubmit} disabled={!canSubmit}>
             {mutation.isPending ? t(($) => $.feedback.sending) : t(($) => $.feedback.send)}
-            <kbd className="ml-1 inline-flex h-4 items-center gap-0.5 rounded border border-border/50 bg-background/30 px-1 font-mono text-[10px] leading-none">
-              {formatShortcut(modKey, enterKey)}
-            </kbd>
+            {sendShortcut ? (
+              <ShortcutKeycaps
+                shortcut={sendShortcut}
+                decorative
+                className="ml-1"
+                keyClassName="border-background/30 bg-background/15 text-primary-foreground shadow-none"
+              />
+            ) : null}
           </Button>
         </div>
       </DialogContent>
