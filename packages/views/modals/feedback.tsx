@@ -16,7 +16,12 @@ import {
   useFileDropZone,
   FileDropOverlay,
 } from "../editor";
-import { useCreateFeedback, useFeedbackDraftStore } from "@multica/core/feedback";
+import {
+  useCreateFeedback,
+  useFeedbackDraftStore,
+  FEEDBACK_KINDS,
+  type FeedbackKind,
+} from "@multica/core/feedback";
 import { useCurrentWorkspace } from "@multica/core/paths";
 import { useFileUpload } from "@multica/core/hooks/use-file-upload";
 import { api } from "@multica/core/api";
@@ -26,7 +31,30 @@ import { ShortcutKeycaps } from "../common/shortcut-keycaps";
 
 const MAX_MESSAGE_LEN = 10000;
 
-export function FeedbackModal({ onClose }: { onClose: () => void }) {
+const FEEDBACK_KIND_SET = new Set<FeedbackKind>(FEEDBACK_KINDS);
+
+function composeFeedbackInitialMessage(draftMessage: string, incomingInitialMessage: string) {
+  const draft = draftMessage.trim();
+  const incoming = incomingInitialMessage.trim();
+  if (!incoming) return draftMessage;
+  if (!draft) return incomingInitialMessage;
+  if (draft.includes(incoming)) return draftMessage;
+  return `${draftMessage}
+
+---
+
+${incomingInitialMessage}`;
+}
+
+export function FeedbackModal({
+  onClose,
+  data,
+  initialMessage,
+}: {
+  onClose: () => void;
+  data?: Record<string, unknown> | null;
+  initialMessage?: string;
+}) {
   const sendShortcut = useShortcut("send");
   const { t } = useT("modals");
   const workspace = useCurrentWorkspace();
@@ -35,7 +63,13 @@ export function FeedbackModal({ onClose }: { onClose: () => void }) {
   const clearDraft = useFeedbackDraftStore((s) => s.clearDraft);
 
   const editorRef = useRef<ContentEditorRef>(null);
-  const [message, setMessage] = useState(draft.message);
+  const incomingInitialMessage =
+    initialMessage ?? (typeof data?.initialMessage === "string" ? data.initialMessage : "");
+  const kind = typeof data?.kind === "string" && FEEDBACK_KIND_SET.has(data.kind as FeedbackKind)
+    ? (data.kind as FeedbackKind)
+    : undefined;
+  const seededMessage = composeFeedbackInitialMessage(draft.message, incomingInitialMessage);
+  const [message, setMessage] = useState(seededMessage);
   const { isDragOver, dropZoneProps } = useFileDropZone({
     onDrop: (files) => files.forEach((f) => editorRef.current?.uploadFile(f)),
   });
@@ -67,6 +101,7 @@ export function FeedbackModal({ onClose }: { onClose: () => void }) {
         message: latest,
         url: typeof window !== "undefined" ? window.location.href : undefined,
         workspace_id: workspace?.id,
+        kind,
       });
       clearDraft();
       toast.success(t(($) => $.feedback.toast_sent));
@@ -104,8 +139,7 @@ export function FeedbackModal({ onClose }: { onClose: () => void }) {
             className="relative h-full overflow-y-auto rounded-lg border-1 border-border transition-colors focus-within:border-brand"
           >
             <ContentEditor
-              ref={editorRef}
-              defaultValue={draft.message}
+              defaultValue={seededMessage}
               placeholder={t(($) => $.feedback.placeholder)}
               onUpdate={(md) => { setMessage(md); setDraft({ message: md }); }}
               onUploadFile={uploadWithToast}
