@@ -552,17 +552,16 @@ multica project get <id> --output json
 multica project create --title "2026 Week 16 Sprint" --icon "🏃" --lead "Lambda"
 ```
 
-Flags: `--title` (required), `--description`, `--status`, `--icon`, `--lead`, `--start-date`, `--due-date`. Dates are calendar days (`YYYY-MM-DD`).
+Flags: `--title` (required), `--description`, `--status`, `--icon`, `--lead`.
 
 ### Update Project
 
 ```bash
 multica project update <id> --title "New title" --status in_progress
 multica project update <id> --lead "Lambda"
-multica project update <id> --due-date 2026-04-15
 ```
 
-Flags: `--title`, `--description`, `--status`, `--icon`, `--lead`, `--start-date`, `--due-date`. For the date flags, pass an empty string (e.g. `--start-date ""`) to clear the date.
+Flags: `--title`, `--description`, `--status`, `--icon`, `--lead`.
 
 ### Change Status
 
