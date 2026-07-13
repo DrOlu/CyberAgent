@@ -139,6 +139,7 @@ export function FeedbackModal({
             className="relative h-full overflow-y-auto rounded-lg border-1 border-border transition-colors focus-within:border-brand"
           >
             <ContentEditor
+              ref={editorRef}
               defaultValue={seededMessage}
               placeholder={t(($) => $.feedback.placeholder)}
               onUpdate={(md) => { setMessage(md); setDraft({ message: md }); }}
