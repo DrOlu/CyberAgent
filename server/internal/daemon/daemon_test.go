@@ -83,6 +83,62 @@ func TestTriggerRestart_BrewLinuxCellarDeleted(t *testing.T) {
 	}
 }
 
+func TestTriggerRestart_UsesResolvedFallback(t *testing.T) {
+	originalResolveSelfExecutable := resolveSelfExecutable
+	originalIsBrewInstall := isBrewInstall
+	t.Cleanup(func() {
+		resolveSelfExecutable = originalResolveSelfExecutable
+		isBrewInstall = originalIsBrewInstall
+	})
+
+	want := filepath.Join(t.TempDir(), "multica")
+	if err := os.WriteFile(want, []byte("test executable"), 0o755); err != nil {
+		t.Fatalf("write executable fixture: %v", err)
+	}
+	wantResolved, err := filepath.EvalSymlinks(want)
+	if err != nil {
+		t.Fatalf("resolve executable fixture: %v", err)
+	}
+	resolveSelfExecutable = func() (string, error) { return want, nil }
+	isBrewInstall = func() bool { return false }
+
+	canceled := false
+	d := &Daemon{
+		logger:     slog.New(slog.NewTextHandler(io.Discard, nil)),
+		cancelFunc: func() { canceled = true },
+	}
+	d.triggerRestart()
+
+	if got := d.RestartBinary(); got != wantResolved {
+		t.Fatalf("restart binary = %q, want resolved fallback executable %q", got, wantResolved)
+	}
+	if !canceled {
+		t.Fatal("triggerRestart did not initiate graceful shutdown")
+	}
+}
+
+func TestTriggerRestart_ResolveFailureLeavesDaemonRunning(t *testing.T) {
+	originalResolveSelfExecutable := resolveSelfExecutable
+	t.Cleanup(func() { resolveSelfExecutable = originalResolveSelfExecutable })
+	resolveSelfExecutable = func() (string, error) {
+		return "", errors.New("cannot resolve executable")
+	}
+
+	canceled := false
+	d := &Daemon{
+		logger:     slog.New(slog.NewTextHandler(io.Discard, nil)),
+		cancelFunc: func() { canceled = true },
+	}
+	d.triggerRestart()
+
+	if got := d.RestartBinary(); got != "" {
+		t.Fatalf("restart binary = %q, want empty", got)
+	}
+	if canceled {
+		t.Fatal("triggerRestart initiated shutdown without a restart binary")
+	}
+}
+
 func TestIsBlockedEnvKey(t *testing.T) {
 	t.Parallel()
 
@@ -173,16 +229,25 @@ func TestTriggerRestart_BrewPrefixUnavailable_FallsBackToKnownPrefix(t *testing.
 	originalIsBrewInstall := isBrewInstall
 	originalGetBrewPrefix := getBrewPrefix
 	originalMatchKnownBrewPrefix := matchKnownBrewPrefix
+	originalResolveSelfExecutable := resolveSelfExecutable
 	t.Cleanup(func() {
 		isBrewInstall = originalIsBrewInstall
 		getBrewPrefix = originalGetBrewPrefix
 		matchKnownBrewPrefix = originalMatchKnownBrewPrefix
+		resolveSelfExecutable = originalResolveSelfExecutable
 	})
 
 	const knownPrefix = "/home/linuxbrew/.linuxbrew"
+	cellarPath := filepath.Join(knownPrefix, "Cellar", "multica", "0.2.9", "bin", "multica")
 	isBrewInstall = func() bool { return true }
 	getBrewPrefix = func() string { return "" }
-	matchKnownBrewPrefix = func(string) string { return knownPrefix }
+	resolveSelfExecutable = func() (string, error) { return cellarPath, nil }
+	matchKnownBrewPrefix = func(path string) string {
+		if path != cellarPath {
+			t.Fatalf("MatchKnownBrewPrefix path = %q, want resolver result %q", path, cellarPath)
+		}
+		return knownPrefix
+	}
 
 	d := &Daemon{
 		logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
@@ -2620,21 +2685,21 @@ func TestWatchTaskCancellation_ReconcileWithRunningTaskStaysAlive(t *testing.T) 
 }
 
 // TestWorkspaceSyncLoop_ReconcileBroadcastTriggersImmediateSync pins that the
-// 30s workspace sync ticker is also short-circuited by reconcile broadcasts.
-// Without this, runtime/repo changes the server made during a WS disconnect
-// stay invisible to the daemon for up to 30 seconds.
+// long-period workspace consistency timer is short-circuited by reconnect
+// broadcasts. Without this, changes made during a WS disconnect stay invisible
+// until the next fallback sync.
 func TestWorkspaceSyncLoop_ReconcileBroadcastTriggersImmediateSync(t *testing.T) {
 	t.Parallel()
 
 	var calls atomic.Int32
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/api/workspaces" {
+		if r.URL.Path != "/api/daemon/workspaces" {
 			http.NotFound(w, r)
 			return
 		}
 		calls.Add(1)
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"workspaces":[]}`))
+		_, _ = w.Write([]byte(`[]`))
 	}))
 	t.Cleanup(srv.Close)
 
@@ -2687,6 +2752,132 @@ func TestWorkspaceSyncLoop_ReconcileBroadcastTriggersImmediateSync(t *testing.T)
 	}
 }
 
+func TestWorkspaceSyncLoop_WorkspaceChangeTriggersImmediateSync(t *testing.T) {
+	t.Parallel()
+
+	var calls atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/daemon/workspaces" {
+			http.NotFound(w, r)
+			return
+		}
+		calls.Add(1)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`[]`))
+	}))
+	t.Cleanup(srv.Close)
+
+	d := &Daemon{
+		client:           NewClient(srv.URL),
+		logger:           slog.Default(),
+		workspaces:       make(map[string]*workspaceState),
+		workspaceChanges: newWorkspaceChangeSignal(),
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	loopDone := make(chan struct{})
+	go func() {
+		defer close(loopDone)
+		d.workspaceSyncLoop(ctx)
+	}()
+
+	d.workspaceChanges.broadcast()
+	deadline := time.Now().Add(2 * time.Second)
+	for time.Now().Before(deadline) && calls.Load() < 1 {
+		time.Sleep(10 * time.Millisecond)
+	}
+	if calls.Load() < 1 {
+		cancel()
+		<-loopDone
+		t.Fatal("workspace change did not trigger an immediate sync")
+	}
+
+	cancel()
+	<-loopDone
+}
+
+// TestWorkspaceSyncLoop_DoesNotDropChangeAfterSuccessfulSync covers the
+// request-changes race from MUL-4480: a real membership hint arriving within
+// one second of a completed sync must trigger another sync, not be treated as
+// a duplicate of the earlier read and deferred to the 30-minute fallback.
+func TestWorkspaceSyncLoop_DoesNotDropChangeAfterSuccessfulSync(t *testing.T) {
+	t.Parallel()
+
+	var calls atomic.Int32
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/daemon/workspaces" {
+			http.NotFound(w, r)
+			return
+		}
+		calls.Add(1)
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`[]`))
+	}))
+	t.Cleanup(srv.Close)
+
+	d := &Daemon{
+		client:           NewClient(srv.URL),
+		logger:           slog.Default(),
+		workspaces:       make(map[string]*workspaceState),
+		workspaceChanges: newWorkspaceChangeSignal(),
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	loopDone := make(chan struct{})
+	go func() {
+		defer close(loopDone)
+		d.workspaceSyncLoop(ctx)
+	}()
+
+	waitForCalls := func(want int32) {
+		t.Helper()
+		deadline := time.Now().Add(2 * time.Second)
+		for time.Now().Before(deadline) && calls.Load() < want {
+			time.Sleep(10 * time.Millisecond)
+		}
+		if got := calls.Load(); got < want {
+			t.Fatalf("workspace sync calls = %d, want at least %d", got, want)
+		}
+	}
+
+	d.workspaceChanges.broadcast()
+	waitForCalls(1)
+	deadline := time.Now().Add(time.Second)
+	for !d.reloading.TryLock() {
+		if time.Now().After(deadline) {
+			t.Fatal("first workspace sync did not finish")
+		}
+		time.Sleep(time.Millisecond)
+	}
+	d.reloading.Unlock()
+	// The second edge lands immediately after a successful API read. It
+	// represents a later commit and therefore cannot be coalesced backward.
+	d.workspaceChanges.broadcast()
+	waitForCalls(2)
+
+	cancel()
+	<-loopDone
+}
+
+func TestWorkspaceSyncBackoff(t *testing.T) {
+	tests := []struct {
+		failures int
+		want     time.Duration
+	}{
+		{failures: 0, want: 30 * time.Second},
+		{failures: 1, want: time.Minute},
+		{failures: 2, want: 2 * time.Minute},
+		{failures: 10, want: DefaultWorkspaceLegacySyncInterval},
+	}
+	for _, tt := range tests {
+		if got := workspaceSyncBackoff(30*time.Second, tt.failures); got != tt.want {
+			t.Fatalf("workspaceSyncBackoff(30s, %d) = %s, want %s", tt.failures, got, tt.want)
+		}
+	}
+}
+
 // TestWorkspaceSyncLoop_ReplaysBroadcastFromBeforeStart pins the daemon-
 // startup race fix: broadcast() that fired while no one was subscribed
 // MUST still wake the loop on its first subscription. Without the
@@ -2698,13 +2889,13 @@ func TestWorkspaceSyncLoop_ReplaysBroadcastFromBeforeStart(t *testing.T) {
 
 	var calls atomic.Int32
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/api/workspaces" {
+		if r.URL.Path != "/api/daemon/workspaces" {
 			http.NotFound(w, r)
 			return
 		}
 		calls.Add(1)
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"workspaces":[]}`))
+		_, _ = w.Write([]byte(`[]`))
 	}))
 	t.Cleanup(srv.Close)
 
