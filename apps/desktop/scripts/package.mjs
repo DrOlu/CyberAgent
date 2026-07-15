@@ -66,6 +66,7 @@ const ARCH_FLAGS = new Map([
 const SUPPORTED_CLI_ARCHS = new Set(["x64", "arm64"]);
 const MAC_ALL_PLATFORM_TARGETS = [
   { platform: "mac", arch: "arm64" },
+  { platform: "mac", arch: "x64" },
   { platform: "win", arch: "x64" },
   { platform: "win", arch: "arm64" },
   { platform: "linux", arch: "x64" },
@@ -338,25 +339,20 @@ export function builderArgsForTarget(
       `-c.directories.output=dist/${target.platform}-${target.arch}`,
     );
   }
-  // electron-builder's auto-update metadata file is arch-agnostic for
-  // Windows (`latest.yml`) and macOS (`latest-mac.yml`) — only Linux
-  // gets an arch suffix automatically (see app-builder-lib's
-  // getArchPrefixForUpdateFile). Without an explicit channel override,
-  // building x64 and arm64 in two invocations makes both publish the
-  // same file to one GitHub Release, so the second upload overwrites
-  // the first and one architecture ends up with no auto-update
-  // metadata — and on macOS a fresh tag has hard-failed the desktop
-  // job with a 422 already_exists from GitHub's assets API (release
-  // runs #13 / #14 against v1.5.0 / v1.5.1). Route arm64 to its own
-  // `latest-arm64` channel so x64 keeps the default `latest.yml` /
-  // `latest-mac.yml` and arm64 ships `latest-arm64.yml` /
-  // `latest-arm64-mac.yml`; the renderer-side updater pins the
-  // matching channel per arch.
-  if (
-    target.arch === "arm64" &&
-    (target.platform === "win" || target.platform === "mac")
-  ) {
+  // electron-builder only adds an architecture suffix to Linux update
+  // metadata. Windows x64/arm64 would both publish `latest.yml`, while macOS
+  // arm64/x64 would both publish `latest-mac.yml`. Keep the established x64
+  // Windows and arm64 macOS feeds unchanged for installed clients, and route
+  // the additional architectures to explicit channels. updater.ts pins the
+  // matching channel at runtime.
+  if (target.platform === "win" && target.arch === "arm64") {
     builderArgs.push("-c.publish.channel=latest-arm64");
+  }
+  if (target.platform === "mac" && target.arch === "x64") {
+    // Scope the Electron 39 platform floor to the new Intel package so this
+    // change does not rewrite established Apple Silicon bundle metadata.
+    builderArgs.push("-c.mac.minimumSystemVersion=12.0.0");
+    builderArgs.push("-c.publish.channel=latest-x64");
   }
   return builderArgs;
 }

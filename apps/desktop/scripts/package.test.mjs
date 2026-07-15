@@ -126,47 +126,31 @@ describe("deriveVersion (real git describe)", () => {
     while (repos.length) rmSync(repos.pop(), { recursive: true, force: true });
   });
 
-  // These spawn real `git` subprocesses (init + config x3 + commit + tag +
-  // describe). The vitest default 5s timeout is too tight on a loaded CI
-  // runner — the first cold-start invocation has crossed it on the shared
-  // ubuntu runner — so give the whole integration block headroom.
-  it(
-    "resolves a clean semver tag to its bare version",
-    () => {
-      const { dir, run } = initRepo();
-      run("tag", "v1.4.2");
-      expect(deriveVersion(dir)).toBe("1.4.2");
-    },
-    30000,
-  );
+  it("resolves a clean semver tag to its bare version", () => {
+    const { dir, run } = initRepo();
+    run("tag", "v1.4.2");
+    expect(deriveVersion(dir)).toBe("1.4.2");
+  });
 
-  it(
-    "selects the semver tag even when a nearer non-semver tag exists",
-    () => {
-      // A release-train tag like `release_iteration/…` sitting closer to HEAD
-      // must not become the version. With the match pattern correctly reaching
-      // git, describe skips it and reports the real vX.Y.Z tag. If the pattern
-      // were mangled (e.g. quotes leaking through a shell) git would match
-      // nothing and the version would collapse to `0.0.0-…`.
-      const { dir, run } = initRepo();
-      run("tag", "v1.4.2");
-      run("commit", "-q", "--allow-empty", "-m", "sprint");
-      run("tag", "release_iteration/Sprint_0705");
-      const version = deriveVersion(dir);
-      expect(version).toMatch(/^1\.4\.2-1-g[0-9a-f]+$/);
-      expect(version).not.toMatch(/^0\.0\.0/);
-    },
-    30000,
-  );
+  it("selects the semver tag even when a nearer non-semver tag exists", () => {
+    // A release-train tag like `release_iteration/…` sitting closer to HEAD
+    // must not become the version. With the match pattern correctly reaching
+    // git, describe skips it and reports the real vX.Y.Z tag. If the pattern
+    // were mangled (e.g. quotes leaking through a shell) git would match
+    // nothing and the version would collapse to `0.0.0-…`.
+    const { dir, run } = initRepo();
+    run("tag", "v1.4.2");
+    run("commit", "-q", "--allow-empty", "-m", "sprint");
+    run("tag", "release_iteration/Sprint_0705");
+    const version = deriveVersion(dir);
+    expect(version).toMatch(/^1\.4\.2-1-g[0-9a-f]+$/);
+    expect(version).not.toMatch(/^0\.0\.0/);
+  });
 
-  it(
-    "falls back to 0.0.0-g<hash> when no semver tag is reachable",
-    () => {
-      const { dir } = initRepo();
-      expect(deriveVersion(dir)).toMatch(/^0\.0\.0-g[0-9a-f]+$/);
-    },
-    30000,
-  );
+  it("falls back to 0.0.0-g<hash> when no semver tag is reachable", () => {
+    const { dir } = initRepo();
+    expect(deriveVersion(dir)).toMatch(/^0\.0\.0-g[0-9a-f]+$/);
+  });
 });
 
 describe("stripLeadingSeparator", () => {
@@ -257,6 +241,7 @@ describe("resolveBuildMatrix", () => {
       ),
     ).toEqual([
       { platform: "mac", arch: "arm64" },
+      { platform: "mac", arch: "x64" },
       { platform: "win", arch: "x64" },
       { platform: "win", arch: "arm64" },
       { platform: "linux", arch: "x64" },
@@ -338,14 +323,35 @@ describe("builderArgsForTarget", () => {
     ]);
   });
 
-  // The macOS arm64 channel override is the publish-side half of the
-  // pact with apps/desktop/src/main/updater.ts. Without it both arches
-  // race to upload `latest-mac.yml`, which on a fresh tag has hard-failed
-  // the desktop job with a 422 already_exists from GitHub's assets API
-  // (see release runs #13 / #14 against v1.5.0 / v1.5.1). Routing arm64
-  // to its own channel produces `latest-arm64-mac.yml` so the two files
-  // never collide.
-  it("routes macOS arm64 to its own publish channel to avoid latest-mac.yml collisions", () => {
+  it("isolates the macOS x64 feed and platform floor", () => {
+    expect(
+      builderArgsForTarget(
+        { platform: "mac", arch: "x64" },
+        {
+          allPlatforms: false,
+          sharedArgs: ["--publish", "always"],
+          platformTargets: { mac: ["dmg", "zip"], win: [], linux: [] },
+          requestedPlatforms: ["mac"],
+          requestedArchs: ["x64"],
+        },
+        "1.2.3",
+        { hostPlatform: "darwin", useScopedOutputDir: true },
+      ),
+    ).toEqual([
+      "-c.extraMetadata.version=1.2.3",
+      "--mac",
+      "dmg",
+      "zip",
+      "--x64",
+      "--publish",
+      "always",
+      "-c.directories.output=dist/mac-x64",
+      "-c.mac.minimumSystemVersion=12.0.0",
+      "-c.publish.channel=latest-x64",
+    ]);
+  });
+
+  it("keeps macOS arm64 on the existing latest-mac update channel", () => {
     expect(
       builderArgsForTarget(
         { platform: "mac", arch: "arm64" },
@@ -366,31 +372,6 @@ describe("builderArgsForTarget", () => {
       "--publish",
       "always",
       "-c.directories.output=dist/mac-arm64",
-      "-c.publish.channel=latest-arm64",
-    ]);
-  });
-
-  it("does not override the publish channel for macOS x64 (default latest-mac.yml)", () => {
-    expect(
-      builderArgsForTarget(
-        { platform: "mac", arch: "x64" },
-        {
-          allPlatforms: false,
-          sharedArgs: ["--publish", "always"],
-          platformTargets: { mac: [], win: [], linux: [] },
-          requestedPlatforms: ["mac"],
-          requestedArchs: ["x64"],
-        },
-        "1.2.3",
-        { hostPlatform: "darwin", useScopedOutputDir: true },
-      ),
-    ).toEqual([
-      "-c.extraMetadata.version=1.2.3",
-      "--mac",
-      "--x64",
-      "--publish",
-      "always",
-      "-c.directories.output=dist/mac-x64",
     ]);
   });
 

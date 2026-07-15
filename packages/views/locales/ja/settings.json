@@ -30,6 +30,10 @@
     "sticky_comment_bar": {
       "title": "コメントバーを固定",
       "hint": "イシューのページをスクロールしても、コメントバーを常に下部に固定します。"
+    },
+    "issue_link_new_tab": {
+      "title": "イシューリンクを新しいタブで開く",
+      "hint": "説明・コメント・チャット内のイシューリンクを、その場で移動せず新しいタブで開きます。"
     }
   },
   "shortcuts": {
@@ -206,7 +210,6 @@
       "description": "説明",
       "description_placeholder": "このラベルを使用する条件を説明",
       "color": "色",
-      "custom_color": "カスタム色を選択",
       "cancel": "キャンセル",
       "save": "ラベルを保存",
       "saving": "保存中..."
