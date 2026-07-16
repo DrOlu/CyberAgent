@@ -945,6 +945,7 @@ func (d *Daemon) Run(ctx context.Context) error {
 		"heartbeat_interval", d.cfg.HeartbeatInterval,
 		"agent_timeout", d.cfg.AgentTimeout,
 		"idle_watchdog", d.cfg.AgentIdleWatchdog,
+		"opencode_idle_watchdog", d.cfg.OpenCodeIdleWatchdog,
 		"max_concurrent_tasks", d.cfg.MaxConcurrentTasks,
 		"gc_enabled", d.cfg.GCEnabled,
 		"auto_update", d.cfg.AutoUpdateEnabled,
@@ -4128,6 +4129,18 @@ func (d *Daemon) runTask(ctx context.Context, task Task, provider string, slot i
 	if env.CodexHome != "" {
 		agentEnv["CODEX_HOME"] = env.CodexHome
 	}
+	// Redirect HOME/XDG/npm_config_cache to the per-task writable home under the
+	// Linux codex workspace-write sandbox, where the real home is read-only. This
+	// lets tools that write to `~` (npm, Prisma, …) succeed without per-tool env
+	// tweaks. Set before custom_env below so a user override still wins for the
+	// non-blocklisted XDG keys; HOME itself stays blocklisted. Empty TaskHome
+	// (macOS/Windows, non-sandboxed providers) leaves the real HOME untouched
+	// (MUL-4856).
+	if env.TaskHome != "" {
+		for k, v := range execenv.TaskHomeEnv(env.TaskHome) {
+			agentEnv[k] = v
+		}
+	}
 	// (Hermes HERMES_HOME is applied after custom_env below so the per-task
 	// overlay can win over a user-set HERMES_HOME; see
 	// layerCustomEnvAndHermesHome.)
@@ -4247,12 +4260,17 @@ func (d *Daemon) runTask(ctx context.Context, task Task, provider string, slot i
 			thinkingLevel = ""
 		}
 	}
+	var idleWatchdogTimeout time.Duration
+	if provider == "opencode" {
+		idleWatchdogTimeout = d.cfg.OpenCodeIdleWatchdog
+	}
 	execOpts := agent.ExecOptions{
 		Cwd:                       env.WorkDir,
 		Model:                     model,
 		ThreadName:                deriveTaskThreadName(task),
 		Timeout:                   d.cfg.AgentTimeout,
 		SemanticInactivityTimeout: d.cfg.CodexSemanticInactivityTimeout,
+		IdleWatchdogTimeout:       idleWatchdogTimeout,
 		HandshakeTimeout:          d.cfg.CodexHandshakeTimeout,
 		ResumeSessionID:           task.PriorSessionID,
 		// Post-gate intent: PriorSessionID here already reflects the pre-flight
@@ -4302,6 +4320,7 @@ func (d *Daemon) runTask(ctx context.Context, task Task, provider string, slot i
 		"inline_system_prompt", execOpts.SystemPrompt != "",
 		"resume_session", execOpts.ResumeSessionID != "",
 		"timeout", execOpts.Timeout,
+		"idle_watchdog", execOpts.IdleWatchdogTimeout,
 	)
 
 	// Shared across the resume-retry below so the retry's transcript rows
@@ -4567,9 +4586,15 @@ func (d *Daemon) executeAndDrain(ctx context.Context, backend agent.Backend, pro
 	// idleWatchdogThreshold records (as nanos) which silence budget actually
 	// tripped the watchdog — the idle window or the larger in-flight-tool
 	// window — so the failure message reports the real duration.
-	var idleWatchdogThreshold atomic.Int64
-	idleWatchdogThreshold.Store(int64(d.cfg.AgentIdleWatchdog))
 	idleWindow := d.cfg.AgentIdleWatchdog
+	// A provider may opt into a shorter per-run no-message budget. The global
+	// zero remains authoritative so MULTICA_AGENT_IDLE_WATCHDOG=0 still disables
+	// the entire watchdog suite. Tool calls continue to use AgentToolWatchdog.
+	if idleWindow > 0 && opts.IdleWatchdogTimeout > 0 && opts.IdleWatchdogTimeout < idleWindow {
+		idleWindow = opts.IdleWatchdogTimeout
+	}
+	var idleWatchdogThreshold atomic.Int64
+	idleWatchdogThreshold.Store(int64(idleWindow))
 	if idleWindow > 0 {
 		go d.runIdleWatchdog(agentCtx, idleWindow, d.cfg.AgentToolWatchdog, &lastActivityAt, &inFlightTools, &idleWatchdogFired, &idleWatchdogThreshold, agentCancel, session.Messages, taskLog, taskID)
 	}

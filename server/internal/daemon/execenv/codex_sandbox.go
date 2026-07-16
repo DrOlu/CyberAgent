@@ -16,11 +16,11 @@ import (
 // ignores `[sandbox_workspace_write] network_access = true`. DNS resolution is
 // blocked at the syscall layer, so processes inside the sandbox see
 // `no such host` errors when calling out (for example, `multica issue get`
-// hitting the CyberAgent API). See upstream issue openai/codex#10390.
+// hitting the Multica API). See upstream issue openai/codex#10390.
 //
 // Until a fixed Codex release ships, the per-task Codex config on macOS needs
 // to fall back to `sandbox_mode = "danger-full-access"` so the agent can
-// actually reach the CyberAgent API. On Linux (and on macOS once the upstream
+// actually reach the Multica API. On Linux (and on macOS once the upstream
 // fix is released), the normal `workspace-write` + `network_access = true`
 // combo is preferred because it keeps the filesystem sandbox intact.
 //
@@ -38,6 +38,15 @@ type codexSandboxPolicy struct {
 	// NetworkAccess controls `[sandbox_workspace_write] network_access`.
 	// Only meaningful when Mode is "workspace-write".
 	NetworkAccess bool
+	// WritableRoots are extra absolute paths added to
+	// `[sandbox_workspace_write] writable_roots`, granting write access outside
+	// the sandbox cwd (the task workdir). Under workspace-write (Linux Landlock)
+	// everything outside the cwd is read-only, which breaks tools that write to
+	// $HOME (npm, Prisma). The daemon points this at the per-task writable HOME.
+	// Only emitted when Mode is "workspace-write"; empty on darwin
+	// danger-full-access, where the filesystem is not sandboxed at all. See
+	// task_home.go.
+	WritableRoots []string
 	// Reason is a short human-readable label used in warn-level logs.
 	Reason string
 }
@@ -45,12 +54,12 @@ type codexSandboxPolicy struct {
 // codexSandboxPolicyFor picks the right policy for the given platform and
 // detected Codex CLI version.
 //
-// - Non-darwin: always workspace-write with network access (Landlock is not
-//   affected by the macOS Seatbelt bug).
-// - darwin with a version at or above CodexDarwinNetworkAccessFixedVersion:
-//   workspace-write with network access (upstream bug fixed).
-// - darwin otherwise (including when the version is unknown): fall back to
-//   danger-full-access so the CyberAgent CLI can reach the API.
+//   - Non-darwin: always workspace-write with network access (Landlock is not
+//     affected by the macOS Seatbelt bug).
+//   - darwin with a version at or above CodexDarwinNetworkAccessFixedVersion:
+//     workspace-write with network access (upstream bug fixed).
+//   - darwin otherwise (including when the version is unknown): fall back to
+//     danger-full-access so the Multica CLI can reach the API.
 func codexSandboxPolicyFor(goos, detectedVersion string) codexSandboxPolicy {
 	if goos == "" {
 		goos = runtime.GOOS
@@ -134,10 +143,27 @@ func renderMulticaManagedBlock(policy codexSandboxPolicy) string {
 	b.WriteString(fmt.Sprintf("sandbox_mode = %q\n", policy.Mode))
 	if policy.Mode == "workspace-write" {
 		b.WriteString(fmt.Sprintf("sandbox_workspace_write.network_access = %t\n", policy.NetworkAccess))
+		if len(policy.WritableRoots) > 0 {
+			b.WriteString("sandbox_workspace_write.writable_roots = ")
+			b.WriteString(renderTomlStringArray(policy.WritableRoots))
+			b.WriteString("\n")
+		}
 	}
 	b.WriteString(multicaManagedEndMarker)
 	b.WriteString("\n")
 	return b.String()
+}
+
+// renderTomlStringArray renders a TOML inline array of basic strings, e.g.
+// ["/a/b", "/c d"]. Each element is quoted with Go's %q, whose escaping (\\,
+// \", \n, …) is a subset of TOML basic-string escaping, so ordinary
+// filesystem paths — including ones with spaces — round-trip safely.
+func renderTomlStringArray(vals []string) string {
+	parts := make([]string, len(vals))
+	for i, v := range vals {
+		parts[i] = fmt.Sprintf("%q", v)
+	}
+	return "[" + strings.Join(parts, ", ") + "]"
 }
 
 // managedBlockRe captures the daemon-owned block (including the surrounding
