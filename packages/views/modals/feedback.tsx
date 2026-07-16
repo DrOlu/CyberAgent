@@ -15,8 +15,6 @@ import {
   type ContentEditorRef,
   useFileDropZone,
   FileDropOverlay,
-  useUploadGate,
-  useEditorUpload,
 } from "../editor";
 import {
   useCreateFeedback,
@@ -25,6 +23,8 @@ import {
   type FeedbackKind,
 } from "@multica/core/feedback";
 import { useCurrentWorkspace } from "@multica/core/paths";
+import { useFileUpload } from "@multica/core/hooks/use-file-upload";
+import { api } from "@multica/core/api";
 import { useT } from "../i18n";
 import { useShortcut } from "@multica/core/shortcuts";
 import { ShortcutKeycaps } from "../common/shortcut-keycaps";
@@ -57,7 +57,6 @@ export function FeedbackModal({
 }) {
   const sendShortcut = useShortcut("send");
   const { t } = useT("modals");
-  const { t: tEditor } = useT("editor");
   const workspace = useCurrentWorkspace();
   const draft = useFeedbackDraftStore((s) => s.draft);
   const setDraft = useFeedbackDraftStore((s) => s.setDraft);
@@ -74,23 +73,17 @@ export function FeedbackModal({
   const { isDragOver, dropZoneProps } = useFileDropZone({
     onDrop: (files) => files.forEach((f) => editorRef.current?.uploadFile(f)),
   });
-  const { uploadWithToast } = useEditorUpload();
-  // The handler already refused to submit mid-upload, but the button stayed
-  // clickable — so the only feedback was a toast fired after the click.
-  const uploadGate = useUploadGate(editorRef);
+  const { uploadWithToast } = useFileUpload(api);
   const mutation = useCreateFeedback();
 
   const canSubmit =
     message.trim().length > 0 &&
     message.length <= MAX_MESSAGE_LEN &&
-    !mutation.isPending &&
-    !uploadGate.uploading;
+    !mutation.isPending;
 
   const handleSubmit = async () => {
     if (mutation.isPending) return;
-    // Keep the toast on this path: the shortcut can fire while the button is
-    // disabled and off-screen, so a silent no-op would read as a dead ⌘+Enter.
-    if (uploadGate.isBlocked()) {
+    if (editorRef.current?.hasActiveUploads()) {
       toast.info(t(($) => $.feedback.toast_uploading));
       return;
     }
@@ -151,7 +144,6 @@ export function FeedbackModal({
               placeholder={t(($) => $.feedback.placeholder)}
               onUpdate={(md) => { setMessage(md); setDraft({ message: md }); }}
               onUploadFile={uploadWithToast}
-              onUploadingChange={uploadGate.onUploadingChange}
               onSubmit={handleSubmit}
               debounceMs={150}
               showBubbleMenu={false}
@@ -166,18 +158,8 @@ export function FeedbackModal({
             size="sm"
             onSelect={(file) => editorRef.current?.uploadFile(file)}
           />
-          <Button
-            size="sm"
-            onClick={handleSubmit}
-            disabled={!canSubmit}
-            aria-disabled={uploadGate.uploading || undefined}
-            aria-busy={uploadGate.uploading || undefined}
-          >
-            {mutation.isPending
-              ? t(($) => $.feedback.sending)
-              : uploadGate.uploading
-                ? tEditor(($) => $.upload.in_progress)
-                : t(($) => $.feedback.send)}
+          <Button size="sm" onClick={handleSubmit} disabled={!canSubmit}>
+            {mutation.isPending ? t(($) => $.feedback.sending) : t(($) => $.feedback.send)}
             {sendShortcut ? (
               <ShortcutKeycaps
                 shortcut={sendShortcut}
