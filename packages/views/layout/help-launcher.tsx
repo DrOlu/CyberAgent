@@ -4,6 +4,7 @@ import { ArrowUpRight, BookOpen, CircleHelp, History, MessageCircle } from "luci
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -65,9 +66,11 @@ export function HelpLauncher() {
         {serverVersion && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuLabel>
-              {t(($) => $.help.server_version, { version: serverVersion })}
-            </DropdownMenuLabel>
+            <DropdownMenuGroup>
+              <DropdownMenuLabel>
+                {t(($) => $.help.server_version, { version: serverVersion })}
+              </DropdownMenuLabel>
+            </DropdownMenuGroup>
           </>
         )}
       </DropdownMenuContent>

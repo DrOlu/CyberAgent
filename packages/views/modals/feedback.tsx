@@ -15,6 +15,7 @@ import {
   type ContentEditorRef,
   useFileDropZone,
   FileDropOverlay,
+  useUploadGate,
 } from "../editor";
 import {
   useCreateFeedback,
@@ -57,12 +58,14 @@ export function FeedbackModal({
 }) {
   const sendShortcut = useShortcut("send");
   const { t } = useT("modals");
+  const { t: tEditor } = useT("editor");
   const workspace = useCurrentWorkspace();
   const draft = useFeedbackDraftStore((s) => s.draft);
   const setDraft = useFeedbackDraftStore((s) => s.setDraft);
   const clearDraft = useFeedbackDraftStore((s) => s.clearDraft);
 
   const editorRef = useRef<ContentEditorRef>(null);
+  const uploadGate = useUploadGate(editorRef);
   const incomingInitialMessage =
     initialMessage ?? (typeof data?.initialMessage === "string" ? data.initialMessage : "");
   const kind = typeof data?.kind === "string" && FEEDBACK_KIND_SET.has(data.kind as FeedbackKind)
@@ -79,11 +82,11 @@ export function FeedbackModal({
   const canSubmit =
     message.trim().length > 0 &&
     message.length <= MAX_MESSAGE_LEN &&
-    !mutation.isPending;
+    !mutation.isPending &&
+    !uploadGate.uploading;
 
   const handleSubmit = async () => {
-    if (mutation.isPending) return;
-    if (editorRef.current?.hasActiveUploads()) {
+    if (uploadGate.isBlocked()) {
       toast.info(t(($) => $.feedback.toast_uploading));
       return;
     }
@@ -144,6 +147,7 @@ export function FeedbackModal({
               placeholder={t(($) => $.feedback.placeholder)}
               onUpdate={(md) => { setMessage(md); setDraft({ message: md }); }}
               onUploadFile={uploadWithToast}
+              onUploadingChange={uploadGate.onUploadingChange}
               onSubmit={handleSubmit}
               debounceMs={150}
               showBubbleMenu={false}
@@ -158,8 +162,17 @@ export function FeedbackModal({
             size="sm"
             onSelect={(file) => editorRef.current?.uploadFile(file)}
           />
-          <Button size="sm" onClick={handleSubmit} disabled={!canSubmit}>
-            {mutation.isPending ? t(($) => $.feedback.sending) : t(($) => $.feedback.send)}
+          <Button
+            size="sm"
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            aria-busy={uploadGate.uploading || undefined}
+          >
+            {mutation.isPending
+              ? t(($) => $.feedback.sending)
+              : uploadGate.uploading
+                ? tEditor(($) => $.upload.in_progress)
+                : t(($) => $.feedback.send)}
             {sendShortcut ? (
               <ShortcutKeycaps
                 shortcut={sendShortcut}
