@@ -1223,9 +1223,9 @@ export function createZhDict(allowSignup: boolean): LandingDict {
       },
       macIntel: {
         title: "CyberAgent for macOS",
-        sub: "需要 Apple Silicon——暂不支持 Intel Mac。",
-        disabledCta: "需要 Apple Silicon",
-        intelHint: "在 Intel Mac 上？请使用下方 CLI——底层跑的是同一个 daemon。",
+        sub: "Intel · 内置 daemon，无需配置",
+        primary: "下载 (.dmg)",
+        altZip: "或下载 .zip",
       },
       winX64: {
         title: "CyberAgent for Windows",
@@ -1252,7 +1252,8 @@ export function createZhDict(allowSignup: boolean): LandingDict {
     },
     allPlatforms: {
       title: "所有平台",
-      macLabel: "macOS · Apple Silicon",
+      macArm64Label: "macOS · Apple Silicon",
+      macX64Label: "macOS · Intel",
       winX64Label: "Windows · x64",
       winArm64Label: "Windows · ARM64",
       linuxX64Label: "Linux · x64",
@@ -1263,7 +1264,6 @@ export function createZhDict(allowSignup: boolean): LandingDict {
       formatAppImage: ".AppImage",
       formatDeb: ".deb",
       formatRpm: ".rpm",
-      intelNote: "仅支持 Apple Silicon——Intel Mac 目前暂不支持。",
       unavailable: "暂不可用",
     },
     cli: {
