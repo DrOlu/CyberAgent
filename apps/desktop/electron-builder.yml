@@ -3,6 +3,12 @@ productName: CyberAgent
 directories:
   buildResources: build
 files:
+  # Regression guard (multica-ai/multica#5595): the multi-arch release build
+  # writes each target's output to dist/<platform>-<arch> in this same dir.
+  # electron-builder only auto-excludes the *current* target's output dir,
+  # so without this the earlier arch's dist/ got repacked into the next
+  # arch's app.asar — inflating the Intel DMG and crashing Intel Macs.
+  - "!dist/**"
   - "!**/.vscode/*"
   - "!src/*"
   - "!electron.vite.config.*"
