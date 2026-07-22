@@ -112,5 +112,8 @@ jobs:
       - name: Run migrations
         run: cd server && go run ./cmd/migrate up
 
+      - name: Verify Go test wrapper
+        run: bash scripts/test-go.test.sh
+
       - name: Test
         run: cd server && go test ./...
