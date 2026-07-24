@@ -51,6 +51,7 @@ scripts/rebrand-manifest.txt
 # them. See the v1.5.0 release post-mortem for context.
 scripts/check-landing-i18n.mjs
 scripts/check-renderer-dedupe.mjs
+scripts/check-style-tokens.mjs
 
 # Install scripts — upstream URLs changed
 scripts/install.sh

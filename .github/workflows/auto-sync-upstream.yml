@@ -315,6 +315,18 @@ jobs:
         if: steps.check.outputs.has_changes == 'true'
         run: node scripts/check-landing-i18n.mjs
 
+      # Same failure mode as the i18n guardrail above, but for the design-token
+      # (CSS) layer. Snapshotted stylesheets (tokens.css, base.css, custom.css,
+      # docs global.css) are restored verbatim after the merge, so any token
+      # upstream ADDS is silently dropped — and a missing token does NOT fail
+      # the TS build, it fails at render time (e.g. the floating chat window
+      # rendering with a transparent background because --surface-raised was
+      # dropped). Catch it here, before the sync commit is pushed, so main
+      # stays green and we get a failure notification pointing at the file.
+      - name: Verify snapshotted stylesheets did not drop upstream design tokens
+        if: steps.check.outputs.has_changes == 'true'
+        run: node scripts/check-style-tokens.mjs
+
       - name: Commit and push
         if: steps.check.outputs.has_changes == 'true'
         run: |

@@ -48,6 +48,19 @@ jobs:
       - name: Verify landing i18n dictionaries match the LandingDict type
         run: node scripts/check-landing-i18n.mjs
 
+      # Catch design-token drift early — the same check the upstream sync
+      # workflow runs before pushing. Snapshotted stylesheets can silently
+      # drop tokens upstream adds, and a missing token fails at render time
+      # (not the TS build) — e.g. the floating chat rendering transparent
+      # because --surface-raised was dropped. We fetch a shallow upstream
+      # baseline so the check can compare token definitions; when offline it
+      # degrades to checking that every var(--*) reference resolves locally.
+      - name: Verify snapshotted stylesheets did not drop upstream design tokens
+        run: |
+          git remote add upstream https://github.com/multica-ai/multica.git 2>/dev/null || true
+          git fetch upstream main --depth=1 --quiet 2>/dev/null || echo "upstream fetch failed — check will run in offline mode"
+          node scripts/check-style-tokens.mjs
+
       - name: Build, type check, lint, and test
         run: pnpm exec turbo build typecheck lint test --filter='!@multica/docs'
 
