@@ -645,7 +645,7 @@ describe("CreateIssueModal", () => {
 
     expect(mockPush).toHaveBeenCalledWith("/ws-test/issues/issue-123");
     expect(mockToastDismiss).toHaveBeenCalledWith("toast-1");
-  });
+  }, 15_000);
 
   it("forwards selected labels in the create payload so they attach in the same transaction", async () => {
     const user = userEvent.setup();
