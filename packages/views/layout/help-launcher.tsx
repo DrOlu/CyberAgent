@@ -33,7 +33,7 @@ export function HelpLauncher() {
         align="end"
         side="top"
         sideOffset={8}
-        className="min-w-40"
+        className="min-w-40 max-w-56"
       >
         <DropdownMenuItem
           render={
@@ -66,8 +66,13 @@ export function HelpLauncher() {
         {serverVersion && (
           <>
             <DropdownMenuSeparator />
+            {/* DropdownMenuLabel renders Base UI's Menu.GroupLabel, which reads
+                a Menu.Group context and throws if it has no Group ancestor. It
+                must always be wrapped in a DropdownMenuGroup — without it the
+                Help menu crashes the whole app on open (no error boundary sits
+                above the sidebar). */}
             <DropdownMenuGroup>
-              <DropdownMenuLabel>
+              <DropdownMenuLabel className="font-normal break-words">
                 {t(($) => $.help.server_version, { version: serverVersion })}
               </DropdownMenuLabel>
             </DropdownMenuGroup>
