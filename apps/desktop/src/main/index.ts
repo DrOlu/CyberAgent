@@ -28,7 +28,8 @@ import {
 import { createBestEffortDevLog } from "./dev-log";
 import {
   writeFreezeBreadcrumb,
-  readAndClearFreezeBreadcrumb,
+  readFreezeBreadcrumb,
+  ackFreezeBreadcrumb,
   clearFreezeBreadcrumb,
 } from "./freeze-breadcrumb";
 import {
@@ -709,12 +710,20 @@ if (!gotTheLock) {
       event.returnValue = { version: getAppVersion(), os };
     });
 
-    // Sync IPC: read + clear any freeze/crash breadcrumb left by a previous
-    // session. The renderer flushes it to telemetry on boot (it couldn't be
-    // reported when it happened — the renderer was hung or gone). Read-and-
-    // clear so a failure reports exactly once.
+    // Sync IPC: read any freeze/crash breadcrumb left by a previous session.
+    // The renderer flushes it to telemetry on boot (it couldn't be reported
+    // when it happened — the renderer was hung or gone). Read WITHOUT deleting:
+    // the renderer acks via "freeze:ack" once the event is on the wire, so a
+    // crash mid-report leaves the breadcrumb for the next boot (MUL-4115).
     ipcMain.on("freeze:get-last", (event) => {
-      event.returnValue = readAndClearFreezeBreadcrumb(freezeBreadcrumbPath());
+      event.returnValue = readFreezeBreadcrumb(freezeBreadcrumbPath());
+    });
+
+    // Async IPC: renderer retires the breadcrumb after handing it to analytics.
+    // The timestamp must match the stored one — a newer failure between read
+    // and ack overwrote the slot and must survive to be reported next boot.
+    ipcMain.on("freeze:ack", (_event, ts: number) => {
+      ackFreezeBreadcrumb(freezeBreadcrumbPath(), ts);
     });
 
     // Sync IPC: preload exposes the validated runtime config before renderer
