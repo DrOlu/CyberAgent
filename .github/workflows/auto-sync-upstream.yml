@@ -338,6 +338,10 @@ jobs:
       # build only blew up at release time. Catching it during sync means
       # `main` stays green and we get a workflow failure notification
       # pointing at the missing keys.
+      - name: Verify docker-compose env vars
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: node scripts/check-compose-env.mjs
+
       - name: Verify landing i18n dictionaries are in sync with the LandingDict type
         if: steps.check.outputs.has_changes == 'true'
         run: node scripts/check-landing-i18n.mjs
