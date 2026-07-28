@@ -218,6 +218,33 @@ jobs:
         run: |
           ./scripts/rebrand.sh --rebrand
 
+      - name: Validate docker-compose env vars post-restore
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          # After snapshot restore, upstream env vars added directly to main
+          # (between sync runs) may have been overwritten with an older snapshot.
+          # Re-apply any critical env vars that must always be present.
+          #
+          # Root cause: when upstream contributors push directly to main (e.g.
+          # commit a90aa92d added REMOTE_API_URL), the snapshot captured before
+          # that push is stale. The restore then overwrites the newer version.
+          # This step re-adds vars that are provably correct regardless of snapshot age.
+
+          COMPOSE="docker-compose.selfhost.yml"
+          if [ -f "$COMPOSE" ]; then
+            # REMOTE_API_URL is required by the Next.js SSR proxy (apps/web/proxy.ts).
+            # Without it, every /api/* /ws/* /auth/* request is silently misrouted
+            # and the entire web app appears slow/broken.
+            if ! grep -q "REMOTE_API_URL" "$COMPOSE"; then
+              echo "::warning::REMOTE_API_URL missing from $COMPOSE after restore — re-adding..."
+              # Insert after HOSTNAME line in the frontend environment block
+              sed -i '/HOSTNAME: "0.0.0.0"/a\      REMOTE_API_URL: ${REMOTE_API_URL:-http://backend:8080}\n      DOCS_URL: ${DOCS_URL:-}\n      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}\n      NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-}' "$COMPOSE"
+              echo "Re-added REMOTE_API_URL and related vars."
+            else
+              echo "REMOTE_API_URL present in $COMPOSE ✅"
+            fi
+          fi
+
       - name: Reconcile apps/desktop/package.json
         if: steps.check.outputs.has_changes == 'true'
         run: |
