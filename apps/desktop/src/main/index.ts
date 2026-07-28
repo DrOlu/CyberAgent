@@ -28,17 +28,9 @@ import {
 import { createBestEffortDevLog } from "./dev-log";
 import {
   writeFreezeBreadcrumb,
-  readFreezeBreadcrumb,
-  ackFreezeBreadcrumb,
+  readAndClearFreezeBreadcrumb,
   clearFreezeBreadcrumb,
 } from "./freeze-breadcrumb";
-import {
-  captureHangStack,
-  coolDebuggerChannel,
-  warmDebuggerChannel,
-} from "./renderer-stack-capture";
-import { DIAGNOSTICS_CONTROL_CHANNEL } from "../shared/diagnostics-control";
-import { createDiagnosticsControlRegistry } from "./diagnostics-control-registry";
 import {
   loadWindowState,
   resolveWindowOptions,
@@ -149,36 +141,6 @@ const rendererRouteContexts = new WeakMap<
   Electron.WebContents,
   RendererRouteContext
 >();
-
-// Hang stack capture is off until the backend says otherwise, and stays off in
-// dev. Reading a stack means holding a debugger channel open on a renderer, so
-// it has to be revocable without shipping a release — the flag arrives with
-// /api/config, which is also why this cannot be decided at window creation: no
-// renderer has fetched config yet at that point.
-//
-// State is per renderer, not global: every window publishes `false` before its
-// own config lands, so one global value would let a newly opened window revoke
-// capture for the others (see diagnostics-control-registry).
-const diagnosticsControl = createDiagnosticsControlRegistry<Electron.WebContents>({
-  warm: (webContents) => {
-    if (is.dev || webContents.isDestroyed()) return;
-    void warmDebuggerChannel(webContents.debugger);
-  },
-  cool: (webContents) => {
-    if (webContents.isDestroyed()) return;
-    void coolDebuggerChannel(webContents.debugger);
-  },
-});
-
-/** Read the hung renderer's JS stack, or null when capture is not permitted. */
-async function captureStackIfEnabled(
-  webContents: Electron.WebContents,
-): Promise<unknown> {
-  if (is.dev) return null;
-  if (!diagnosticsControl.isStackCaptureEnabled(webContents)) return null;
-  if (webContents.isDestroyed()) return null;
-  return captureHangStack(webContents.debugger);
-}
 let runtimeConfigResult: RuntimeConfigResult = {
   ok: false,
   error: { message: "Runtime config has not loaded yet" },
@@ -489,7 +451,6 @@ function createWindow(): BrowserWindow {
     // Only persist in production: a true hang/crash can't report itself, so we
     // write a breadcrumb and the next renderer boot flushes it to PostHog. Dev
     // is excluded to keep field telemetry clean.
-    captureStack: () => captureStackIfEnabled(window.webContents),
     persistBreadcrumb: is.dev
       ? undefined
       : (payload) =>
@@ -573,7 +534,6 @@ function createIssueWindow(context: IssueWindowContext): void {
         ...(routeContext ? { desktopRoute: routeContext } : {}),
       };
     },
-    captureStack: () => captureStackIfEnabled(window.webContents),
     persistBreadcrumb: is.dev
       ? undefined
       : (payload) =>
@@ -754,24 +714,7 @@ if (!gotTheLock) {
     // reported when it happened — the renderer was hung or gone). Read-and-
     // clear so a failure reports exactly once.
     ipcMain.on("freeze:get-last", (event) => {
-      event.returnValue = readFreezeBreadcrumb(freezeBreadcrumbPath());
-    });
-
-    // The renderer got its breadcrumb event to posthog — retire that exact
-    // payload. A newer failure recorded since the read keeps its own ts and
-    // survives to be reported on the next boot.
-    ipcMain.on("freeze:ack", (event, ts: unknown) => {
-      if (!BrowserWindow.fromWebContents(event.sender)) return;
-      if (typeof ts !== "number" || !Number.isFinite(ts)) return;
-      ackFreezeBreadcrumb(freezeBreadcrumbPath(), ts);
-    });
-
-    // Server-driven kill switch for stack capture. Fail-closed: anything that
-    // is not an explicit `true` turns it off, and turning it off also drops
-    // the debugger channels we are holding.
-    ipcMain.on(DIAGNOSTICS_CONTROL_CHANNEL, (event, control: unknown) => {
-      if (!BrowserWindow.fromWebContents(event.sender)) return;
-      diagnosticsControl.apply(event.sender, control);
+      event.returnValue = readAndClearFreezeBreadcrumb(freezeBreadcrumbPath());
     });
 
     // Sync IPC: preload exposes the validated runtime config before renderer
