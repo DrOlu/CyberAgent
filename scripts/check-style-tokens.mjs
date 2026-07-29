@@ -129,6 +129,7 @@ for (const f of allCssFiles) for (const d of defsOf(read(f))) defined.add(norm(d
 // Shiki dual-theme variables injected by the syntax highlighter).
 const RUNTIME_PROVIDED = new Set([
   "--font-sans",
+  "--font-instrument-serif",
   "--font-serif",
   "--font-mono",
   "--font-heading",
