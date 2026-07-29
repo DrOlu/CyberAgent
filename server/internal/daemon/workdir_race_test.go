@@ -424,9 +424,28 @@ func TestRunTask_PrepareTimeoutStopsLeaseDuringBlockedStartTask(t *testing.T) {
 		t.Fatal("prepare lease was never extended while /start was blocked")
 	}
 	leaseCallsAtReturn := leaseCalls.Load()
-	time.Sleep(4 * taskPrepareLeaseRefresh)
-	if got := leaseCalls.Load(); got != leaseCallsAtReturn {
-		t.Fatalf("prepare lease kept extending after timeout: calls %d -> %d", leaseCallsAtReturn, got)
+	// The extender goroutine has exited (stopPrepareLease waited on <-done),
+	// so no new lease refreshes are scheduled. A single refresh that was
+	// already in flight when the prepare deadline fired may still land on the
+	// test server: the httptest handler increments its counter before it
+	// observes the now-cancelled request context, so it is not synchronously
+	// coupled to stopPrepareLease. The contract under test is that the
+	// extender stopped extending — i.e. the count stabilises — not that it
+	// froze at the exact instant runTask returned. Allow one straggler, then
+	// confirm the count holds steady.
+	var prev, cur int64 = leaseCallsAtReturn, leaseCalls.Load()
+	for deadline := time.Now().Add(8 * taskPrepareLeaseRefresh); time.Now().Before(deadline); {
+		time.Sleep(taskPrepareLeaseRefresh)
+		prev, cur = cur, leaseCalls.Load()
+		if cur == prev {
+			break
+		}
+	}
+	if cur > leaseCallsAtReturn+1 {
+		t.Fatalf("prepare lease kept extending after timeout: calls %d -> %d", leaseCallsAtReturn, cur)
+	}
+	if cur != prev {
+		t.Fatalf("prepare lease count never stabilised after timeout: calls %d -> %d", leaseCallsAtReturn, cur)
 	}
 	if got := taskRunFailureReason(err); got != "timeout" {
 		t.Fatalf("taskRunFailureReason = %q, want retryable platform timeout", got)
