@@ -1169,10 +1169,10 @@ export class ApiClient {
   }
 
   /**
-   * Returns the plaintext `custom_env` map for an agent. Owner/admin
-   * only; calls from agent-actor sessions get a 403. Every successful
-   * call writes an `agent_env_revealed` activity_log row server-side.
-   * MUL-2600.
+   * Returns the plaintext `custom_env` map for an agent. Admits the
+   * agent's owner or a workspace owner/admin (MUL-5438); calls from
+   * agent-actor sessions get a 403. Every successful call writes an
+   * `agent_env_revealed` activity_log row server-side. MUL-2600.
    */
   async getAgentEnv(id: string): Promise<AgentEnvResponse> {
     return this.fetch(`/api/agents/${id}/env`);
@@ -1182,9 +1182,9 @@ export class ApiClient {
    * Replaces an agent's `custom_env` wholesale. Values equal to
    * `"****"` are preserved server-side (the **** guard) so a partial
    * UI edit doesn't overwrite real secrets with the masked
-   * placeholder. Owner/admin only; agent actors get a 403. Every
-   * successful call writes an `agent_env_updated` activity_log row.
-   * MUL-2600.
+   * placeholder. Admits the agent's owner or a workspace owner/admin
+   * (MUL-5438); agent actors get a 403. Every successful call writes an
+   * `agent_env_updated` activity_log row. MUL-2600.
    */
   async updateAgentEnv(id: string, data: UpdateAgentEnvRequest): Promise<AgentEnvResponse> {
     return this.fetch(`/api/agents/${id}/env`, {
@@ -2358,6 +2358,29 @@ export class ApiClient {
       text: await res.text(),
       originalContentType: res.headers.get("X-Original-Content-Type") ?? "",
     };
+  }
+
+  // Fetches the raw bytes of an attachment through the unified download
+  // endpoint.
+  //
+  // This is the last-resort inline-media path for deployments where the
+  // server has no natively-loadable URL to offer. `GET /api/attachments/{id}`
+  // only upgrades `download_url` to a signed storage URL under CloudFront
+  // signing or presign mode; in **proxy** mode (self-hosted MinIO or any
+  // storage endpoint on an internal host, which the default `auto` mode
+  // classifies as proxy) it returns the auth-gated API path again. Clients
+  // that cannot ride the session cookie on a native `<img>` resource fetch —
+  // Desktop's file:// renderer, the mobile webview, split-origin web — get
+  // the bytes here and render them from an object URL instead.
+  //
+  // Routes through `fetchRaw` so it inherits the standard auth headers,
+  // 401 → handleUnauthorized recovery, request-id logging and ApiError shape.
+  // Callers must only reach for this once the metadata refresh has shown
+  // there is no signed URL: in the other modes the endpoint 302s to storage,
+  // where CORS is not configured for a JS fetch.
+  async getAttachmentBlob(id: string): Promise<Blob> {
+    const res = await this.fetchRaw(`/api/attachments/${id}/download`);
+    return res.blob();
   }
 
   // Projects
