@@ -334,6 +334,29 @@ open('.goreleaser.yml', 'w').write(text)
     ! -path './.git/*' ! -path './node_modules/*' ! -path './.cyberagent-snapshot/*' \
     -exec sed -i 's/Multica/CyberAgent/g' {} + 2>/dev/null || true
 
+  # ── Type scale: upstream writes Tailwind's default font sizes; CyberAgent's
+  #    design system uses role-named steps. Convert the defaults so the
+  #    type-scale guard (apps/web/app/type-scale.test.ts) stays green after
+  #    every sync. Scoped to the .ts/.tsx in the dirs the guard scans —
+  #    apps/mobile and apps/docs keep Tailwind's default scale on purpose and
+  #    are excluded. Mapping mirrors the token sizes exactly:
+  #      xs(12)→caption  sm(14)→body  base(16)→title-sm  lg(18)→title
+  #      xl(20)→title-lg  2xl(24)→display-sm
+  #    text-3xl (30px) has no role step and is left unconverted; if upstream
+  #    introduces it the guard flags it for a manual mapping.
+  find packages/ui packages/views apps/web apps/desktop/src \
+    -type f '(' -name '*.ts' -o -name '*.tsx' ')' \
+    ! -name '*.test.ts' ! -name '*.test.tsx' \
+    ! -path '*/node_modules/*' \
+    -exec sed -i \
+      -e 's/\btext-xs\b/text-caption/g' \
+      -e 's/\btext-sm\b/text-body/g' \
+      -e 's/\btext-base\b/text-title-sm/g' \
+      -e 's/\btext-lg\b/text-title/g' \
+      -e 's/\btext-xl\b/text-title-lg/g' \
+      -e 's/\btext-2xl\b/text-display-sm/g' \
+      {} + 2>/dev/null || true
+
   echo "Rebrand substitutions complete."
 }
 
