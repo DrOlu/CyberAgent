@@ -1629,7 +1629,9 @@ function BuilderConversation({
   ];
 
   return (
-    <section className="flex min-h-0 flex-col bg-background">
+    // `@container`: this is one column of the studio's split layout, so the
+    // shared chat gutter must size against the column, not the viewport.
+    <section className="flex min-h-0 flex-col bg-background @container">
       <header className="flex min-h-14 shrink-0 items-center justify-between gap-4 border-b px-5 py-2.5">
         <div className="min-w-0">
           <h2 className="truncate text-sm font-semibold">
@@ -1727,7 +1729,7 @@ export function StudioFooter({
 }) {
   const { t } = useT("agents");
   return (
-    <div className="sticky bottom-0 mt-8 flex items-center justify-between gap-3 border-t bg-background/95 px-5 py-3 backdrop-blur">
+    <div className="pe-chat-launcher sticky bottom-0 mt-8 flex items-center justify-between gap-3 border-t bg-background/95 py-3 pl-5 backdrop-blur">
       {error ? (
         <p
           role="alert"
