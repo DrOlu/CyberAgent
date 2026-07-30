@@ -161,7 +161,7 @@ function CallbackContent() {
                 window.location.href = `multica://auth/callback?token=${encodeURIComponent(desktopToken)}`;
               }}
             >
-              Open Multica Desktop
+              Open CyberAgent Desktop
             </Button>
           </CardContent>
         </Card>
