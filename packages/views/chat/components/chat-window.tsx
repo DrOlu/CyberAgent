@@ -48,10 +48,16 @@ import {
   useUpdateChatSession,
 } from "@multica/core/chat/mutations";
 import { useChatStore } from "@multica/core/chat";
+import {
+  enqueuePendingChatTask,
+  removePendingChatTask,
+} from "@multica/core/chat/pending";
 import { removeChatMessageFromCaches } from "@multica/core/realtime";
 import { useChatDraftRestore } from "./use-chat-draft-restore";
+import { useChatInputFocus } from "./use-chat-input-focus";
 import { ChatMessageList, ChatMessageSkeleton } from "./chat-message-list";
 import { ChatInput } from "./chat-input";
+import { ChatQueue } from "./chat-queue";
 import { ChatResizeHandles } from "./chat-resize-handles";
 import { useChatContextItems } from "./use-chat-context-items";
 import { useChatResize } from "./use-chat-resize";
@@ -171,14 +177,9 @@ export function ChatWindow() {
   const appForeground = useAppForeground();
   const { restoreDraftRequest, enqueueLocalRestore, handleRestoreDraftApplied } =
     useChatDraftRestore(activeSessionId, isOpen && appForeground);
-  // Nonce handed to ChatInput to pull focus into the compose box when a new
-  // chat starts (⊕ or switching agent). 0 is inert so opening the window on an
-  // existing session never steals focus.
-  const [focusRequest, setFocusRequest] = useState(0);
-  const requestInputFocus = useCallback(
-    () => setFocusRequest((n) => n + 1),
-    [],
-  );
+  // Nonce handed to ChatInput to pull focus into the compose box: when a new
+  // chat starts (⊕ or switching agent), and whenever the window itself opens.
+  const { focusRequest, requestInputFocus } = useChatInputFocus(isOpen);
 
   // Legacy archived sessions (the old soft-archive feature was removed but
   // pre-existing rows with status='archived' may still exist) are excluded
@@ -393,7 +394,10 @@ export function ChatWindow() {
         sessionId,
         source: options.source,
       });
-      qc.setQueryData(chatKeys.pendingTask(sessionId), {});
+      qc.setQueryData<ChatPendingTask>(
+        chatKeys.pendingTask(sessionId),
+        (old) => removePendingChatTask(old, taskId),
+      );
 
       try {
         const result = await api.cancelTaskById(taskId);
@@ -426,9 +430,12 @@ export function ChatWindow() {
         qc.invalidateQueries({ queryKey: chatKeys.messages(sessionId) });
         qc.invalidateQueries({ queryKey: chatKeys.messagesPage(sessionId) });
         return null;
+      } finally {
+        qc.invalidateQueries({ queryKey: chatKeys.pendingTask(sessionId) });
+        if (wsId) qc.invalidateQueries({ queryKey: chatKeys.pendingTasks(wsId) });
       }
     },
-    [qc, enqueueLocalRestore],
+    [qc, enqueueLocalRestore, wsId],
   );
 
   const handleSend = useCallback(
@@ -522,11 +529,16 @@ export function ChatWindow() {
         chatKeys.messages(sessionId),
         (old) => (old ? [...old, sent] : [sent]),
       );
-      qc.setQueryData<ChatPendingTask>(chatKeys.pendingTask(sessionId), {
-        task_id: result.task_id,
-        status: "queued",
-        created_at: result.created_at,
-      });
+      qc.setQueryData<ChatPendingTask>(
+        chatKeys.pendingTask(sessionId),
+        (old) => enqueuePendingChatTask(old, {
+          task_id: result.task_id,
+          status: "queued",
+          created_at: result.created_at,
+          message_id: result.message_id,
+          content: finalContent,
+        }),
+      );
       // Cache primed → publish the new active session, but only if the user
       // hasn't navigated away mid-send. Compare the live store against the
       // closure-captured target; see isStillOnComposeTarget for the rule, which
@@ -598,6 +610,17 @@ export function ChatWindow() {
       source: "active-input",
     });
   }, [pendingTaskId, activeSessionId, cancelChatTask]);
+
+  const handleRemoveQueuedTask = useCallback(
+    async (taskId: string) => {
+      if (!activeSessionId) return;
+      await cancelChatTask(taskId, activeSessionId, {
+        restoreDraftToInput: true,
+        source: "queued-message",
+      });
+    },
+    [activeSessionId, cancelChatTask],
+  );
 
   const handleSelectAgent = useCallback(
     (agent: Agent) => {
@@ -859,6 +882,11 @@ export function ChatWindow() {
         <OfflineBanner agentName={activeAgent?.name} availability={availability} />
       )}
 
+      <ChatQueue
+        tasks={pendingTask?.queued_tasks ?? []}
+        onRemove={handleRemoveQueuedTask}
+      />
+
       {/* Input — disabled for legacy archived sessions and for sessions whose
        *  agent has been archived (read-only); locked out entirely when there's
        *  no agent (the EmptyState above carries the CTA). */}
@@ -938,7 +966,7 @@ export function AgentDropdown({
   };
 
   if (!activeAgent) {
-    return <span className="text-xs text-muted-foreground">{t(($) => $.window.no_agents)}</span>;
+    return <span className="text-caption text-muted-foreground">{t(($) => $.window.no_agents)}</span>;
   }
 
   return (
@@ -966,7 +994,7 @@ export function AgentDropdown({
             enableHoverCard
             showStatusDot
           />
-          <span className="text-xs font-medium max-w-28 truncate">{activeAgent.name}</span>
+          <span className="text-caption font-medium max-w-28 truncate">{activeAgent.name}</span>
           <ChevronDown className="size-3 text-muted-foreground shrink-0" />
         </>
       }
@@ -1284,12 +1312,12 @@ function SessionDropdown({
               onCancel={() => setRenamingId(null)}
             />
           ) : isConfirmingStop ? (
-            <div className="truncate text-sm font-medium text-destructive">
+            <div className="truncate text-body font-medium text-destructive">
               {t(($) => $.session_history.stop_dialog.title)}
             </div>
           ) : (
             <div
-              className={cn("truncate text-sm", (showUnread || showCompleted) && !isRunning && "font-medium")}
+              className={cn("truncate text-body", (showUnread || showCompleted) && !isRunning && "font-medium")}
               style={{
                 maskImage: "linear-gradient(to right, black calc(100% - 18px), transparent)",
                 WebkitMaskImage: "linear-gradient(to right, black calc(100% - 18px), transparent)",
@@ -1314,7 +1342,7 @@ function SessionDropdown({
                   setConfirmingStopId(null);
                 }}
                 disabled={stoppingTaskId === pendingTask.task_id}
-                className="inline-flex h-7 items-center rounded px-2 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
+                className="inline-flex h-7 items-center rounded px-2 text-micro font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground disabled:opacity-50"
               >
                 {t(($) => $.session_history.stop_dialog.cancel)}
               </button>
@@ -1330,7 +1358,7 @@ function SessionDropdown({
                   handleConfirmStop(session, pendingTask);
                 }}
                 disabled={stoppingTaskId === pendingTask.task_id}
-                className="inline-flex h-7 items-center rounded px-2 text-[11px] font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
+                className="inline-flex h-7 items-center rounded px-2 text-micro font-medium text-destructive transition-colors hover:bg-destructive/10 disabled:opacity-50"
               >
                 {stoppingTaskId === pendingTask.task_id
                   ? t(($) => $.session_history.stop_dialog.confirming)
@@ -1339,7 +1367,7 @@ function SessionDropdown({
             </div>
           ) : (
             <div className="flex shrink-0 items-center">
-              <div className="flex h-7 items-center justify-end gap-1.5 text-xs text-muted-foreground group-hover/history-row:hidden">
+              <div className="flex h-7 items-center justify-end gap-1.5 text-caption text-muted-foreground group-hover/history-row:hidden">
                 {isRunning && <Loader2 className="size-3 animate-spin" />}
                 {showCompleted && !isRunning && <Check className="size-3 text-emerald-500" />}
                 {showUnread && !isRunning && !showCompleted && (
@@ -1364,7 +1392,7 @@ function SessionDropdown({
                       e.preventDefault();
                       setConfirmingStopId(session.id);
                     }}
-                    className="inline-flex h-7 items-center gap-1 rounded px-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:bg-destructive/10 focus-visible:text-destructive focus-visible:outline-none"
+                    className="inline-flex h-7 items-center gap-1 rounded px-1.5 text-micro font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus-visible:bg-destructive/10 focus-visible:text-destructive focus-visible:outline-none"
                     aria-label={t(($) => $.session_history.row_stop_aria)}
                     title={t(($) => $.session_history.row_stop_aria)}
                   >
@@ -1432,7 +1460,7 @@ function SessionDropdown({
                 showStatusDot
               />
             )}
-            <span className="min-w-0 truncate text-sm font-medium">{title}</span>
+            <span className="min-w-0 truncate text-body font-medium">{title}</span>
             {currentSessionRunning && (
               <Loader2
                 aria-label={t(($) => $.session_history.row_subtitle.working)}
@@ -1445,7 +1473,7 @@ function SessionDropdown({
             <span
               aria-label={t(($) => $.window.another_running)}
               title={t(($) => $.window.another_running)}
-              className="inline-flex h-6 shrink-0 items-center gap-1 rounded-md px-1.5 text-xs font-medium text-muted-foreground"
+              className="inline-flex h-6 shrink-0 items-center gap-1 rounded-md px-1.5 text-caption font-medium text-muted-foreground"
             >
               <Loader2 className="size-3 animate-spin" />
               {otherRunningCount > 1 && <span>{otherRunningCount}</span>}
@@ -1454,7 +1482,7 @@ function SessionDropdown({
             <span
               aria-label={t(($) => $.window.another_unread)}
               title={t(($) => $.window.another_unread)}
-              className="inline-flex h-6 shrink-0 items-center gap-1 rounded-md px-1.5 text-xs font-medium text-muted-foreground"
+              className="inline-flex h-6 shrink-0 items-center gap-1 rounded-md px-1.5 text-caption font-medium text-muted-foreground"
             >
               <span className="size-1.5 rounded-full bg-brand" />
               {otherUnreadCount > 1 && <span>{otherUnreadCount}</span>}
@@ -1467,12 +1495,12 @@ function SessionDropdown({
           onClick={(e) => e.stopPropagation()}
         >
           {historySessions.length === 0 ? (
-            <div className="px-2 py-1.5 text-xs text-muted-foreground">
+            <div className="px-2 py-1.5 text-caption text-muted-foreground">
               {t(($) => $.window.no_previous)}
             </div>
           ) : (
             <div role="group" aria-label={t(($) => $.window.history_group)}>
-              <div className="px-1.5 py-1 text-xs font-medium text-muted-foreground">
+              <div className="px-1.5 py-1 text-caption font-medium text-muted-foreground">
                 {t(($) => $.window.history_group)}
               </div>
               {historySessions.map(renderRow)}
@@ -1556,7 +1584,7 @@ function SessionRenameInput({
           onCancel();
         }
       }}
-      className="w-full rounded-sm bg-background px-1 py-0.5 text-sm outline-none ring-1 ring-border focus-visible:ring-brand"
+      className="w-full rounded-sm bg-background px-1 py-0.5 text-body outline-none ring-1 ring-border focus-visible:ring-brand"
     />
   );
 }
@@ -1610,17 +1638,17 @@ function EmptyState({
     return (
       <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 py-8">
         <div className="text-center space-y-3">
-          <h3 className="text-base font-semibold">
+          <h3 className="text-title-sm font-semibold">
             {t(($) => $.empty_state.first_time_title)}
           </h3>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body text-muted-foreground">
             {t(($) => $.empty_state.first_time_intro)}{" "}
             <span className="font-medium text-foreground">
               {t(($) => $.empty_state.first_time_pillars)}
             </span>
             {t(($) => $.empty_state.first_time_pillars_suffix)}
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-body text-muted-foreground">
             {t(($) => $.empty_state.first_time_actions)}
           </p>
         </div>
@@ -1632,12 +1660,12 @@ function EmptyState({
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-5 px-6 py-8">
       <div className="text-center space-y-1">
-        <h3 className="text-base font-semibold">
+        <h3 className="text-title-sm font-semibold">
           {agentName
             ? t(($) => $.empty_state.returning_title_named, { name: agentName })
             : t(($) => $.empty_state.returning_title_default)}
         </h3>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-body text-muted-foreground">
           {t(($) => $.empty_state.returning_subtitle)}
         </p>
       </div>
@@ -1649,7 +1677,7 @@ function EmptyState({
               key={key}
               type="button"
               onClick={() => onPickPrompt(text)}
-              className="w-full rounded-lg border border-border bg-card px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-accent hover:border-brand/40"
+              className="w-full rounded-lg border border-border bg-card px-3 py-2 text-left text-body text-foreground transition-colors hover:bg-accent hover:border-brand/40"
             >
               <span className="mr-2">{STARTER_ICONS[key]}</span>
               {text}

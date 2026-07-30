@@ -429,8 +429,8 @@ export function ChatInput({
       editorScrubbedRef.current = false;
       // These states disable the SubmitButton, but Mod+Enter bypasses it — so a
       // read-only or busy composer must still refuse the keyboard path.
-      if (isRunning || disabled || noAgent) {
-        logger.debug("input.send skipped", { isRunning, disabled, noAgent });
+      if (disabled || noAgent) {
+        logger.debug("input.send skipped", { disabled, noAgent });
         return false;
       }
       // The editor is still holding a DIFFERENT draft's document than the one
@@ -603,13 +603,13 @@ export function ChatInput({
                     disabled={!projectSelectionEnabled}
                     aria-label={t(($) => $.input.change_project_context)}
                     title={t(($) => $.input.change_project_context)}
-                    className="flex h-6 max-w-56 items-center gap-1.5 rounded-full border border-surface-border bg-surface-raised px-2 pr-7 text-xs font-medium text-foreground transition-colors hover:bg-accent/60"
+                    className="flex h-6 max-w-56 items-center gap-1.5 rounded-full border border-surface-border bg-surface-raised px-2 pr-7 text-caption font-medium text-foreground transition-colors hover:bg-accent/60"
                   />
                 }
               />
             </div>
             {projectContextUnsupported && (
-              <span className="inline-flex min-w-0 items-center gap-1 text-xs text-warning">
+              <span className="inline-flex min-w-0 items-center gap-1 text-caption text-warning">
                 <TriangleAlert className="size-3 shrink-0" />
                 {t(($) => $.input.project_context_unsupported)}
               </span>
@@ -673,13 +673,18 @@ export function ChatInput({
             busy={gate.uploading}
             running={isRunning}
             onStop={onStop}
+            allowSubmitWhileRunning
             tooltip={gate.uploading
               ? tEditor(($) => $.upload.in_progress)
-              : sendShortcut
-                ? `${t(($) => $.input.send_tooltip)} · ${formatShortcut(sendShortcut)}`
-                : t(($) => $.input.send_tooltip)}
+              : isRunning
+                ? t(($) => $.input.queue_send_tooltip)
+                : sendShortcut
+                  ? `${t(($) => $.input.send_tooltip)} · ${formatShortcut(sendShortcut)}`
+                  : t(($) => $.input.send_tooltip)}
             ariaLabel={gate.uploading
               ? tEditor(($) => $.upload.in_progress)
+              : isRunning
+                ? t(($) => $.input.queue_send_tooltip)
               : t(($) => $.input.send_tooltip)}
             stopTooltip={t(($) => $.input.stop_tooltip)}
             stopAriaLabel={t(($) => $.input.stop_tooltip)}

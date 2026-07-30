@@ -19,6 +19,7 @@ import { useNavigation } from "../navigation";
 import { useT } from "../i18n";
 import { ChatMessageList, ChatMessageSkeleton } from "./components/chat-message-list";
 import { ChatInput } from "./components/chat-input";
+import { ChatQueue } from "./components/chat-queue";
 import { ChatThreadList } from "./components/chat-thread-list";
 import { ChatSessionHeader } from "./components/chat-session-header";
 import { EmptyState } from "./components/chat-empty-state";
@@ -201,7 +202,7 @@ export function ChatPage() {
   const listHeader = (
     <PageHeader className="justify-between">
       <div className="flex items-center gap-2">
-        <h1 className="text-sm font-semibold">{t(($) => $.page.title)}</h1>
+        <h1 className="text-body font-semibold">{t(($) => $.page.title)}</h1>
       </div>
       {newChatButton}
     </PageHeader>
@@ -258,6 +259,11 @@ export function ChatPage() {
       ) : (
         <OfflineBanner agentName={c.activeAgent?.name} availability={c.availability} />
       )}
+
+      <ChatQueue
+        tasks={c.pendingTask?.queued_tasks ?? []}
+        onRemove={c.handleRemoveQueuedTask}
+      />
 
       <ChatInput
         onSend={c.handleSend}
@@ -343,7 +349,7 @@ export function ChatPage() {
           ) : (
             <div className="flex h-full flex-col items-center justify-center gap-3 text-muted-foreground">
               <MessageSquare className="h-10 w-10 text-muted-foreground/30" />
-              <p className="text-sm">{t(($) => $.page.select_prompt)}</p>
+              <p className="text-body">{t(($) => $.page.select_prompt)}</p>
             </div>
           )}
         </div>
