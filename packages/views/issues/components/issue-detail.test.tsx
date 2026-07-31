@@ -1442,6 +1442,10 @@ describe("IssueDetail (shared)", () => {
     // plain `comment` item, not a `resolved-bar`. The rail must still read it
     // as resolved — proof the flag comes from deriveThreadResolution and not
     // from the fold state.
+    // Timeout raised from the 5s default: this test mounts the full IssueDetail
+    // (timeline query → thread-view derivation → minimap rail) and the
+    // waitFor poll can exceed 5s under CI parallel-load (see run 30617531783,
+    // 610s suite). 15s matches the suite's other render-heavy specs.
     mockApiObj.listTimeline.mockResolvedValue([
       ...mockTimeline,
       {
@@ -1466,7 +1470,7 @@ describe("IssueDetail (shared)", () => {
       ).toBeInTheDocument();
     });
     expect(screen.getByRole("button", { name: "I can help with this" })).toBeInTheDocument();
-  });
+  }, 15000);
 
   it("sends empty description when editor is cleared", async () => {
     renderIssueDetail();
