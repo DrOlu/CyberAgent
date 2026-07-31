@@ -1728,7 +1728,7 @@ func TestInjectRuntimeConfigQoderCN(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to read AGENTS.md: %v", err)
 	}
-	if !strings.Contains(string(content), "Multica Agent Runtime") {
+	if !strings.Contains(string(content), "CyberAgent Agent Runtime") {
 		t.Error("AGENTS.md missing meta skill header")
 	}
 }
