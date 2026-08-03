@@ -243,6 +243,7 @@ type workspaceState struct {
 
 type repoCacheBackend interface {
 	Lookup(workspaceID, url string) string
+	BarePath(workspaceID, url string) string
 	Sync(workspaceID string, repos []repocache.RepoInfo) error
 	WithRepoLock(barePath string, fn func() error) error
 	CreateWorktree(params repocache.WorktreeParams) (*repocache.WorktreeResult, error)
@@ -1913,6 +1914,45 @@ func (d *Daemon) workspaceRepoAllowed(workspaceID, repoURL string) bool {
 	return false
 }
 
+// repoBarePathIsLive reports whether some watched workspace still claims the
+// repo cached at barePath, so the GC can refuse to evict it.
+//
+// Answering per-path rather than materializing the whole set lets the GC ask
+// again immediately before it deletes. A snapshot taken once per cycle goes
+// stale while the caller runs git and filesystem work on each repo in turn,
+// which is exactly the window in which a workspace can re-attach one.
+//
+// It mirrors workspaceRepoAllowed by unioning both sources: allowedRepoURLs
+// (workspace-level bindings) and taskRepoURLs (project repos the server
+// surfaced through a task claim, which never appear in GetWorkspaceRepos).
+// Missing the second set would make the GC evict repos that tasks actively
+// check out.
+//
+// Read from in-memory state on purpose. The alternative — asking the server
+// for each workspace's repo list during GC — would make a transient API
+// failure look like "nothing is attached", and this set is what protects
+// caches from deletion.
+func (d *Daemon) repoBarePathIsLive(barePath string) bool {
+	if d.repoCache == nil || barePath == "" {
+		return false
+	}
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	for workspaceID, ws := range d.workspaces {
+		for url := range ws.allowedRepoURLs {
+			if d.repoCache.BarePath(workspaceID, url) == barePath {
+				return true
+			}
+		}
+		for url := range ws.taskRepoURLs {
+			if d.repoCache.BarePath(workspaceID, url) == barePath {
+				return true
+			}
+		}
+	}
+	return false
+}
+
 func (d *Daemon) workspaceLastRepoSyncErr(workspaceID string) string {
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -3029,6 +3069,11 @@ func (d *Daemon) handleLocalSkillList(ctx context.Context, rt Runtime, requestID
 		"supported":     supported,
 		"mcp_servers":   mcpServers,
 		"mcp_supported": mcpSupported,
+		// Additive: tells the server (and through it the agent MCP tab) that
+		// this daemon enforces a managed mcp_config as an authoritative
+		// allowlist. A daemon without this field still merges the host's MCP
+		// servers, so the UI must not claim they are excluded (GitHub #6283).
+		"authoritative_mcp": true,
 	})
 }
 
@@ -4897,15 +4942,18 @@ func (d *Daemon) runTask(ctx context.Context, task Task, provider string, slot i
 	var cursorMcpAuthSource string
 	if task.Agent != nil {
 		agentMcpConfig = task.Agent.McpConfig
-		effectiveMcpConfig = agentMcpConfig
-		if merged, mergeErr := mergeRuntimeAndAgentMcpConfig(provider, agentMcpConfig); mergeErr != nil {
-			taskLog.Warn("mcp_config: runtime merge failed; using agent configuration only",
-				"provider", provider,
-				"error", mergeErr,
-			)
-		} else {
-			effectiveMcpConfig = merged
-		}
+		// A managed mcp_config is an authoritative allowlist: it must NOT be
+		// silently widened with the host's own MCP servers (GitHub #6283).
+		// resolveEffectiveMcpConfig owns that decision, including the two
+		// explicit inherit paths (overlay-only tasks and the per-agent
+		// runtime_config.mcp.inherit_runtime opt-in).
+		effectiveMcpConfig = resolveEffectiveMcpConfig(
+			provider,
+			agentMcpConfig,
+			task.Agent.McpConfigOverlayOnly,
+			task.Agent.RuntimeConfig,
+			taskLog,
+		)
 		if provider == "cursor" {
 			cursorMcpAuthSource = strings.TrimSpace(task.Agent.CustomEnv[execenv.CursorMcpAuthSourceEnv])
 		}

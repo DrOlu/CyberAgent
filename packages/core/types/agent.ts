@@ -373,7 +373,16 @@ export interface AgentTask {
 export interface Agent {
   id: string;
   workspace_id: string;
+  /**
+   * Empty string when the agent is unbound: it kept its configuration, chats and
+   * task history when its runtime was deleted, and needs a new runtime before it
+   * can run again (MUL-5559). Use `isAgentRuntimeBound` so additive and legacy
+   * signals stay compatible, and do not confuse it with a bound-but-offline
+   * runtime — that one just needs the machine back.
+   */
   runtime_id: string;
+  /** False exactly when the agent has no runtime. Older backends omit it. */
+  runtime_bound?: boolean;
   name: string;
   description: string;
   instructions: string;
@@ -940,7 +949,7 @@ export interface DashboardRunTimeDaily {
 // One (date, failure_reason) bucket of terminal-task counts for the workspace
 // dashboard's Errors metric.
 //
-// `failure_reason` carries the backend's canonical failure taxonomy (the 21
+// `failure_reason` carries the backend's canonical failure taxonomy (the 23
 // `taskfailure.Reason` values, plus `"unclassified"` for failed rows with an
 // empty column) — EXCEPT for the empty string, which is the *succeeded*
 // bucket. Shipping successes in the same series is deliberate: the error rate
@@ -1123,6 +1132,13 @@ export interface RuntimeLocalSkillListRequest {
   supported: boolean;
 	mcp_servers?: RuntimeLocalMcpServerSummary[];
 	mcp_supported?: boolean;
+	/**
+	 * Whether the daemon enforces a managed `mcp_config` as an authoritative
+	 * allowlist. Absent/false on daemons predating that fix, which still merge
+	 * the host's own MCP servers underneath the managed set (GitHub #6283) —
+	 * the UI must not claim those servers are excluded.
+	 */
+	authoritative_mcp?: boolean;
   error?: string;
   created_at: string;
   updated_at: string;
@@ -1159,6 +1175,8 @@ export interface RuntimeLocalSkillsResult {
   supported: boolean;
 	mcpServers: RuntimeLocalMcpServerSummary[];
 	mcpSupported: boolean;
+	/** See `RuntimeLocalSkillListRequest.authoritative_mcp`. */
+	authoritativeMcp: boolean;
 }
 
 export interface RuntimeLocalSkillImportResult {

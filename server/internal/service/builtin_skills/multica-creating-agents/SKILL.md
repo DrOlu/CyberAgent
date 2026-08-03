@@ -23,6 +23,13 @@ multica agent skills list <agent-id> --output json   # current skill bindings
 multica agent env get <agent-id> --output json  # plaintext env (agent owner or ws owner/admin; agents denied)
 ```
 
+An agent can also be **unbound**: `runtime_id` is `NULL` (served as `""` with
+`runtime_bound: false`) after its runtime was deleted, which unbinds instead of
+deleting its agents (MUL-5559). An unbound agent keeps everything it owns and
+stays editable, but no trigger path will run it — they all refuse with
+`agent_runtime_required` — until `agent update <id> --runtime-id <runtime-id>` binds
+it again. Unbound is orthogonal to archived.
+
 `agent get` returns the persisted agent including `runtime_id`, `model`,
 `thinking_level`, `service_tier`, `custom_args`, `has_custom_env`,
 `custom_env_key_count`, and `skills`. It never returns plaintext `custom_env`.
@@ -110,7 +117,7 @@ multica agent copy <source-agent-id> --runtime-id <target> --model <model>  # cr
 | `description` | `agent.description` | 400 if > 255 code points | catalog/listing only — NOT the runtime prompt |
 | `instructions` | `agent.instructions` | none | daemon → provider at claim time |
 | `avatar_url` | `agent.avatar_url` | none; an explicit non-empty value is preserved, while omitted/empty creates a random `emoji:<glyph>` avatar | catalog/listing UI only — NOT the runtime prompt |
-| `runtime_id` | `agent.runtime_id` | required (400) + must resolve to a runtime in this workspace | selects runtime/provider |
+| `runtime_id` | `agent.runtime_id` (nullable) | required at create (400) + must resolve to a runtime in this workspace | selects runtime/provider; `NULL` means unbound — see below |
 | `model` | `agent.model` (nullable) | none beyond runtime support | daemon reads; empty = runtime default |
 | `thinking_level` | `agent.thinking_level` (nullable) | provider-level enum; unknown literal → 400 | daemon; empty = runtime default |
 | `service_tier` | `agent.service_tier` (nullable) | Codex-only safe token; other providers reject; exact model/tier pair checked by daemon | daemon → Codex app-server; empty = local Codex config |
@@ -216,6 +223,37 @@ multica agent update <agent-id> --mcp-config 'null'   # clears the config
 and `ps`; the inline `--mcp-config <json>` does not. The CLI requires a JSON
 **object** or the literal `null`; a top-level array or primitive is rejected
 client-side, and empty stdin/file input errors rather than silently clearing.
+
+**`mcp_config` is an authoritative allowlist, not an addition.** The three states
+are distinct and are the agent's MCP access-control boundary (GitHub #6283):
+
+| value | what the agent can reach |
+| --- | --- |
+| omitted / `null` | the runtime host's own MCP servers (native inheritance) |
+| `{"mcpServers":{}}` | nothing — no MCP servers at all |
+| non-empty object | exactly those servers; the host's own are excluded |
+
+To get both the managed set AND the host's servers, set the persisted opt-in
+`runtime_config.mcp.inherit_runtime` to `true`; it is `false` by default and a
+malformed `runtime_config` never enables it.
+
+```bash
+multica agent update <agent-id> --runtime-config '{"mcp":{"inherit_runtime":true}}'
+```
+
+`runtime_config` is replaced wholesale, so merge the agent's existing keys
+(e.g. OpenClaw `mode`/`gateway`) into that JSON rather than dropping them.
+
+Enforcement lives in the **daemon**. The claim path refuses to hand a
+strictly-scoped task to a daemon that does not advertise the
+`authoritative-mcp-v1` capability: the task is failed with reason
+`mcp_config_daemon_outdated` and an actionable message, rather than letting an
+older daemon merge the host's servers in. Upgrade the daemon, or set
+`inherit_runtime` to accept the wider surface deliberately.
+
+The gate is scoped to the providers whose older daemons actually merged host MCP
+(`claude`, `codebuddy`, `codex`, `cursor`, `opencode`, `openclaw`). Qwen Code was
+never merged and already had strict semantics, so its tasks are never gated.
 
 Two ways `mcp_config` differs from `custom_env`:
 

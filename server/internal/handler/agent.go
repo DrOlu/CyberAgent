@@ -35,9 +35,18 @@ import (
 const maxAgentDescriptionLength = 255
 
 type AgentResponse struct {
-	ID            string          `json:"id"`
-	WorkspaceID   string          `json:"workspace_id"`
-	RuntimeID     string          `json:"runtime_id"`
+	ID          string `json:"id"`
+	WorkspaceID string `json:"workspace_id"`
+	// RuntimeID is the empty string when the agent is unbound — it kept its
+	// configuration and history when its runtime was deleted, and needs a new
+	// runtime before it can run again (MUL-5559). The wire type stays a string
+	// so installed clients keep parsing; RuntimeBound is the explicit signal.
+	RuntimeID string `json:"runtime_id"`
+	// RuntimeBound is false exactly when the agent has no runtime. UI should
+	// branch on this rather than on RuntimeID being falsy, and must not confuse
+	// it with a bound-but-offline runtime (a different user story: reconnect the
+	// machine vs. pick a new one).
+	RuntimeBound  bool            `json:"runtime_bound"`
 	Name          string          `json:"name"`
 	Description   string          `json:"description"`
 	Instructions  string          `json:"instructions"`
@@ -159,6 +168,7 @@ func (h *Handler) agentToResponse(a db.Agent) AgentResponse {
 		ID:                       uuidToString(a.ID),
 		WorkspaceID:              uuidToString(a.WorkspaceID),
 		RuntimeID:                uuidToString(a.RuntimeID),
+		RuntimeBound:             a.RuntimeID.Valid,
 		Name:                     a.Name,
 		Description:              a.Description,
 		Instructions:             a.Instructions,
@@ -586,6 +596,15 @@ type TaskAgentData struct {
 	// (issue #3260). Other providers ignore the payload entirely. Sent
 	// raw so the daemon can evolve its schema without a server roundtrip.
 	RuntimeConfig json.RawMessage `json:"runtime_config,omitempty"`
+	// McpConfigOverlayOnly tells the daemon that McpConfig carries ONLY the
+	// per-task integration overlay (currently Composio) because the agent
+	// itself has no saved mcp_config. The daemon needs this to keep MCP
+	// access control fail-closed without regressing those agents: a managed
+	// mcp_config is an authoritative allowlist (GitHub #6283), but an agent
+	// that never configured one was already inheriting the runtime's own MCP
+	// servers and must keep doing so rather than being narrowed to the
+	// overlay by the mere act of enabling an integration.
+	McpConfigOverlayOnly bool `json:"mcp_config_overlay_only,omitempty"`
 }
 
 // taskToResponse maps a queue row to its wire shape. workspaceID is threaded

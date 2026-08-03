@@ -311,6 +311,8 @@ import {
   EMPTY_LIST_GITHUB_REPOSITORIES_RESPONSE,
   RuntimeModelListRequestSchema,
   MALFORMED_RUNTIME_MODEL_LIST_REQUEST,
+  RuntimeLocalSkillListRequestSchema,
+  MALFORMED_RUNTIME_LOCAL_SKILL_LIST_REQUEST,
 } from "./schemas";
 
 /** Identifies the calling client to the server.
@@ -1442,19 +1444,30 @@ export class ApiClient {
     await this.fetch(`/api/runtimes/${runtimeId}`, { method: "DELETE" });
   }
 
-  // Cascade variant of deleteRuntime. The strict DELETE refuses with
+  // Confirmed variant of deleteRuntime. The strict DELETE refuses with
   // structured 409 (`code: "runtime_has_active_agents"`, body carries the
   // blocking agents) when active agents are bound; the front-end then opens
-  // the cascade-mode confirmation dialog and submits the user-confirmed
-  // active agent set here. Server compares the snapshot to the live set
-  // inside the transaction and refuses with `code: "runtime_delete_plan_changed"`
-  // (same shape, fresh `active_agents`) if they don't match — caller should
-  // re-render the agent list and force the user to re-confirm.
-  async archiveAgentsAndDeleteRuntime(
+  // the confirmation dialog and submits the user-confirmed active agent set
+  // here. Server compares the snapshot to the live set inside the transaction
+  // and refuses with `code: "runtime_delete_plan_changed"` (same shape, fresh
+  // `active_agents`) if they don't match — caller should re-render the agent
+  // list and force the user to re-confirm.
+  //
+  // The agents are UNBOUND, not archived or deleted (MUL-5559): they keep their
+  // configuration, chats and task history and need a new runtime to run again.
+  // `agents_archived` is the server's deprecated mirror of `agents_unbound`,
+  // kept because installed clients read it; prefer `agents_unbound`.
+  async unbindAgentsAndDeleteRuntime(
     runtimeId: string,
     expectedActiveAgentIds: string[],
-  ): Promise<{ status: string; agents_archived: number; tasks_cancelled: number }> {
-    return this.fetch(`/api/runtimes/${runtimeId}/archive-agents-and-delete`, {
+  ): Promise<{
+    status: string;
+    agents_unbound?: number;
+    agents_archived?: number;
+    tasks_cancelled: number;
+    autopilots_paused?: number;
+  }> {
+    return this.fetch(`/api/runtimes/${runtimeId}/unbind-agents-and-delete`, {
       method: "POST",
       body: JSON.stringify({ expected_active_agent_ids: expectedActiveAgentIds }),
     });
@@ -1770,19 +1783,45 @@ export class ApiClient {
     );
   }
 
+  // Both capability-discovery endpoints feed the same poll-then-render state
+  // machine as model discovery, and their `authoritative_mcp` flag decides
+  // whether the agent MCP tab may claim the runtime's own MCP servers are
+  // excluded from an agent. That is a security statement, so the body is
+  // validated rather than cast: an unparseable response degrades to an explicit
+  // "failed" record with authoritative_mcp false, never to a fabricated
+  // guarantee (GitHub #6283).
   async initiateListLocalSkills(
     runtimeId: string,
   ): Promise<RuntimeLocalSkillListRequest> {
-    return this.fetch(`/api/runtimes/${runtimeId}/local-skills`, {
-      method: "POST",
-    });
+    const raw = await this.fetch<unknown>(
+      `/api/runtimes/${runtimeId}/local-skills`,
+      { method: "POST" },
+    );
+    return parseWithFallback<RuntimeLocalSkillListRequest>(
+      raw,
+      RuntimeLocalSkillListRequestSchema,
+      { ...MALFORMED_RUNTIME_LOCAL_SKILL_LIST_REQUEST, runtime_id: runtimeId },
+      { endpoint: "POST /api/runtimes/{id}/local-skills" },
+    );
   }
 
   async getListLocalSkillsResult(
     runtimeId: string,
     requestId: string,
   ): Promise<RuntimeLocalSkillListRequest> {
-    return this.fetch(`/api/runtimes/${runtimeId}/local-skills/${requestId}`);
+    const raw = await this.fetch<unknown>(
+      `/api/runtimes/${runtimeId}/local-skills/${requestId}`,
+    );
+    return parseWithFallback<RuntimeLocalSkillListRequest>(
+      raw,
+      RuntimeLocalSkillListRequestSchema,
+      {
+        ...MALFORMED_RUNTIME_LOCAL_SKILL_LIST_REQUEST,
+        id: requestId,
+        runtime_id: runtimeId,
+      },
+      { endpoint: "GET /api/runtimes/{id}/local-skills/{requestId}" },
+    );
   }
 
   async initiateImportLocalSkill(

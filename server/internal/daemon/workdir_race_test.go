@@ -347,6 +347,18 @@ func TestRunTask_ExtendsPrepareLeaseDuringStartTask(t *testing.T) {
 	}
 }
 
+type prepareLeaseCountingTransport struct {
+	base  http.RoundTripper
+	calls *atomic.Int64
+}
+
+func (t *prepareLeaseCountingTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	if strings.HasSuffix(req.URL.Path, "/prepare-lease") {
+		t.calls.Add(1)
+	}
+	return t.base.RoundTrip(req)
+}
+
 func TestRunTask_PrepareTimeoutStopsLeaseDuringBlockedStartTask(t *testing.T) {
 	oldRefresh := taskPrepareLeaseRefresh
 	oldTimeout := taskPrepareLeaseTimeout
@@ -366,7 +378,6 @@ func TestRunTask_PrepareTimeoutStopsLeaseDuringBlockedStartTask(t *testing.T) {
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch {
 		case strings.HasSuffix(r.URL.Path, "/prepare-lease"):
-			leaseCalls.Add(1)
 			w.WriteHeader(http.StatusOK)
 		case strings.HasSuffix(r.URL.Path, "/start"):
 			closeStartOnce.Do(func() { close(startEntered) })
@@ -378,13 +389,22 @@ func TestRunTask_PrepareTimeoutStopsLeaseDuringBlockedStartTask(t *testing.T) {
 	}))
 	t.Cleanup(srv.Close)
 
+	// Count requests where the extender starts them. A cancelled RoundTrip can
+	// return before httptest schedules its handler, so counting in the handler
+	// can make an already-in-flight request look like post-timeout activity.
+	client := NewClient(srv.URL)
+	client.client.Transport = &prepareLeaseCountingTransport{
+		base:  client.client.Transport,
+		calls: &leaseCalls,
+	}
+
 	workspacesRoot := t.TempDir()
 	fakeBin := filepath.Join(t.TempDir(), "claude")
 	if err := os.WriteFile(fakeBin, []byte("#!/bin/sh\nexit 0\n"), 0o755); err != nil {
 		t.Fatalf("write fake agent: %v", err)
 	}
 	d := &Daemon{
-		client:             NewClient(srv.URL),
+		client:             client,
 		logger:             slog.New(slog.NewTextHandler(io.Discard, nil)),
 		workspaces:         make(map[string]*workspaceState),
 		runtimeIndex:       map[string]Runtime{"rt-1": {ID: "rt-1", Provider: "claude"}},
@@ -421,31 +441,12 @@ func TestRunTask_PrepareTimeoutStopsLeaseDuringBlockedStartTask(t *testing.T) {
 	}
 	releaseStartOnce.Do(func() { close(releaseStart) })
 	if got := leaseCalls.Load(); got == 0 {
-		t.Fatal("prepare lease was never extended while /start was blocked")
+		t.Fatal("prepare lease request was never started while /start was blocked")
 	}
 	leaseCallsAtReturn := leaseCalls.Load()
-	// The extender goroutine has exited (stopPrepareLease waited on <-done),
-	// so no new lease refreshes are scheduled. A single refresh that was
-	// already in flight when the prepare deadline fired may still land on the
-	// test server: the httptest handler increments its counter before it
-	// observes the now-cancelled request context, so it is not synchronously
-	// coupled to stopPrepareLease. The contract under test is that the
-	// extender stopped extending — i.e. the count stabilises — not that it
-	// froze at the exact instant runTask returned. Allow one straggler, then
-	// confirm the count holds steady.
-	var prev, cur int64 = leaseCallsAtReturn, leaseCalls.Load()
-	for deadline := time.Now().Add(8 * taskPrepareLeaseRefresh); time.Now().Before(deadline); {
-		time.Sleep(taskPrepareLeaseRefresh)
-		prev, cur = cur, leaseCalls.Load()
-		if cur == prev {
-			break
-		}
-	}
-	if cur > leaseCallsAtReturn+1 {
-		t.Fatalf("prepare lease kept extending after timeout: calls %d -> %d", leaseCallsAtReturn, cur)
-	}
-	if cur != prev {
-		t.Fatalf("prepare lease count never stabilised after timeout: calls %d -> %d", leaseCallsAtReturn, cur)
+	time.Sleep(4 * taskPrepareLeaseRefresh)
+	if got := leaseCalls.Load(); got != leaseCallsAtReturn {
+		t.Fatalf("prepare lease requests kept starting after timeout: calls %d -> %d", leaseCallsAtReturn, got)
 	}
 	if got := taskRunFailureReason(err); got != "timeout" {
 		t.Fatalf("taskRunFailureReason = %q, want retryable platform timeout", got)

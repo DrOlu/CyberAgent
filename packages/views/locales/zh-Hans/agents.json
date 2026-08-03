@@ -40,7 +40,7 @@
   },
   "empty": {
     "title": "还没有智能体",
-    "description": "创建一个智能体，像分配给同事那样把 issue 交给它。本地智能体在你的机器上运行，云智能体在 CyberAgent 运行时上运行。"
+    "description": "创建一个智能体，像分配给同事那样把 issue 交给它。本地智能体在你的机器上运行，云智能体在 Multica 运行时上运行。"
   },
   "no_matches": {
     "title": "无匹配项",
@@ -76,6 +76,7 @@
   "row": {
     "you": "你",
     "archived": "已归档",
+    "needs_runtime": "需绑定运行时",
     "no_description": "暂无描述",
     "fallback_runtime_cloud": "云端",
     "fallback_runtime_local": "本地",
@@ -131,6 +132,8 @@
     "no_access_hint": "只有该私密智能体的拥有者或工作区管理员可以查看。",
     "try_again": "重试",
     "archived_banner": "该智能体已归档，无法被分配或提及。",
+    "runtime_required_banner": "该智能体的配置和历史记录已保留，但需要绑定运行时后才能运行。",
+    "bind_runtime": "绑定运行时",
     "restore": "恢复",
     "archive_dialog_title": "归档智能体？",
     "archive_dialog_description": "\"{{name}}\"将被归档，无法被分配或提及，但所有历史会被保留。可以稍后恢复。",
@@ -145,6 +148,7 @@
     "restore_failed_toast": "恢复智能体失败",
     "dm": "私信",
     "dm_no_permission_toast": "你没有权限与该智能体聊天。",
+    "runtime_required_toast": "请先绑定运行时，再运行该智能体。",
     "assign_work": "分配工作",
     "more_actions_aria": "智能体操作",
     "updated": "{{when}}更新"
@@ -478,16 +482,19 @@
       "save_failed_toast": "保存自定义参数失败"
     },
     "mcp_config": {
-      "intro": "管理该智能体可用的 MCP Server。由 CyberAgent 管理的 Server 会与本地 Runtime 继承的 Server 合并使用。",
-      "managed_title": "由 CyberAgent 管理",
-      "managed_hint": "保存在 CyberAgent 中并仅配置给该智能体。执行任务时会与 Runtime MCP 合并；名称相同时以 CyberAgent 配置为准。",
-      "managed_empty": "还没有由 CyberAgent 管理的 MCP Server。",
+      "intro": "管理该智能体可用的 MCP Server。由 Multica 管理的配置具有排他性——除非该智能体显式开启继承，本地 Runtime 自带的 Server 不会暴露给它。",
+      "managed_title": "由 Multica 管理",
+      "managed_hint": "保存在 Multica 中并仅配置给该智能体。执行任务时会与 Runtime MCP 合并；名称相同时以 Multica 配置为准。",
+      "managed_hint_authoritative": "保存在 Multica 中并仅配置给该智能体。该集合具有排他性：只有这些 Server 会暴露给智能体，Runtime 自带的 MCP Server 不会。",
+      "managed_empty": "还没有由 Multica 管理的 MCP Server。",
       "add_action": "添加 MCP",
       "agent_disabled_badge": "已为智能体关闭",
       "runtime_disabled_badge": "运行时中已关闭",
-      "runtime_overridden_badge": "已由 CyberAgent 覆盖",
+      "runtime_overridden_badge": "已由 Multica 覆盖",
+      "runtime_excluded_badge": "未暴露",
       "runtime_title": "从运行时继承",
       "runtime_hint": "自动从 {{runtime}} 发现，并在任务启动时于本机完成合并。URL、Header、命令和环境变量等敏感值不会离开本机。",
+      "runtime_hint_excluded": "自动从 {{runtime}} 发现。该智能体已有由 Multica 管理的 MCP 配置，因此这些 Server 不会暴露给它。",
       "refresh_action": "刷新",
       "runtime_missing": "请先分配一个本地运行时，以发现继承的 MCP Server。",
       "runtime_offline": "本地运行时处于离线状态，重新连接后即可刷新继承的 MCP Server。",
@@ -537,12 +544,20 @@
       "dialog_add_action": "添加 Server",
       "dialog_update_action": "保存修改",
       "delete_dialog_title": "删除 MCP Server？",
-      "delete_dialog_description": "{{name}} 将不再提供给该智能体；Runtime 中的 Server 不受影响。",
+      "delete_dialog_description": "{{name}} 将不再对该智能体可用。这里管理的其他 Server 不受影响，Runtime 自带的 MCP Server 仍然不会暴露。",
       "delete_action": "删除 Server",
       "invalid_json": "JSON 无效：{{error}}",
       "save_failed_toast": "保存 MCP 配置失败",
       "redacted_title": "已配置 —— 当前账号无权查看",
-      "redacted_hint": "只有智能体所有者或工作区管理员可以读取该配置。"
+      "redacted_hint": "只有智能体所有者或工作区管理员可以读取该配置。",
+      "managed_empty_strict": "没有 MCP Server。该智能体完全没有 MCP 访问权限——连 Runtime 自带的 Server 也没有。",
+      "clear_action": "停止管理 MCP",
+      "clear_dialog_title": "停止为该智能体管理 MCP？",
+      "clear_dialog_description": "这会移除受管配置，让该智能体重新可以使用 {{runtime}} 上的全部 MCP Server，也就是**扩大**它能访问的工具范围。如果你是想让它完全没有 MCP 访问权限，请改为逐个删除 Server。",
+      "clear_confirm_action": "停止管理并恢复继承",
+      "cleared_toast": "已移除受管 MCP 配置——重新继承 Runtime Server",
+      "daemon_upgrade_required": "该 Runtime 的 daemon 仍会把自身的 MCP Server 合并进受管配置。请升级 daemon，该配置才会作为 allowlist 真正生效。",
+      "runtime_hint_needs_upgrade": "自动从 {{runtime}} 发现。由于该 daemon 版本尚不支持排他性 MCP 配置，这些 Server 目前**仍然**能被该智能体访问——升级 daemon 后才会被排除。"
     },
     "composio_mcp": {
       "subtitle": "勾选 toolkit，只在你自己（这个 agent 的创建者）直接或通过下级 agent 链路触发这个 agent 时，才把它挂载为 MCP server。",
