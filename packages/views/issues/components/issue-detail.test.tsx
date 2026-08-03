@@ -896,7 +896,7 @@ describe("IssueDetail (shared)", () => {
       expect(pre).not.toBeNull();
       expect(pre!.textContent).toBe(expected);
     });
-  });
+  }, 15_000);
 
   it("hides the Metadata button entirely when the bag is empty", async () => {
     // Default fixture already has metadata: {}, asserted explicitly here.

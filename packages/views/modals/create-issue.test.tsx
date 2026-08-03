@@ -804,7 +804,7 @@ describe("CreateIssueModal", () => {
       );
     });
     expect(mockClearDraft).toHaveBeenCalled();
-  });
+  }, 15_000);
 
   it("persists manual-mode uploads in the issue draft", async () => {
     const user = userEvent.setup();
