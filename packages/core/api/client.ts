@@ -27,6 +27,8 @@ import type {
   CreateAgentFromTemplateResponse,
   AgentBuilderRuntimeSwitch,
   AgentBuilderSession,
+  AgentBuilderSessionSummary,
+  StoredAgentDraft,
   UpdateAgentRequest,
   AgentEnvResponse,
   UpdateAgentEnvRequest,
@@ -198,6 +200,8 @@ import {
   CreateAgentFromTemplateResponseSchema,
   AgentBuilderRuntimeSwitchSchema,
   AgentBuilderSessionSchema,
+  AgentBuilderSessionListSchema,
+  EMPTY_AGENT_BUILDER_SESSION_LIST,
   agentBuilderRuntimeSwitchFallback,
   DashboardAgentRunTimeListSchema,
   DashboardRunTimeDailyListSchema,
@@ -311,8 +315,6 @@ import {
   EMPTY_LIST_GITHUB_REPOSITORIES_RESPONSE,
   RuntimeModelListRequestSchema,
   MALFORMED_RUNTIME_MODEL_LIST_REQUEST,
-  RuntimeLocalSkillListRequestSchema,
-  MALFORMED_RUNTIME_LOCAL_SKILL_LIST_REQUEST,
 } from "./schemas";
 
 /** Identifies the calling client to the server.
@@ -1145,6 +1147,46 @@ export class ApiClient {
     );
   }
 
+  /**
+   * The caller's unfinished agent-creation conversations.
+   *
+   * Builder sessions are hidden from every chat list (their carrier agent is
+   * `kind = 'system'`), so this is the only route back to one. A 404 means the
+   * backend predates the endpoint: degrade to "no drafts" instead of erroring
+   * the Agents page, exactly as listChatDraftRestores does.
+   */
+  async listAgentBuilderSessions(): Promise<AgentBuilderSessionSummary[]> {
+    let raw: unknown;
+    try {
+      raw = await this.fetch<unknown>("/api/agent-builder/sessions");
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 404) return [];
+      throw err;
+    }
+    return parseWithFallback(
+      raw,
+      AgentBuilderSessionListSchema,
+      EMPTY_AGENT_BUILDER_SESSION_LIST,
+      { endpoint: "GET /api/agent-builder/sessions" },
+    ).sessions;
+  }
+
+  /**
+   * Stores the configuration a creation conversation has arrived at, including
+   * edits the user typed but has not sent. Whole-object last-write-wins: one
+   * conversation has one editor, so a field-level merge could only reconstruct
+   * a state nobody saw. Read back through `listAgentBuilderSessions`.
+   */
+  async saveAgentBuilderDraft(
+    sessionId: string,
+    draft: StoredAgentDraft,
+  ): Promise<void> {
+    await this.fetch(`/api/agent-builder/sessions/${sessionId}/draft`, {
+      method: "PUT",
+      body: JSON.stringify({ draft }),
+    });
+  }
+
   /** Rebinds a live builder conversation to another runtime. Callers must not
    *  show the new runtime as selected until this resolves — the whole point is
    *  that the UI's runtime and the executing runtime agree.
@@ -1783,45 +1825,19 @@ export class ApiClient {
     );
   }
 
-  // Both capability-discovery endpoints feed the same poll-then-render state
-  // machine as model discovery, and their `authoritative_mcp` flag decides
-  // whether the agent MCP tab may claim the runtime's own MCP servers are
-  // excluded from an agent. That is a security statement, so the body is
-  // validated rather than cast: an unparseable response degrades to an explicit
-  // "failed" record with authoritative_mcp false, never to a fabricated
-  // guarantee (GitHub #6283).
   async initiateListLocalSkills(
     runtimeId: string,
   ): Promise<RuntimeLocalSkillListRequest> {
-    const raw = await this.fetch<unknown>(
-      `/api/runtimes/${runtimeId}/local-skills`,
-      { method: "POST" },
-    );
-    return parseWithFallback<RuntimeLocalSkillListRequest>(
-      raw,
-      RuntimeLocalSkillListRequestSchema,
-      { ...MALFORMED_RUNTIME_LOCAL_SKILL_LIST_REQUEST, runtime_id: runtimeId },
-      { endpoint: "POST /api/runtimes/{id}/local-skills" },
-    );
+    return this.fetch(`/api/runtimes/${runtimeId}/local-skills`, {
+      method: "POST",
+    });
   }
 
   async getListLocalSkillsResult(
     runtimeId: string,
     requestId: string,
   ): Promise<RuntimeLocalSkillListRequest> {
-    const raw = await this.fetch<unknown>(
-      `/api/runtimes/${runtimeId}/local-skills/${requestId}`,
-    );
-    return parseWithFallback<RuntimeLocalSkillListRequest>(
-      raw,
-      RuntimeLocalSkillListRequestSchema,
-      {
-        ...MALFORMED_RUNTIME_LOCAL_SKILL_LIST_REQUEST,
-        id: requestId,
-        runtime_id: runtimeId,
-      },
-      { endpoint: "GET /api/runtimes/{id}/local-skills/{requestId}" },
-    );
+    return this.fetch(`/api/runtimes/${runtimeId}/local-skills/${requestId}`);
   }
 
   async initiateImportLocalSkill(
