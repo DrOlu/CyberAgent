@@ -30,7 +30,8 @@ import { Button } from "@multica/ui/components/ui/button";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@multica/ui/components/ui/resizable";
 import { Sheet, SheetContent } from "@multica/ui/components/ui/sheet";
 import { useIsMobile } from "@multica/ui/hooks/use-mobile";
-import { ContentEditor, type ContentEditorRef, TitleEditor, type TitleEditorRef, useFileDropZone, FileDropOverlay, useLazyEditor, useEditorUpload } from "../../editor";
+import { ContentEditor, type ContentEditorRef, TitleEditor, type TitleEditorRef, useFileDropZone, FileDropOverlay, useLazyEditor, useEditorUpload, ImageSequenceProvider } from "../../editor";
+import { collectImageSequence, type ImageSequenceBlock } from "@multica/core/attachments/image-sequence";
 import { FileUploadButton } from "@multica/ui/components/common/file-upload-button";
 import {
   Tooltip,
@@ -70,7 +71,10 @@ import { LocalDirectoryHint } from "../../projects/components/local-directory-hi
 import { CommentCard } from "./comment-card";
 import { CommentInput } from "./comment-input";
 import { ResolvedThreadBar } from "./resolved-thread-bar";
-import { ThreadMinimap, type ThreadMinimapThread } from "./thread-minimap";
+import { getShortcut, shortcutMatchesEvent } from "@multica/core/shortcuts";
+import { isImeComposing } from "@multica/core/utils";
+import { ThreadMinimap } from "./thread-minimap";
+import { ThreadNavPanel, mentionsUser, type ThreadNavThread } from "./thread-nav-panel";
 import { collectThreadReplies, deriveThreadResolution } from "./thread-utils";
 import { IssueAgentHeaderChip } from "./issue-agent-header-chip";
 import { ExecutionLogSection } from "./execution-log-section";
@@ -83,7 +87,7 @@ import { useWorkspacePaths } from "@multica/core/paths";
 import { useActorName } from "@multica/core/workspace/hooks";
 import { useWorkspaceId } from "@multica/core/hooks";
 import { useRecentContextStore } from "@multica/core/chat";
-import { issueListOptions, issueDetailOptions, childIssuesOptions, childIssueProgressOptions, issueUsageOptions, issueAttachmentsOptions } from "@multica/core/issues/queries";
+import { issueListOptions, issueDetailOptions, childIssuesOptions, childIssueProgressOptions, issueAttachmentsOptions } from "@multica/core/issues/queries";
 import { projectDetailOptions } from "@multica/core/projects/queries";
 import { ProjectIcon } from "../../projects/components/project-icon";
 import { issueLabelsOptions } from "@multica/core/labels";
@@ -322,12 +326,6 @@ function formatActivity(
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function formatTokenCount(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(1)}k`;
-  return String(n);
-}
 
 // Stable reference for threads with no replies. Inline `[]` would create a
 // new array on every render and bust React.memo on CommentCard / ResolvedThreadBar.
@@ -1103,7 +1101,6 @@ export function IssueDetail({ issueId, onDelete, onDone, defaultSidebarOpen = tr
   const [parentIssueOpen, setParentIssueOpen] = useState(true);
   const [pullRequestsOpen, setPullRequestsOpen] = useState(true);
   const [metadataOpen, setMetadataOpen] = useState(false);
-  const [tokenUsageOpen, setTokenUsageOpen] = useState(true);
   const githubSettings = useGitHubSettings();
 
   // Per-issue, per-session set of optional properties currently visible in
@@ -1448,31 +1445,44 @@ export function IssueDetail({ issueId, onDelete, onDone, defaultSidebarOpen = tr
     return items.findIndex((it) => it.id === rootId);
   }, [items, highlightCommentId, replyToRoot]);
 
-  // Quick-jump minimap rail: one tick per comment thread (folded resolved
-  // bars included), activity groups skipped. Derived from the same flat
-  // `items` array Virtuoso renders so tick order always matches the page.
+  // One entry per comment thread (folded resolved bars included), activity
+  // groups skipped. Derived from the same flat `items` array Virtuoso renders
+  // so the order always matches the page. Feeds both thread navigators — the
+  // right-edge rail and the header panel — from one derivation, so they can
+  // never disagree about what the threads are or what order they are in.
+  //
   // The resolved flag comes from `deriveThreadResolution`, not from the
   // `resolved-bar` kind: that kind only covers root resolutions that are
   // currently folded, so it would miss reply resolutions and would flip off
   // as soon as the user expanded a resolved thread.
-  const minimapThreads = useMemo<ThreadMinimapThread[]>(
+  const minimapThreads = useMemo<ThreadNavThread[]>(
     () =>
-      items.flatMap((it) =>
-        it.kind === "comment" || it.kind === "resolved-bar"
-          ? [
-              {
-                id: it.id,
-                entry: it.entry,
-                resolved:
-                  deriveThreadResolution(
-                    it.entry,
-                    timelineView.threadReplies.get(it.id) ?? EMPTY_REPLIES,
-                  ).kind !== "none",
-              },
-            ]
-          : [],
-      ),
-    [items, timelineView.threadReplies],
+      items.flatMap((it) => {
+        if (it.kind !== "comment" && it.kind !== "resolved-bar") return [];
+        const replies = timelineView.threadReplies.get(it.id) ?? EMPTY_REPLIES;
+        const currentUserId = user?.id ?? "";
+        // "@me" means the thread concerns this reader: they started it,
+        // answered in it, or were @mentioned anywhere in it. Authorship counts
+        // because a thread you spoke in is one you are expected to follow —
+        // narrowing to literal mentions would drop most of them.
+        const involvesMe =
+          currentUserId !== "" &&
+          ([it.entry, ...replies].some(
+            (entry) =>
+              (entry.actor_type === "member" && entry.actor_id === currentUserId) ||
+              mentionsUser(entry.content, currentUserId),
+          ));
+        return [
+          {
+            id: it.id,
+            entry: it.entry,
+            resolved: deriveThreadResolution(it.entry, replies).kind !== "none",
+            replyCount: replies.length,
+            involvesMe,
+          },
+        ];
+      }),
+    [items, timelineView.threadReplies, user?.id],
   );
 
   // When the timeline renders flat (deep-link or in-page find), there is no
@@ -1515,6 +1525,49 @@ export function IssueDetail({ issueId, onDelete, onDone, defaultSidebarOpen = tr
     [isFlatTimeline, items, scrollContainerEl],
   );
 
+  // Header thread navigator. `open` and `pinned` live here rather than inside
+  // the panel because the global shortcut has to be able to open it already
+  // pinned, and because the rail needs `threadNavHoverId` to light the tick
+  // the panel's pointer is resting on — the two navigators share one
+  // coordinate system (MUL-5755).
+  const [threadNavOpen, setThreadNavOpen] = useState(false);
+  const [threadNavPinned, setThreadNavPinned] = useState(false);
+  const [threadNavHoverId, setThreadNavHoverId] = useState<string | null>(null);
+  const handleThreadNavOpenChange = useCallback((open: boolean, pinned: boolean) => {
+    setThreadNavOpen(open);
+    setThreadNavPinned(pinned);
+    if (!open) setThreadNavHoverId(null);
+  }, []);
+
+  // Global Mod+Shift+O. Scoped to the mounted issue detail and gated on
+  // visibility the same way Cmd+F is, so on desktop only the visible tab
+  // intercepts the key.
+  useEffect(() => {
+    if (minimapThreads.length === 0) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.defaultPrevented || e.repeat || isImeComposing(e)) return;
+      if (!shortcutMatchesEvent(getShortcut("openThreadNav"), e)) return;
+      if (!scrollContainerEl || scrollContainerEl.getClientRects().length === 0) return;
+      e.preventDefault();
+      // The shortcut is a deliberate act, so it opens the pinned state
+      // directly. Pressing it again over a hover preview pins that preview
+      // rather than closing it, matching what pressing the button does.
+      if (threadNavOpen && threadNavPinned) {
+        handleThreadNavOpenChange(false, false);
+      } else {
+        handleThreadNavOpenChange(true, true);
+      }
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [
+    handleThreadNavOpenChange,
+    minimapThreads.length,
+    scrollContainerEl,
+    threadNavOpen,
+    threadNavPinned,
+  ]);
+
   const {
     reactions: issueReactions,
     toggleReaction: handleToggleIssueReaction,
@@ -1526,9 +1579,6 @@ export function IssueDetail({ issueId, onDelete, onDone, defaultSidebarOpen = tr
     toggleSubscribe: handleToggleSubscribe, toggleSubscriber,
     unsubscribeFromSubtree: handleUnsubscribeSubtree,
   } = useIssueSubscribers(id, user?.id);
-
-  // Token usage
-  const { data: usage } = useQuery(issueUsageOptions(id));
 
   // Attachments uploaded against this issue. Drives the description
   // editor's click-time fresh-sign download: NodeViews match
@@ -1716,9 +1766,44 @@ export function IssueDetail({ issueId, onDelete, onDone, defaultSidebarOpen = tr
   // so text/code attachments show an Eye before the bind round-trips.
   const [descPendingAttachments, setDescPendingAttachments] = useState<Attachment[]>([]);
   const descPendingAttachmentsRef = useRef<Attachment[]>([]);
-  const descEditorAttachments = descPendingAttachments.length > 0
-    ? [...(issueAttachments ?? []), ...descPendingAttachments]
-    : issueAttachments;
+  // Memoized because the image sequence below keys off this array: without it
+  // the concat branch hands a fresh reference to every render and rebuilds the
+  // whole issue's sequence on each one.
+  const descEditorAttachments = useMemo(
+    () =>
+      descPendingAttachments.length > 0
+        ? [...(issueAttachments ?? []), ...descPendingAttachments]
+        : issueAttachments,
+    [issueAttachments, descPendingAttachments],
+  );
+
+  // Every image in this issue, in the order the page renders them: the
+  // description first, then each timeline comment with its thread replies
+  // nested under it (MUL-5752). Built from `items` rather than the flat
+  // timeline so a reply sits next to the root it renders under, and from data
+  // rather than the DOM because Virtuoso only mounts the visible window.
+  //
+  // A resolved thread that is currently collapsed still contributes its
+  // images: they belong to the issue and are one click from being on screen,
+  // so leaving them out would make the counter change depending on which
+  // threads happen to be folded.
+  const imageSequence = useMemo(() => {
+    const blocks: ImageSequenceBlock[] = [
+      { content: issue?.description, attachments: descEditorAttachments },
+    ];
+    for (const item of items) {
+      if (item.kind === "activity-group") continue;
+      blocks.push({
+        content: item.entry.content,
+        attachments: item.entry.attachments,
+      });
+      for (const reply of timelineView.threadReplies.get(item.entry.id) ?? []) {
+        blocks.push({ content: reply.content, attachments: reply.attachments });
+      }
+    }
+    return collectImageSequence(blocks);
+  }, [issue?.description, descEditorAttachments, items, timelineView.threadReplies]);
+
   const handleDescriptionUpload = useCallback(
     async (file: File) => {
       const result = await uploadWithToast(file);
@@ -2138,10 +2223,11 @@ export function IssueDetail({ issueId, onDelete, onDone, defaultSidebarOpen = tr
         </div>
       )}
 
-      {/* Execution log — active runs + collapsed past runs. Self-contained;
-          owns its own collapse state and WS subscriptions. Hides itself
-          when there are no runs to show. */}
-      <ExecutionLogSection issueId={id} />
+      {/* Execution log — active runs + collapsed past runs, each carrying its
+          own token spend, with the issue total on the section header.
+          Self-contained; owns its own collapse state and WS subscriptions.
+          Hides itself when there are no runs to show. */}
+      <ExecutionLogSection issueId={id} identifier={issue.identifier} />
 
       {/* Details — creator and timestamps. Sits below the execution log
           because it is the least-read block in the sidebar: the values
@@ -2170,40 +2256,12 @@ export function IssueDetail({ issueId, onDelete, onDone, defaultSidebarOpen = tr
         </div>}
       </div>
 
-      {/* Token usage */}
-      {usage && usage.task_count > 0 && (
-        <div>
-          <button
-            type="button"
-            className={`flex w-full items-center gap-1 rounded-md px-2 py-1 text-caption font-medium transition-colors mb-2 hover:bg-accent/70 ${tokenUsageOpen ? "" : "text-muted-foreground hover:text-foreground"}`}
-            onClick={() => setTokenUsageOpen(!tokenUsageOpen)}
-          >
-            {t(($) => $.detail.section_token_usage)}
-            <ChevronRight className={`!size-3 shrink-0 stroke-[2.5] text-muted-foreground transition-transform ${tokenUsageOpen ? "rotate-90" : ""}`} />
-          </button>
-          {tokenUsageOpen && <div className="grid grid-cols-[auto_1fr] gap-x-2 gap-y-0.5 pl-2">
-            <PropRow label={t(($) => $.detail.prop_input)}>
-              <span className="text-muted-foreground">{formatTokenCount(usage.total_input_tokens)}</span>
-            </PropRow>
-            <PropRow label={t(($) => $.detail.prop_output)}>
-              <span className="text-muted-foreground">{formatTokenCount(usage.total_output_tokens)}</span>
-            </PropRow>
-            {(usage.total_cache_read_tokens > 0 || usage.total_cache_write_tokens > 0) && (
-              <PropRow label={t(($) => $.detail.prop_cache)}>
-                <span className="text-muted-foreground">
-                  {t(($) => $.detail.prop_cache_value, {
-                    read: formatTokenCount(usage.total_cache_read_tokens),
-                    write: formatTokenCount(usage.total_cache_write_tokens),
-                  })}
-                </span>
-              </PropRow>
-            )}
-            <PropRow label={t(($) => $.detail.prop_runs)}>
-              <span className="text-muted-foreground">{usage.task_count}</span>
-            </PropRow>
-          </div>}
-        </div>
-      )}
+      {/* The standalone "Token usage" section that used to sit here is gone:
+          it showed the same issue totals the execution-log header now carries,
+          minus the cost and minus any way to tell which run spent them. Its
+          every field (input / output / cache / run count) lives in the usage
+          dialog that header opens. The `/api/issues/:id/usage` endpoint it
+          read stays — the CLI's `issue usage` command still uses it. */}
 
       {/* Metadata — agent-facing free-form KV bag. The values almost
           never mean anything to humans, so the trigger row matches the
@@ -2323,6 +2381,10 @@ export function IssueDetail({ issueId, onDelete, onDone, defaultSidebarOpen = tr
       : [];
 
   const detailContent = (
+    // Hosts the one image viewer this issue's images page through — see
+    // ImageSequenceProvider. Wraps the whole column so the description
+    // editor's images and the timeline's images share one sequence.
+    <ImageSequenceProvider items={imageSequence}>
     <div className="relative flex h-full min-w-0 flex-1 flex-col">
         {/* In-page find bar — floats over the top-right of the content column
             (below the breadcrumb header), outside the scroll container so it
@@ -2358,6 +2420,21 @@ export function IssueDetail({ issueId, onDelete, onDone, defaultSidebarOpen = tr
                 it never overlaps the title (which truncates to make room).
                 It self-hides when no agent is active. */}
             <IssueAgentHeaderChip issueId={id} />
+            {/* Thread navigator. Leftmost of the action buttons because it
+                navigates the document, while everything to its right acts on
+                the issue. Hidden on mobile with the rail: the panel would work
+                there, but it needs a sheet rather than a popover to be usable
+                one-handed, which is its own change. */}
+            {!isMobile && (
+              <ThreadNavPanel
+                threads={minimapThreads}
+                onJump={jumpToThread}
+                onHoverThread={setThreadNavHoverId}
+                open={threadNavOpen}
+                pinned={threadNavPinned}
+                onOpenChange={handleThreadNavOpenChange}
+              />
+            )}
             {onDone && issue.status !== "done" && issue.status !== "cancelled" && (
               <Tooltip>
                 <TooltipTrigger
@@ -2939,10 +3016,12 @@ export function IssueDetail({ issueId, onDelete, onDone, defaultSidebarOpen = tr
             threads={minimapThreads}
             scrollContainerEl={scrollContainerEl}
             onJump={jumpToThread}
+            highlightedThreadId={threadNavHoverId}
             className="absolute bottom-0 right-3 top-12"
           />
         )}
       </div>
+    </ImageSequenceProvider>
   );
 
   if (isMobile) {

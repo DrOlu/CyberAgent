@@ -7,18 +7,38 @@ import (
 	"github.com/multica-ai/multica/server/internal/daemon/execenv"
 )
 
-// freshSessionRetryPrompt prefixes an explicit context-loss disclosure onto the
-// (already cold-rebuilt) prompt used for the daemon's single fresh-session
-// retry. When a resumed run is refused — the transcript is gone, belongs to
-// another account, or (GH #5975) carries history the provider now rejects —
-// the retry starts a brand-new provider session with none of the prior
-// conversation. Stating that up front stops the agent from assuming continuity
-// (e.g. "as I said earlier", relying on files/state it never created) and steers
-// it to re-read the issue and triggering thread before acting. The current user
-// prompt is preserved verbatim below the notice.
-func freshSessionRetryPrompt(prompt string) string {
-	const notice = "⚠️ Note: a previous provider session for this task could not be resumed, so this is a brand-new session. None of the earlier provider conversation context is available to you now. Do not assume any prior back-and-forth, in-memory state, or uncommitted work carried over — re-read the issue and the triggering thread to reconstruct what you need before acting.\n\n"
-	return notice + prompt
+// sessionContinuityNoticeFor picks the notice matching what this surface
+// actually lost. See the constants in execenv for the full reasoning; the
+// question is whether the conversation is still READABLE, not whether it is a
+// chat — an issue's comments and a Slack channel's history both are, a web
+// chat's and a Feishu channel's are not (MUL-5722).
+func sessionContinuityNoticeFor(task Task) string {
+	if task.ChatSessionID == "" {
+		return execenv.SessionContinuityNoticeIssue
+	}
+	if task.ChatChannelType == execenv.ChannelTypeSlack {
+		return execenv.SessionContinuityNoticeChannelHistory
+	}
+	// Web chat (no channel type) and every channel Multica cannot read back.
+	return execenv.SessionContinuityNoticeUnrecoverable
+}
+
+// backendResumeContinuityNotice returns the notice the BACKEND should inject if
+// it lands on a fresh thread, or "" when the prompt already carries one.
+//
+// Only one notice may reach a turn. Two paths can produce it — the daemon,
+// which appends it to the prompt whenever it already knows the resume is gone,
+// and the backend, which is the only one that can see a live resume RPC being
+// rejected mid-run. Before MUL-5722 both fired on the codex overflow retry, so
+// the same paragraph was paid for twice in one turn and maintained as two
+// hand-written strings. Deriving the backend's copy from the daemon's, and
+// suppressing it exactly when the prompt already said it, makes a duplicate
+// structurally impossible rather than merely unlikely.
+func backendResumeContinuityNotice(task Task) string {
+	if task.PriorSessionResumeUnavailable {
+		return ""
+	}
+	return sessionContinuityNoticeFor(task)
 }
 
 // Turn-mode markers consumed by the runtime brief's mode router
@@ -51,7 +71,7 @@ const (
 func perTurnContextBlocks(task Task) string {
 	var b strings.Builder
 	if task.PriorSessionResumeUnavailable {
-		b.WriteString(execenv.SessionContinuityNotice)
+		b.WriteString(sessionContinuityNoticeFor(task))
 	}
 	b.WriteString(execenv.BuildTaskInitiatorBlock(task.InitiatorType, task.InitiatorName, task.InitiatorEmail))
 	b.WriteString(execenv.BuildConnectedAppsBlock(task.ConnectedApps))
@@ -93,7 +113,7 @@ func buildPromptBody(task Task, provider string) string {
 		return buildQuickCreatePrompt(task)
 	}
 	var b strings.Builder
-	b.WriteString("You are running as a local coding agent for a CyberAgent workspace.\n\n")
+	b.WriteString("You are running as a local coding agent for a Multica workspace.\n\n")
 	fmt.Fprintf(&b, "Your assigned issue ID is: %s\n\n", task.IssueID)
 	b.WriteString(turnModeOwnership)
 	// Assignment handoff (MUL-3375): a free-text instruction the person who
@@ -117,7 +137,7 @@ func buildPromptBody(task Task, provider string) string {
 // or reply to.
 func buildQuickCreatePrompt(task Task) string {
 	var b strings.Builder
-	b.WriteString("You are running as a quick-create assistant for a CyberAgent workspace.\n\n")
+	b.WriteString("You are running as a quick-create assistant for a Multica workspace.\n\n")
 	b.WriteString("A user captured the following input via the quick-create modal. There is NO existing issue. Your job is to create a well-formed issue from this input with a single `multica issue create` command.\n\n")
 	fmt.Fprintf(&b, "User input:\n> %s\n\n", task.QuickCreatePrompt)
 
@@ -220,7 +240,7 @@ func buildQuickCreatePrompt(task Task) string {
 // previous turn's --parent UUID.
 func buildCommentPrompt(task Task, provider string) string {
 	var b strings.Builder
-	b.WriteString("You are running as a local coding agent for a CyberAgent workspace.\n\n")
+	b.WriteString("You are running as a local coding agent for a Multica workspace.\n\n")
 	fmt.Fprintf(&b, "Your assigned issue ID is: %s\n\n", task.IssueID)
 	// Mode marker for the brief's router. Emitted unconditionally from the same
 	// branch that selects this code path, so the brief and the prompt can never
@@ -421,8 +441,19 @@ func buildChatPrompt(task Task) string {
 	}
 
 	var b strings.Builder
-	b.WriteString("You are running as a chat assistant for a CyberAgent workspace.\n")
-	b.WriteString("A user is chatting with you directly. Respond to their message.\n\n")
+	b.WriteString("You are running as a chat assistant for a Multica workspace.\n")
+	// Audience is per-session context, so keep it out of the cached runtime
+	// brief. The compact anchors here preserve the non-inferable boundaries: a
+	// group reply is not private to its sender and people not otherwise present
+	// in the run context may read it. Unknown never defaults to private.
+	switch execenv.AudienceOf(task.ChatChannelType, task.ChatType) {
+	case execenv.ChatAudienceGroup:
+		b.WriteString("Audience: group room; not private; unseen members may read replies.\n\n")
+	case execenv.ChatAudienceUnknown:
+		b.WriteString("Audience: unknown.\n\n")
+	default:
+		b.WriteString("Audience: direct room.\n\n")
+	}
 	// Channel awareness (MUL-3871). When the session is backed by an IM channel,
 	// the agent must KNOW it is operating inside that channel — otherwise an ask
 	// like "what did you just talk about" sends it to read Multica instead of the
@@ -541,8 +572,8 @@ func channelDisplayName(channelType string) string {
 // buildAutopilotPrompt constructs a prompt for run_only autopilot tasks.
 func buildAutopilotPrompt(task Task) string {
 	var b strings.Builder
-	b.WriteString("You are running as a local coding agent for a CyberAgent workspace.\n\n")
-	b.WriteString("This task was triggered by an Autopilot in run-only mode. There is no assigned CyberAgent issue for this run.\n\n")
+	b.WriteString("You are running as a local coding agent for a Multica workspace.\n\n")
+	b.WriteString("This task was triggered by an Autopilot in run-only mode. There is no assigned Multica issue for this run.\n\n")
 	fmt.Fprintf(&b, "Autopilot run ID: %s\n", task.AutopilotRunID)
 	if task.AutopilotID != "" {
 		fmt.Fprintf(&b, "Autopilot ID: %s\n", task.AutopilotID)
