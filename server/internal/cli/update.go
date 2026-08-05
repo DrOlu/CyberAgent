@@ -6,7 +6,6 @@ import (
 	"bufio"
 	"bytes"
 	"compress/gzip"
-	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -312,14 +311,8 @@ func IsBrewInstall() bool {
 }
 
 // GetBrewPrefix returns the Homebrew prefix by running `brew --prefix`, or empty string.
-// Bounded: a wedged brew (broken shellenv, unreachable network home) must not
-// park the caller — the daemon's reload loop reaches here periodically.
 func GetBrewPrefix() string {
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-	cmd := exec.CommandContext(ctx, "brew", "--prefix")
-	cmd.WaitDelay = 2 * time.Second
-	out, err := cmd.Output()
+	out, err := exec.Command("brew", "--prefix").Output()
 	if err != nil {
 		return ""
 	}
