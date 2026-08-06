@@ -18,7 +18,6 @@ import { IssueWindow } from "./components/issue-window";
 import { useTabStore } from "./stores/tab-store";
 import { useWindowOverlayStore } from "./stores/window-overlay-store";
 import { useDaemonIPCBridge } from "./platform/daemon-ipc-bridge";
-import { syncDaemonOnLogin } from "./platform/daemon-login-sync";
 import { createDesktopLocaleAdapter } from "./platform/i18n-adapter";
 import { captureEvent } from "@multica/core/analytics";
 import { RESOURCES } from "@multica/views/locales";
@@ -168,26 +167,21 @@ function AppContent() {
     });
   }, [qc]);
 
-  // Sync token and start the daemon whenever the user logs in. The ordering
-  // inside syncDaemonOnLogin is load-bearing — see that module.
+  // Sync token and start the daemon whenever the user logs in.
   useEffect(() => {
-    if (!user || !runtimeConfig) return;
+    if (!user) return;
     const token = localStorage.getItem("multica_token");
     if (!token) return;
     const userId = user.id;
     (async () => {
       try {
-        await syncDaemonOnLogin(
-          window.daemonAPI,
-          runtimeConfig.apiUrl,
-          token,
-          userId,
-        );
+        await window.daemonAPI.syncToken(token, userId);
+        await window.daemonAPI.autoStart();
       } catch (err) {
         console.error("Failed to sync daemon on login", err);
       }
     })();
-  }, [user, runtimeConfig]);
+  }, [user]);
 
   // When a user who started the session with zero workspaces creates their
   // first one, restart the daemon so it picks up the new workspace
