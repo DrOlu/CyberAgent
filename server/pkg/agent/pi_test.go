@@ -197,9 +197,16 @@ func TestPiExecuteAttachesStdinPipe(t *testing.T) {
 
 // piEventStreamScript builds a sh script that prints each JSON event on
 // its own stdout line. Fixtures must not contain single quotes.
+//
+// The script drains stdin to EOF before emitting any event. The real pi
+// binary reads piped stdin as its initial prompt; draining here keeps the
+// backend's concurrent prompt write from racing the script's exit. Without
+// it, a fast/loaded runner can exit the script before the write lands,
+// producing EPIPE ("broken pipe") and a spurious status=failed.
 func piEventStreamScript(events []string) string {
 	var b strings.Builder
 	b.WriteString("#!/bin/sh\n")
+	b.WriteString("cat >/dev/null\n")
 	for _, e := range events {
 		b.WriteString("printf '%s\\n' '")
 		b.WriteString(e)
