@@ -716,7 +716,7 @@
     "agent_bot_connected_label": "Connected to DingTalk",
     "agent_bot_disconnect_tooltip": "Unbind this DingTalk bot from the Agent. The bot will stop receiving DingTalk messages.",
     "byo_dialog_title": "Connect a DingTalk bot",
-    "byo_docs_link": "Step-by-step: connect your Multica agent to DingTalk",
+    "byo_docs_link": "Step-by-step: connect your CyberAgent agent to DingTalk",
     "byo_appkey_label": "AppKey (client id)",
     "byo_appsecret_label": "AppSecret (client secret)",
     "byo_submit": "Connect",
