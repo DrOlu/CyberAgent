@@ -91,11 +91,30 @@ const (
 // shrink it, same as the other timing knobs in this package.
 var pendingWorkHintMinInterval = time.Second
 
+// repoCheckoutModeFor picks the Git metadata layout for a task's
+// `multica repo checkout`. Under Codex's workspace-write sandbox a linked
+// worktree's gitdir resolves into the shared cache and stays read-only even
+// when the task workdir is an explicit writable root, so `git add` /
+// `git commit` fail from inside the checkout — Linux hit this in
+// multica-ai/multica#2925, Codex's native Windows sandbox in
+// multica-ai/multica#6449.
+//
+// Both platforms now default to danger-full-access (execenv's
+// codexSandboxPolicyFor), so in practice only a user who opted into
+// windows.sandbox still trips the Windows case. The layout stays a per-platform
+// choice rather than a per-policy one: it is decided before a task's resolved
+// sandbox config is known, one workdir is reused across tasks whose policies
+// can differ, and task-local metadata is correct under either policy.
 func repoCheckoutModeFor(provider, goos string) string {
-	if provider == "codex" && goos == "linux" {
-		return repoCheckoutModeIsolated
+	if provider != "codex" {
+		return ""
 	}
-	return ""
+	switch goos {
+	case "linux", "windows":
+		return repoCheckoutModeIsolated
+	default:
+		return ""
+	}
 }
 
 var (
@@ -5605,7 +5624,13 @@ func (d *Daemon) runTask(ctx context.Context, task Task, provider string, slot i
 	// resolves to, paired with the path by resolveAgentEntry so a just-upgraded
 	// codex is never launched under the previous version's policy (MUL-4486).
 	var resolvedVersion string
+	// usesCustomProfileCommand distinguishes "this provider's own binary" from
+	// "some other binary speaking this provider's protocol". Backends need it
+	// for compatibility exceptions verified against a specific vendor's CLI,
+	// which must not extend to arbitrary commands sharing a protocol family.
+	var usesCustomProfileCommand bool
 	if customSpec, isCustom := d.customProfileLaunchForRuntime(task.RuntimeID); isCustom {
+		usesCustomProfileCommand = true
 		entry.Path = customSpec.path
 		resolvedVersion = customSpec.version
 		profileFixedArgs = customSpec.fixedArgs
@@ -6073,6 +6098,7 @@ func (d *Daemon) runTask(ctx context.Context, task Task, provider string, slot i
 		RuntimeID:      task.RuntimeID,
 		DaemonVersion:  d.cfg.CLIVersion,
 		CodexVersion:   codexVersion,
+		BuiltinRuntime: !usesCustomProfileCommand,
 	})
 	if err != nil {
 		return TaskResult{}, fmt.Errorf("create agent backend: %w", err)
