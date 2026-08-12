@@ -1443,7 +1443,7 @@ func daemonStatusHealthPort(cmd *cobra.Command) (int, error) {
 // newer daemon naming a manager this CLI predates is still worth showing.
 func describeDaemonManager(launchedBy string) string {
 	if launchedBy == "desktop" {
-		return "Multica Desktop app (start and stop it from the app)"
+		return "CyberAgent Desktop app (start and stop it from the app)"
 	}
 	return launchedBy
 }
