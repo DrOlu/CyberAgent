@@ -21,7 +21,6 @@ import {
   useCreateFeedback,
   useFeedbackDraftStore,
   FEEDBACK_KINDS,
-  isFeedbackContext,
   type FeedbackKind,
 } from "@multica/core/feedback";
 import { useCurrentWorkspace } from "@multica/core/paths";
@@ -72,7 +71,6 @@ export function FeedbackModal({
   const kind = typeof data?.kind === "string" && FEEDBACK_KIND_SET.has(data.kind as FeedbackKind)
     ? (data.kind as FeedbackKind)
     : undefined;
-  const context = isFeedbackContext(data?.context) ? data.context : undefined;
   const seededMessage = composeFeedbackInitialMessage(draft.message, incomingInitialMessage);
   const [message, setMessage] = useState(seededMessage);
   const { isDragOver, dropZoneProps } = useFileDropZone({
@@ -107,7 +105,6 @@ export function FeedbackModal({
         url: typeof window !== "undefined" ? window.location.href : undefined,
         workspace_id: workspace?.id,
         kind,
-        context,
       });
       clearDraft();
       toast.success(t(($) => $.feedback.toast_sent));
