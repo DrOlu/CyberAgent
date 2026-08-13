@@ -15,7 +15,7 @@
  * dialog can't hear, which is why Escape used to stop working after a click.
  */
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Check,
   Code as CodeIcon,
@@ -147,12 +147,25 @@ function MermaidViewerContent({
   const { t } = useT("editor");
   const [showSource, setShowSource] = useState(false);
   const [copied, setCopied] = useState(false);
+  const copyTimerRef = useRef<(() => void) | undefined>(undefined);
   const canvas = useZoomCanvas({ content: layout });
+
+  // Clear the "copied" feedback timer on unmount so it cannot fire after the
+  // dialog (and its jsdom environment) is gone — a leaked setCopied(false)
+  // after teardown throws "window is not defined" inside React's scheduler.
+  useEffect(
+    () => () => {
+      copyTimerRef.current?.();
+    },
+    [],
+  );
 
   const handleCopySource = useCallback(async () => {
     if (await copyText(chart)) {
       setCopied(true);
-      setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
+      copyTimerRef.current?.();
+      const id = setTimeout(() => setCopied(false), COPY_FEEDBACK_MS);
+      copyTimerRef.current = () => clearTimeout(id);
     }
   }, [chart]);
 
