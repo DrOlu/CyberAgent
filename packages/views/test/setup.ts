@@ -1,4 +1,5 @@
 import "@testing-library/jest-dom/vitest";
+import { afterEach } from "vitest";
 
 function createMemoryStorage(): Storage {
   const values = new Map<string, string>();
@@ -66,3 +67,36 @@ if (typeof document.elementFromPoint !== "function") {
 if (typeof Element.prototype.scrollIntoView !== "function") {
   Element.prototype.scrollIntoView = () => {};
 }
+
+// Third-party schedulers (notably @tanstack/virtual-core's batched
+// `maybeNotify`) post `setTimeout` calls that are not always cancelled on
+// unmount. When one fires after vitest tears down this file's jsdom
+// environment, React's `resolveUpdatePriority` reads `window` — now
+// undefined — and throws "ReferenceError: window is not defined", failing
+// the run even though every test passed. Track every `setTimeout` and clear
+// whatever is still pending after each test so no timer outlives the
+// environment that created it. (No views test uses fake timers, so this shim
+// is never displaced by vi.useFakeTimers.)
+const pendingTimers = new Set<ReturnType<typeof setTimeout>>();
+const nativeSetTimeout = globalThis.setTimeout.bind(globalThis);
+const nativeClearTimeout = globalThis.clearTimeout.bind(globalThis);
+
+globalThis.setTimeout = ((
+  handler: Parameters<typeof nativeSetTimeout>[0],
+  timeout?: Parameters<typeof nativeSetTimeout>[1],
+  ...args: unknown[]
+) => {
+  const id = nativeSetTimeout(handler, timeout, ...args);
+  pendingTimers.add(id);
+  return id;
+}) as typeof setTimeout;
+
+globalThis.clearTimeout = ((id?: ReturnType<typeof setTimeout>) => {
+  pendingTimers.delete(id);
+  return nativeClearTimeout(id);
+}) as typeof clearTimeout;
+
+afterEach(() => {
+  for (const id of pendingTimers) nativeClearTimeout(id);
+  pendingTimers.clear();
+});
