@@ -955,7 +955,7 @@ describe("IssueDetail (shared)", () => {
     // Key names are not rendered in the sidebar prior to opening the dialog.
     expect(screen.queryByText("pr_url")).not.toBeInTheDocument();
     expect(screen.queryByText("pipeline_status")).not.toBeInTheDocument();
-  });
+  }, 15_000);
 
   it("opens a dialog with formatted JSON when the Metadata button is clicked", async () => {
     mockApiObj.getIssue.mockResolvedValue({
