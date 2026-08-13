@@ -188,7 +188,7 @@
   },
   "plugins": {
     "title": "Plugins",
-    "description": "Review, install, scope, and manage signed capabilities delivered by Multica.",
+    "description": "Review, install, scope, and manage signed capabilities delivered by CyberAgent.",
     "loading": "Loading Plugins",
     "load_failed": "Plugins couldn't be loaded",
     "load_failed_description": "Try again. Existing enabled Plugins and pinned runs are unaffected.",
@@ -746,7 +746,7 @@
   },
   "dingtalk": {
     "section_title": "DingTalk",
-    "page_description": "Connect a DingTalk robot to Multica. Direct messages use its default Agent; each group can route the same robot to a different Agent.",
+    "page_description": "Connect a DingTalk robot to CyberAgent. Direct messages use its default Agent; each group can route the same robot to a different Agent.",
     "group_routes_title": "Group routing",
     "group_routes_description": "Add this robot to multiple DingTalk groups, then @mention it once in each group. Multica discovers the group automatically and routes future messages to the Agent selected here.",
     "group_routes_empty_title": "No groups discovered yet",

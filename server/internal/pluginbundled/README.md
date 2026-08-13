@@ -1,7 +1,7 @@
 # Bundled Plugin release catalog
 
 This package is the production acquisition boundary for official Plugins that
-ship with the Multica server. It discovers release directories generically,
+ship with the CyberAgent server. It discovers release directories generically,
 rebuilds their ZIP archives deterministically, validates the manifest and
 artifact, and verifies the detached Ed25519 signature against
 `trust_roots.json` before exposing a release to the catalog.
