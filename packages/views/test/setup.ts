@@ -93,7 +93,8 @@ globalThis.setTimeout = ((
 }) as typeof setTimeout;
 
 globalThis.clearTimeout = ((id?: TimerHandle) => {
-  if (id !== undefined) pendingTimers.delete(id);
+  if (id === undefined) return;
+  pendingTimers.delete(id);
   return nativeClearTimeout(id);
 }) as typeof clearTimeout;
 
