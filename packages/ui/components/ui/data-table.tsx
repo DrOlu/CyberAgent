@@ -347,7 +347,14 @@ export function DataTable<TData>({
   );
   const rowVirtualizer = useVirtualizer({
     count: virtualizeRows ? rows.length : 0,
-    getScrollElement: () => scrollRef.current,
+    // The virtualizer only does work when rows are virtualised. With count: 0
+    // it would still attach a scroll observer that arms an isScrollingResetDelay
+    // debounce (a setTimeout); after the table unmounts and the jsdom window is
+    // torn down that timer fires maybeNotify -> React requestUpdateLane ->
+    // resolveUpdatePriority, which reads `window` and throws "window is not
+    // defined". Returning null keeps virtual-core from subscribing at all when
+    // there is nothing to virtualise.
+    getScrollElement: () => (virtualizeRows ? scrollRef.current : null),
     estimateSize: () => virtualRowHeight,
     getItemKey: getVirtualRowKey,
     overscan: virtualOverscan,
