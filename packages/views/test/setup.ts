@@ -77,7 +77,8 @@ if (typeof Element.prototype.scrollIntoView !== "function") {
 // whatever is still pending after each test so no timer outlives the
 // environment that created it. (No views test uses fake timers, so this shim
 // is never displaced by vi.useFakeTimers.)
-const pendingTimers = new Set<ReturnType<typeof setTimeout>>();
+type TimerHandle = ReturnType<typeof setTimeout>;
+const pendingTimers = new Set<TimerHandle>();
 const nativeSetTimeout = globalThis.setTimeout.bind(globalThis);
 const nativeClearTimeout = globalThis.clearTimeout.bind(globalThis);
 
@@ -91,8 +92,8 @@ globalThis.setTimeout = ((
   return id;
 }) as typeof setTimeout;
 
-globalThis.clearTimeout = ((id?: ReturnType<typeof setTimeout>) => {
-  pendingTimers.delete(id);
+globalThis.clearTimeout = ((id?: TimerHandle) => {
+  if (id !== undefined) pendingTimers.delete(id);
   return nativeClearTimeout(id);
 }) as typeof clearTimeout;
 
