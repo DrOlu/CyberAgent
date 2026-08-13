@@ -185,6 +185,9 @@ import type {
   CreateBillingCheckoutSessionResponse,
   BillingCheckoutSessionStatus,
   CreateBillingPortalSessionResponse,
+  WorkspaceSubscriptionEntitlements,
+  WorkspaceSubscriptionSummary,
+  WorkspaceSubscriptionPrices,
 } from "../types";
 import type { OnboardingCompletionPath } from "../onboarding/types";
 import type {
@@ -287,6 +290,9 @@ import {
   CreateBillingCheckoutSessionResponseSchema,
   BillingCheckoutSessionStatusSchema,
   CreateBillingPortalSessionResponseSchema,
+  WorkspaceSubscriptionEntitlementsSchema,
+  WorkspaceSubscriptionSummarySchema,
+  WorkspaceSubscriptionPricesSchema,
   DingTalkInstallationSchema,
   DingTalkGroupRouteSchema,
   ListDingTalkGroupRoutesResponseSchema,
@@ -1556,6 +1562,50 @@ export class ApiClient {
     );
   }
 
+  // ---------------------------------------------------------------------
+  // Workspace subscriptions — the server resolves the workspace from the
+  // authenticated request context, so no caller names one.
+  //
+  // Two distinct failure paths, both of which a caller must render as
+  // "unavailable" and neither of which may look like Free:
+  //
+  //   - non-2xx (older cloud without the route, 403, 503) throws ApiError from
+  //     `fetch`, so a React Query caller sees `isError`;
+  //   - a 2xx body that does not match the contract returns null here.
+  // ---------------------------------------------------------------------
+
+  async getWorkspaceSubscriptionEntitlements(): Promise<WorkspaceSubscriptionEntitlements | null> {
+    const raw = await this.fetch<unknown>(
+      "/api/cloud-subscriptions/entitlements",
+    );
+    return parseWithFallback<WorkspaceSubscriptionEntitlements | null>(
+      raw,
+      WorkspaceSubscriptionEntitlementsSchema,
+      null,
+      { endpoint: "GET /api/cloud-subscriptions/entitlements" },
+    );
+  }
+
+  async getWorkspaceSubscriptionSummary(): Promise<WorkspaceSubscriptionSummary | null> {
+    const raw = await this.fetch<unknown>("/api/cloud-subscriptions/summary");
+    return parseWithFallback<WorkspaceSubscriptionSummary | null>(
+      raw,
+      WorkspaceSubscriptionSummarySchema,
+      null,
+      { endpoint: "GET /api/cloud-subscriptions/summary" },
+    );
+  }
+
+  async getWorkspaceSubscriptionPrices(): Promise<WorkspaceSubscriptionPrices | null> {
+    const raw = await this.fetch<unknown>("/api/cloud-subscriptions/prices");
+    return parseWithFallback<WorkspaceSubscriptionPrices | null>(
+      raw,
+      WorkspaceSubscriptionPricesSchema,
+      null,
+      { endpoint: "GET /api/cloud-subscriptions/prices" },
+    );
+  }
+
   async deleteRuntime(runtimeId: string): Promise<void> {
     await this.fetch(`/api/runtimes/${runtimeId}`, { method: "DELETE" });
   }
@@ -2212,6 +2262,12 @@ export class ApiClient {
     });
     return parseWithFallback(raw, PluginInstallationSchema, EMPTY_PLUGIN_INSTALLATION, {
       endpoint: "POST /api/workspaces/{id}/plugins/{installationId}/rollback",
+    });
+  }
+
+  async uninstallPlugin(workspaceId: string, installationId: string): Promise<void> {
+    await this.fetch(`/api/workspaces/${workspaceId}/plugins/${installationId}`, {
+      method: "DELETE",
     });
   }
 
