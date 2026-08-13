@@ -163,7 +163,9 @@ const landingCss = () =>
 // ── source scanning ────────────────────────────────────────────────────────
 
 const scanRoots = ["packages/ui", "packages/views", "apps/web", "apps/desktop/src"];
-const skipDirs = new Set(["node_modules", ".next", "dist", "out", "build", ".turbo"]);
+// `.source` is fumadocs-mdx generated output (gitignored); scanning it both
+// races the concurrent build that writes it and lints machine-generated code.
+const skipDirs = new Set(["node_modules", ".next", "dist", "out", "build", ".turbo", ".source"]);
 const sourceExtensions = [".ts", ".tsx", ".css"];
 
 /**
