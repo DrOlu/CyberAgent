@@ -40,7 +40,7 @@
   },
   "empty": {
     "title": "No agents yet",
-    "description": "Create an agent and assign it issues, like any teammate. Local agents run on your machine; cloud agents run on Multica's runtime."
+    "description": "Create an agent and assign it issues, like any teammate. Local agents run on your machine; cloud agents run on CyberAgent's runtime."
   },
   "no_matches": {
     "title": "No matches",
@@ -449,7 +449,7 @@
       "intro": "Set the system prompt used for every task. Markdown is supported.",
       "system_prompt_label": "System prompt",
       "placeholder": "Define this agent's role, expertise, and working style.\n\n# Example\nYou are a frontend engineer specializing in React and TypeScript.\n\n## Working Style\n- Write small, focused PRs — one commit per logical change\n- Prefer composition over inheritance\n- Always add unit tests for new components\n\n## Constraints\n- Do not modify shared/ types without explicit approval\n- Follow the existing component patterns in features/",
-      "system_layer_label": "Maintained by Multica",
+      "system_layer_label": "Maintained by CyberAgent",
       "system_layer_hint": "Updates with each Multica release. You can't edit it, and your notes below are never overwritten.",
       "system_layer_show": "Show",
       "system_layer_hide": "Hide",
@@ -508,14 +508,14 @@
       "save_failed_toast": "Failed to save custom arguments"
     },
     "mcp_config": {
-      "intro": "Manage the MCP servers available to this agent. Servers managed by Multica are merged with servers inherited from the local runtime.",
-      "managed_title": "Managed by Multica",
-      "managed_hint": "Saved in Multica for this agent. These servers are merged with runtime servers; a Multica server wins when names match.",
-      "managed_empty": "No MCP servers are managed by Multica yet.",
+      "intro": "Manage the MCP servers available to this agent. Servers managed by CyberAgent are merged with servers inherited from the local runtime.",
+      "managed_title": "Managed by CyberAgent",
+      "managed_hint": "Saved in CyberAgent for this agent. These servers are merged with runtime servers; a Multica server wins when names match.",
+      "managed_empty": "No MCP servers are managed by CyberAgent yet.",
       "add_action": "Add MCP",
       "agent_disabled_badge": "Off for agent",
       "runtime_disabled_badge": "Off in runtime",
-      "runtime_overridden_badge": "Overridden by Multica",
+      "runtime_overridden_badge": "Overridden by CyberAgent",
       "workspace_title": "Inherited from workspace",
       "workspace_hint": "MCP servers shared with every agent in this workspace. Manage them in workspace Settings → MCP; this agent's own servers win on a name collision.",
       "workspace_loading": "Loading shared servers…",
