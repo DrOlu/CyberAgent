@@ -234,6 +234,7 @@ open('.goreleaser.yml', 'w').write(text)
       -e 's|use Multica|use CyberAgent|g' \
       -e 's|hear about Multica|hear about CyberAgent|g' \
       -e 's|Go to Multica|Go to CyberAgent|g' \
+      -e 's|by Multica|by CyberAgent|g' \
       {} + 2>/dev/null || true
 
   # ── Go server tests — patch brand-name string literals in test assertions.

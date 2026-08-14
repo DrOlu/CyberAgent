@@ -397,7 +397,7 @@ describe("McpConfigTab effective set", () => {
     // The shared server hides the runtime's same-named one, even though the
     // agent itself declares nothing.
     expect(
-      await screen.findByText("Overridden by Multica"),
+      await screen.findByText("Overridden by CyberAgent"),
     ).toBeInTheDocument();
   });
 
@@ -416,7 +416,7 @@ describe("McpConfigTab effective set", () => {
     expect(
       await screen.findByText(/inherits none of the workspace/i),
     ).toBeInTheDocument();
-    expect(screen.queryByText("Overridden by Multica")).toBeNull();
+    expect(screen.queryByText("Overridden by CyberAgent")).toBeNull();
   });
 
   // Same transport hazard on the agent side, reached through the SAVED config
