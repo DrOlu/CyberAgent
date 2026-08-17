@@ -154,7 +154,7 @@ cd server && go run ./cmd/migrate up
 
 If you prefer to build and run services manually:
 
-**Prerequisites:** Go 1.26.1, Node.js 22, pnpm 10.28.2, PostgreSQL 17 with pgvector.
+**Prerequisites:** Go 1.26+, Node.js 20+, pnpm 10.28+, PostgreSQL 17 with pgvector.
 
 ```bash
 # Start your PostgreSQL (or use: docker compose up -d postgres)
