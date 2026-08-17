@@ -137,13 +137,12 @@ function renderModal() {
 }
 
 describe("SourceBackfillModal", () => {
-  it("does not render when there is no user", () => {
-    renderModal();
-    expect(
-      screen.queryByText(/How did you hear about CyberAgent/i),
-    ).not.toBeInTheDocument();
-  });
-
+  // Which users need the backfill is needsSourceBackfill's contract — no user,
+  // not yet onboarded, empty/missing/legacy-string/malformed source, the skip
+  // flag and the dismiss cap all have their matrix in
+  // @multica/core/onboarding/needs-backfill.test.ts. What belongs here is the
+  // modal's own reaction to the verdict, so one settled user stands for the
+  // whole "predicate says no" family.
   it("does not render when the user already recorded a source", () => {
     setUser({
       id: "u1",
@@ -152,7 +151,7 @@ describe("SourceBackfillModal", () => {
     });
     renderModal();
     expect(
-      screen.queryByText(/How did you hear about CyberAgent/i),
+      screen.queryByText(/How did you hear about Multica/i),
     ).not.toBeInTheDocument();
     // A settled user must not even pay for the count query.
     expect(mockListIssues).not.toHaveBeenCalled();
@@ -167,7 +166,7 @@ describe("SourceBackfillModal", () => {
     renderModal();
     await waitFor(() => {
       expect(
-        screen.getByText(/How did you hear about CyberAgent/i),
+        screen.getByText(/How did you hear about Multica/i),
       ).toBeInTheDocument();
     });
   });
@@ -185,7 +184,7 @@ describe("SourceBackfillModal", () => {
       expect(mockListIssues).toHaveBeenCalled();
     });
     expect(
-      screen.queryByText(/How did you hear about CyberAgent/i),
+      screen.queryByText(/How did you hear about Multica/i),
     ).not.toBeInTheDocument();
   });
 
@@ -198,7 +197,7 @@ describe("SourceBackfillModal", () => {
     });
     renderModal();
     expect(
-      screen.queryByText(/How did you hear about CyberAgent/i),
+      screen.queryByText(/How did you hear about Multica/i),
     ).not.toBeInTheDocument();
     expect(mockListIssues).not.toHaveBeenCalled();
   });
@@ -275,18 +274,6 @@ describe("SourceBackfillModal", () => {
     expect(sent.use_case).toEqual(["manage_team"]);
   });
 
-  it("treats a legacy single-string source as already answered", () => {
-    setUser({
-      id: "u1",
-      onboarded_at: "2026-01-01T00:00:00Z",
-      onboarding_questionnaire: { source: "search" },
-    });
-    renderModal();
-    expect(
-      screen.queryByText(/How did you hear about CyberAgent/i),
-    ).not.toBeInTheDocument();
-  });
-
   it("picking a second option replaces the first (single-select primary source)", async () => {
     // The modal is a single-select radio. Industry default for HDYHAU
     // is to capture the primary acquisition source, so picking a
@@ -343,19 +330,19 @@ describe("SourceBackfillModal", () => {
         await vi.advanceTimersByTimeAsync(0);
       });
       expect(
-        screen.queryByText(/How did you hear about CyberAgent/i),
+        screen.queryByText(/How did you hear about Multica/i),
       ).not.toBeInTheDocument();
       await act(async () => {
         await vi.advanceTimersByTimeAsync(699);
       });
       expect(
-        screen.queryByText(/How did you hear about CyberAgent/i),
+        screen.queryByText(/How did you hear about Multica/i),
       ).not.toBeInTheDocument();
       await act(async () => {
         await vi.advanceTimersByTimeAsync(50);
       });
       expect(
-        screen.getByText(/How did you hear about CyberAgent/i),
+        screen.getByText(/How did you hear about Multica/i),
       ).toBeInTheDocument();
     } finally {
       vi.useRealTimers();
@@ -371,7 +358,7 @@ describe("SourceBackfillModal", () => {
     });
     renderModal();
     expect(
-      screen.queryByText(/How did you hear about CyberAgent/i),
+      screen.queryByText(/How did you hear about Multica/i),
     ).not.toBeInTheDocument();
     expect(mockListIssues).not.toHaveBeenCalled();
   });
