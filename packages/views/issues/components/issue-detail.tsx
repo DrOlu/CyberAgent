@@ -1584,6 +1584,21 @@ export function IssueDetail({ issueId, onDelete, onDone, defaultSidebarOpen = tr
   // Virtuoso instance — minimap jumps drive the scroll container directly.
   const isFlatTimeline = !!highlightCommentId || find.open;
   const virtuosoRef = useRef<VirtuosoHandle>(null);
+  // `items` and `replyToRoot` change whenever the timeline cache is swapped
+  // (a refetch, a WS `comment:created` from another user, the optimistic
+  // reconcile). Reading them through refs instead of the effect's deps keeps
+  // those re-renders from tearing the estimate→measure pair down mid-flight:
+  // the cleanup used to `clearTimeout` the measure pass whenever `items`
+  // changed between the rAF and the 100ms timeout, so the row stayed aligned
+  // to Virtuoso's pre-measurement height (flaky `realigns after Virtuoso
+  // measures the newly posted row` under CI load). The pair is launched once
+  // per posted comment — `scrollToTimelineBottom` only fires after the
+  // create mutation resolves, so the new entry is already in `items` by the
+  // time this effect runs.
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
+  const replyToRootRef = useRef(replyToRoot);
+  replyToRootRef.current = replyToRoot;
   // Scroll a freshly posted comment into view, aligned so its bottom sits just
   // above the sticky composer (never behind it). A reply lives inside its root
   // CommentCard, so the containing top-level row is the scroll target. Flat and
@@ -1598,8 +1613,8 @@ export function IssueDetail({ issueId, onDelete, onDone, defaultSidebarOpen = tr
   // composer.
   useEffect(() => {
     if (!pendingPostedCommentId || isFlatTimeline) return;
-    const rootId = replyToRoot.get(pendingPostedCommentId) ?? pendingPostedCommentId;
-    const index = items.findIndex((item) => item.id === rootId);
+    const rootId = replyToRootRef.current.get(pendingPostedCommentId) ?? pendingPostedCommentId;
+    const index = itemsRef.current.findIndex((item) => item.id === rootId);
     if (index < 0) return;
     let timer: number | undefined;
     const scrollEnd = () => {
@@ -1617,7 +1632,7 @@ export function IssueDetail({ issueId, onDelete, onDone, defaultSidebarOpen = tr
       cancelAnimationFrame(frame);
       if (timer !== undefined) window.clearTimeout(timer);
     };
-  }, [pendingPostedCommentId, items, replyToRoot, isFlatTimeline]);
+  }, [pendingPostedCommentId, isFlatTimeline]);
 
   // Flat mode (find bar / deep link) has no Virtuoso, so drive scrollTop by
   // hand: align the row's bottom to the composer's top edge. The comment's
