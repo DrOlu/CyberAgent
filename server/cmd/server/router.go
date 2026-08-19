@@ -42,6 +42,7 @@ import (
 	composiosdk "github.com/multica-ai/multica/server/pkg/composio"
 	db "github.com/multica-ai/multica/server/pkg/db/generated"
 	"github.com/multica-ai/multica/server/pkg/featureflag"
+	"github.com/multica-ai/multica/server/pkg/llm"
 )
 
 var defaultOrigins = []string{
@@ -71,6 +72,8 @@ var corsAllowedHeaders = []string{
 	"X-Client-Version",
 	"X-Client-OS",
 	"X-Client-Capabilities",
+	// Sent by the host page when it relays a plugin surface's Action API call.
+	"X-Multica-Plugin-Installation",
 }
 
 // corsExposedHeaders lists response headers browser clients are allowed to read.
@@ -191,6 +194,13 @@ type RouterOptions struct {
 	// BatchedHeartbeatScheduler here so the caller can also drive Run/Stop;
 	// tests leave this nil and get the legacy synchronous behavior.
 	HeartbeatScheduler handler.HeartbeatScheduler
+	// LLMMaxRetries carries the parsed MULTICA_LLM_MAX_RETRIES budget. Unlike
+	// its three MULTICA_LLM_* siblings it is injected rather than read here,
+	// because an invalid value must fail the boot and only main() can exit —
+	// terminating the process from inside a router constructor would also kill
+	// any test that happened to have the variable set. nil means unset, which
+	// is what tests and NewRouter get.
+	LLMMaxRetries *llm.RetryOverride
 }
 
 func buildChannelSupervisor(
@@ -341,6 +351,7 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 		LLMAPIKey:                strings.TrimSpace(os.Getenv("MULTICA_LLM_API_KEY")),
 		LLMBaseURL:               strings.TrimSpace(os.Getenv("MULTICA_LLM_BASE_URL")),
 		LLMDefaultModel:          strings.TrimSpace(os.Getenv("MULTICA_LLM_DEFAULT_MODEL")),
+		LLMMaxRetries:            opts.LLMMaxRetries,
 		ServerVersion:            normalizeServerVersion(version),
 	}
 	h := handler.New(queries, pool, hub, bus, emailSvc, store, cfSigner, analyticsClient, signupConfig, daemonHub)
@@ -1241,6 +1252,26 @@ func NewRouterWithOptions(pool *pgxpool.Pool, hub *realtime.Hub, bus *events.Bus
 	r.Group(func(r chi.Router) {
 		r.Use(middleware.Auth(queries, patCache, cloudPATVerifier))
 		r.Use(middleware.RefreshCloudFrontCookies(cfSigner))
+
+		// Plugin Action API. Called by the HOST PAGE on the signed-in user's
+		// session after a surface asks for something over the postMessage
+		// bridge — the iframe holds no credential and never reaches these
+		// directly. Which installation is speaking arrives in a header the
+		// host sets; the workspace is derived from that installation rather
+		// than trusted from the client, and membership is then checked
+		// against it. Sits in the user-scoped group for that reason: there is
+		// no workspace in the path to gate on.
+		r.Route("/api/v1/plugin", func(r chi.Router) {
+			r.Get("/context", h.GetPluginContext)
+			r.Get("/issues/{id}", h.GetPluginIssue)
+			r.Patch("/issues/{id}", h.PatchPluginIssue)
+			r.Get("/issues/{id}/comments", h.ListPluginComments)
+			r.Post("/issues/{id}/comments", h.CreatePluginComment)
+			r.Get("/storage/{scope}", h.ListPluginStorage)
+			r.Get("/storage/{scope}/{key}", h.GetPluginStorage)
+			r.Put("/storage/{scope}/{key}", h.PutPluginStorage)
+			r.Delete("/storage/{scope}/{key}", h.DeletePluginStorage)
+		})
 
 		// --- User-scoped routes (no workspace context required) ---
 		r.Get("/api/me", h.GetMe)
