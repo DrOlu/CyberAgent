@@ -2,7 +2,7 @@
 
 Status: complete for the text-message scope described below.
 
-This document records the architecture and operating contract of Multica's
+This document records the architecture and operating contract of CyberAgent's
 Telegram channel. Setup instructions for operators live in the localized
 Telegram Bot integration guides under `apps/docs/content/docs/`.
 

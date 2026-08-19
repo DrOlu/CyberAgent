@@ -90,7 +90,7 @@
   "telegram_bind": {
     "page_title": "Link your Telegram account",
     "redeeming": "Linking your account…",
-    "needs_auth_description": "Sign in to Multica to complete the link. The token in the link binds your Telegram account to this Multica user, so you must be logged in first.",
+    "needs_auth_description": "Sign in to CyberAgent to complete the link. The token in the link binds your Telegram account to this Multica user, so you must be logged in first.",
     "sign_in": "Sign in",
     "done_title": "You're linked.",
     "done_description": "Your next message to the bot in Telegram will go straight to the agent. You can close this tab.",
