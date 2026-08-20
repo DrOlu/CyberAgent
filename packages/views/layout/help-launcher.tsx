@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, BookOpen, CircleHelp, History, MessageCircle } from "lucide-react";
+import { ArrowUpRight, BookOpen, CircleHelp, Download, History, MessageCircle } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,13 +13,19 @@ import {
 import { useModalStore } from "@multica/core/modals";
 import { useConfigStore } from "@multica/core/config";
 import { useT } from "../i18n";
+import { isDesktopShell } from "../platform/local-directory";
 
 const DOCS_URL = "https://cyberagent.ng/docs.html";
 const CHANGELOG_URL = "https://cyberagent.ng";
+const DOWNLOAD_URL = "https://multica.ai/download";
 
 export function HelpLauncher() {
   const { t } = useT("layout");
   const serverVersion = useConfigStore((s) => s.serverVersion);
+  // Web-only: offering "download the desktop app" inside the desktop app is
+  // nonsense, and this sidebar is shared — apps/desktop renders the same
+  // AppSidebar as the web dashboard, so the entry has to be gated here.
+  const desktop = isDesktopShell();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -35,6 +41,20 @@ export function HelpLauncher() {
         sideOffset={8}
         className="min-w-40 max-w-56"
       >
+        {!desktop && (
+          <>
+            <DropdownMenuItem
+              render={
+                <a href={DOWNLOAD_URL} target="_blank" rel="noopener noreferrer" />
+              }
+            >
+              <Download className="h-3.5 w-3.5" />
+              {t(($) => $.help.download_desktop)}
+              <ArrowUpRight className="size-3 translate-y-px text-faint-foreground" />
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+          </>
+        )}
         <DropdownMenuItem
           render={
             <a href={DOCS_URL} target="_blank" rel="noopener noreferrer" />
