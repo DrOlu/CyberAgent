@@ -8,13 +8,7 @@ export default defineConfig({
     plugins: [externalizeDepsPlugin()],
   },
   preload: {
-    // `@electron-toolkit/preload` must be bundled INTO the preload script:
-    // the renderer windows run with `sandbox: true`, and a sandboxed preload's
-    // `require` can only load `electron` plus a couple of node builtins — an
-    // externalized `require("@electron-toolkit/preload")` would throw and
-    // every contextBridge API would vanish. electron-vite emits preload as a
-    // single CJS bundle, which is exactly what the sandbox requires.
-    plugins: [externalizeDepsPlugin({ exclude: ["@electron-toolkit/preload"] })],
+    plugins: [externalizeDepsPlugin()],
   },
   renderer: {
     server: {
