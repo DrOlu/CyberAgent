@@ -356,7 +356,7 @@
     },
     "consent": {
       "title": "This Plugin is asking for the following access",
-      "description": "You are approving one specific version. Its code is stored by Multica and will not change until you upgrade. A Plugin can only do what these scopes allow, and never more than the person using it can already do.",
+      "description": "You are approving one specific version. Its code is stored by CyberAgent and will not change until you upgrade. A Plugin can only do what these scopes allow, and never more than the person using it can already do.",
       "cancel": "Cancel",
       "confirm": "Grant and install",
       "confirm_upgrade": "Grant and upgrade",
