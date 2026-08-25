@@ -1138,9 +1138,13 @@ describe("IssueDetail (shared)", () => {
     fireEvent.click(within(composer).getByRole("button", { name: "Send" }));
 
     expect(scrollToIndexSpy).not.toHaveBeenCalled();
+    // 5s timeout: the effect's rAF + 100ms setTimeout pair can drift past
+    // waitFor's 1s default under CI runner contention (turbo runs several
+    // packages' tests at once, and jsdom's requestAnimationFrame is backed
+    // by setTimeout(16) which drifts with the event loop).
     await waitFor(() => {
       expect(scrollToIndexSpy).toHaveBeenCalledTimes(2);
-    });
+    }, { timeout: 5000 });
     expect(scrollToIndexSpy).toHaveBeenNthCalledWith(1, { index: 2, align: "end", offset: 0 });
     expect(scrollToIndexSpy).toHaveBeenNthCalledWith(2, { index: 2, align: "end", offset: 0 });
     expect(scrollIntoViewSpy).not.toHaveBeenCalled();
