@@ -43,9 +43,13 @@ while IFS= read -r line; do
   esac
 done
 `, args, requests, loadSession)
-	if err := os.WriteFile(bin, []byte(script), 0o755); err != nil {
-		t.Fatalf("write fake mcode: %v", err)
-	}
+	// Use writeTestExecutable (ForkLock-guarded) instead of a bare os.WriteFile
+	// so a concurrent t.Parallel() sibling can't fork between open and close,
+	// inherit our still-open write fd, and trip Linux ETXTBSY ("text file
+	// busy") on the subsequent exec — the same flake already fixed for the
+	// kimi/codex/claude backends. Seen on CI as
+	// TestMcodeUnsupportedResumeRequestsFreshRetry: fork/exec ... text file busy.
+	writeTestExecutable(t, bin, []byte(script))
 	return bin, requests, args
 }
 
