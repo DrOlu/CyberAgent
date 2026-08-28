@@ -30,7 +30,6 @@ import { api } from "@multica/core/api";
 import { useT } from "../i18n";
 import { useShortcut } from "@multica/core/shortcuts";
 import { ShortcutKeycaps } from "../common/shortcut-keycaps";
-import { currentPath, useOptionalNavigation } from "../navigation";
 
 const MAX_MESSAGE_LEN = 10000;
 
@@ -62,7 +61,6 @@ export function FeedbackModal({
   const { t } = useT("modals");
   const { t: tEditor } = useT("editor");
   const workspace = useCurrentWorkspace();
-  const navigation = useOptionalNavigation();
   const draft = useFeedbackDraftStore((s) => s.draft);
   const setDraft = useFeedbackDraftStore((s) => s.setDraft);
   const clearDraft = useFeedbackDraftStore((s) => s.clearDraft);
@@ -104,18 +102,9 @@ export function FeedbackModal({
       return;
     }
     try {
-      const browserUrl =
-        typeof window !== "undefined" &&
-        (window.location.protocol === "http:" ||
-          window.location.protocol === "https:")
-          ? window.location.href
-          : undefined;
-      const currentUrl = navigation
-        ? navigation.getShareableUrl(currentPath(navigation))
-        : browserUrl;
       await mutation.mutateAsync({
         message: latest,
-        url: currentUrl,
+        url: typeof window !== "undefined" ? window.location.href : undefined,
         workspace_id: workspace?.id,
         kind,
         context,
