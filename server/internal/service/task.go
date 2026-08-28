@@ -6242,6 +6242,13 @@ func (s *TaskService) dispatchDelegatedFailureRecoveryComment(ctx context.Contex
 	}
 	failed, err := s.Queries.GetAgentTask(ctx, comment.SourceTaskID)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			// The failed task was GC'd between the outbox scan and
+			// dispatch (e.g. a concurrent workspace deletion cascaded
+			// to agent_task_queue). There is nothing to recover; treat
+			// it as covered so the sweep does not report a hard error.
+			return delegatedFailureRecoveryCovered, nil
+		}
 		return delegatedFailureRecoveryCovered, fmt.Errorf("load failed recovery source: %w", err)
 	}
 	target, err := loadDelegatedFailureRecoveryTarget(ctx, s.Queries, failed)
