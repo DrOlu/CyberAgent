@@ -1949,7 +1949,7 @@ func TestCreateWorktreeRemovesCoAuthoredByHookWhenDisabled(t *testing.T) {
 // TestCreateWorktreeRemovesLegacyCoAuthoredByHook verifies the migration
 // path: bare clones already on disk from previous daemon versions carry a
 // prepare-commit-msg hook that does NOT include the multicaHookMarker
-// sentinel — only the older `# Installed by the CyberAgent daemon.` comment.
+// sentinel — only the older `# Installed by the Multica daemon.` comment.
 // Toggling the workspace setting off must still remove those legacy hooks,
 // otherwise users who flip the toggle in production keep seeing the trailer
 // indefinitely (the exact bug reported in MUL-1704).
@@ -1968,8 +1968,8 @@ func TestCreateWorktreeRemovesLegacyCoAuthoredByHook(t *testing.T) {
 	// verbatim copy here means the test fails if recognition logic ever
 	// drifts away from what production hosts actually have on disk.
 	const legacyHook = `#!/bin/sh
-# Multica: add Co-authored-by trailer for the CyberAgent Agent.
-# Installed by the CyberAgent daemon. Do not edit — it will be overwritten.
+# Multica: add Co-authored-by trailer for the Multica Agent.
+# Installed by the Multica daemon. Do not edit — it will be overwritten.
 
 COMMIT_MSG_FILE="$1"
 COMMIT_SOURCE="$2"
