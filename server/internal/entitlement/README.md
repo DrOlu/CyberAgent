@@ -40,7 +40,7 @@ The client reads:
   period. A malformed notification policy is ignored without invalidating an
   otherwise valid enforcement gate.
 
-Deploy Cloud policy revision 2 before the Multica consumer. The consumer treats
+Deploy Cloud policy revision 2 before the CyberAgent consumer. The consumer treats
 a missing notification policy as notices-disabled while continuing to enforce
 the quota. The reverse order is safe because older consumers ignore the
 additive notification fields.
