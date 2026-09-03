@@ -271,6 +271,7 @@ open('.goreleaser.yml', 'w').write(text)
   _sed apps/web/app/layout.tsx 's/Multica/CyberAgent/g' 2>/dev/null || true
   _sed apps/web/app/custom.css 's/Multica/CyberAgent/g' 2>/dev/null || true
   _sed apps/web/app/not-found.tsx 's/Multica/CyberAgent/g' 2>/dev/null || true
+  _sed apps/web/app/not-found.test.tsx 's/返回 Multica/返回 CyberAgent/g' 2>/dev/null || true
 
   # Landing pages (user-facing). NO URL rewriting — multica.ai stays.
   # Twitter handle https://x.com/MulticaAI is intentionally untouched
