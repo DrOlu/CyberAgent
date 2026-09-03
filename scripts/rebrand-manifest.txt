@@ -73,6 +73,7 @@ apps/desktop/src/main/index.ts
 apps/desktop/src/renderer/index.html
 apps/desktop/src/renderer/src/App.tsx
 apps/desktop/src/shared/runtime-config.test.ts
+apps/desktop/src/renderer/src/components/daemon-localization.test.tsx
 
 # Docker compose — self-host points to our published images
 docker-compose.yml
