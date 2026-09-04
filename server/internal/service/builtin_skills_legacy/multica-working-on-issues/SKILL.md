@@ -1,6 +1,6 @@
 ---
 name: multica-working-on-issues
-description: "Superseded by the multica-platform skill — load that instead. This file only records where the Multica issue contracts moved to."
+description: "Superseded by the multica-platform skill — load that instead. This file only records where the CyberAgent issue contracts moved to."
 user-invocable: false
 allowed-tools: Bash(multica *)
 ---
@@ -22,6 +22,6 @@ autopilots, projects, runtimes, and skill import.
 
 Nothing was dropped in the move — the contracts were reorganized, not shortened.
 
-You are seeing this redirect because the Multica app on this machine is older
+You are seeing this redirect because the CyberAgent app on this machine is older
 than the server it is talking to, so its task brief still refers to the previous
 skill name. Updating the app removes this extra hop.

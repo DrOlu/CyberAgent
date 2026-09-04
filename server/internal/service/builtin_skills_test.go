@@ -112,7 +112,7 @@ func TestBuiltinSkillsConformToTemplate(t *testing.T) {
 			// the agent did not already have. Revisit if per-reference
 			// declarations ever exist.
 			if got := strings.TrimSpace(fm["allowed-tools"]); !strings.Contains(got, "Bash(multica *)") {
-				t.Errorf("allowed-tools = %q, want access to the Multica CLI", got)
+				t.Errorf("allowed-tools = %q, want access to the CyberAgent CLI", got)
 			}
 
 			for _, f := range skill.Files {

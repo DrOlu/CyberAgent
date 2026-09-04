@@ -19,7 +19,7 @@ once a URL or concrete target exists.
 
 ## The invariant
 
-A skill is installed for Multica only when it exists in the current workspace's
+A skill is installed for CyberAgent only when it exists in the current workspace's
 skill database. The single supported path that puts it there is the workspace
 import endpoint. It accepts either a hosted URL or an uploaded local archive
 (`.skill` / `.zip`), driven by this CLI:
@@ -42,7 +42,7 @@ part (the `.skill` / `.zip` bytes) and an `on_conflict` field. `--url` and
 `--file` are mutually exclusive; exactly one is required.
 
 Do not finish with `npx skills add`. That installs into an external/local skill
-environment, not the Multica workspace DB, so Multica cannot manage or bind it.
+environment, not the CyberAgent workspace DB, so Multica cannot manage or bind it.
 
 ## Supported URL source families
 
