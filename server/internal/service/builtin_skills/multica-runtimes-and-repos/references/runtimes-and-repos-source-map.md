@@ -1,18 +1,63 @@
-# Runtimes and repos source map
+# Runtimes and Repos — Behavioral Reference
 
-- `server/cmd/multica/cmd_runtime.go` registers `runtime list`, `usage`, `activity`, `update`, and `delete`.
-- `runtime list` reads `/api/runtimes` and prints `id`, `name`, `runtime_mode`, `provider`, `status`, and `last_seen_at`.
-- `runtime update` posts to `/api/runtimes/{runtime-id}/update`; with `--wait` it polls update status. Initiation enforces runtime-owner or workspace-owner/admin access through `canEditRuntime`; status polling additionally permits that request's immutable initiator so an in-flight poll survives an admin-role change (`server/internal/handler/runtime_update.go` and `runtime.go`).
-- `runtime delete` deletes `/api/runtimes/{runtime-id}`; with `--cascade`, it first reads the `runtime_has_active_agents` conflict payload and posts those ids to `/api/runtimes/{runtime-id}/unbind-agents-and-delete` (the older `/archive-agents-and-delete` path still routes to the same handler for installed clients). Both delete paths run the runtime teardown sequence: user agents are unbound, their task history is detached so deleting the runtime cannot cascade it away, active tasks are cancelled for user-confirmed deletion, and only system agents are hard-deleted.
-- `server/cmd/multica/cmd_repo.go` registers `repo checkout <url> [--ref]`.
-- `repo checkout` requires `MULTICA_DAEMON_PORT` plus the injected task-scoped `MULTICA_TOKEN`. It sends the token as a localhost bearer credential along with `workspace_id`, `workdir`, `ref`, `agent_name`, `task_id`, and the daemon-managed optional `checkout_mode`, then prints the checked-out path.
-- `server/internal/daemon/daemon.go` registers each provider execution in an in-memory checkout registry keyed by its task token and removes it when execution ends. `server/internal/daemon/health.go` authenticates `/repo/checkout` against that registry, requires the requested workspace/task and canonical workdir to belong to the active task, and derives the branch's agent name from the registry instead of trusting the request. It then resolves the checkout ref: request `ref` wins; otherwise it asks `daemon.go` for the current task's project repo default ref, and forwards the validated isolated-checkout mode into `repocache.WorktreeParams`.
-- `server/internal/daemon/daemon.go` injects `MULTICA_REPO_CHECKOUT_MODE=isolated` for Linux and Windows Codex tasks. Linux keeps the isolated checkout it already had; Windows Codex now uses the same layout to cover its native sandbox, where a linked worktree's external gitdir stays read-only and `git add` / `git commit` fail from inside the checkout (multica-ai/multica#6449). That failure only bites a Windows user who opted into `windows.sandbox` — `server/internal/daemon/execenv/codex_sandbox.go` defaults both Linux and Windows Codex to `danger-full-access` — but the checkout layout is chosen per platform, not per sandbox policy, so it does not depend on a task's resolved policy. `server/internal/daemon/repocache/cache.go` implements the mode as a local clone with task-local Git metadata and the real repository as `origin`; on Windows it clones with `--no-hardlinks` so the checkout's objects are private copies rather than NTFS links that share one file and security descriptor with the cache. Other runtimes keep the linked-worktree path.
-- When the bare cache is a partial clone, that isolated checkout must have `remote.origin.promisor` / `partialclonefilter` restored before its first `checkout`: `git clone --local` neither inherits them nor errors on the missing objects it leaves behind, so the checkout would otherwise succeed with an empty working tree. The linked-worktree path shares the cache's own config and needs no such repair.
-- `server/cmd/server/router.go` registers daemon APIs under `/api/daemon`, including workspace repos and task claim.
-- `server/internal/daemon/daemon.go` claims tasks, prepares workdirs, launches provider CLIs, and reports completion. It validates the task-scoped `mat_` credential, exports `MULTICA_TASK_CONFIG_ROOT`, and keeps that daemon-owned variable ahead of custom environment assembly so agents cannot override it.
-- `server/internal/daemon/execenv/execenv.go` creates and restores the private per-task `multica-config` directory with mode `0700`; it does not copy the daemon Owner's Multica profile into the directory.
-- `server/internal/cli/config.go` resolves CyberAgent CLI profiles below `MULTICA_TASK_CONFIG_ROOT` when present while leaving ordinary `HOME`-based resolution unchanged outside tasks.
-- `server/cmd/multica/cmd_agent.go`, `cmd_config.go`, `cmd_auth.go`, `cmd_login.go`, `cmd_setup.go`, `cmd_workspace.go`, `cmd_runtime_profile.go`, and `cmd_daemon.go` enforce the task boundary: API calls require task authentication, task-local config commands fail closed without their root, auth status hides credential material, and human/local profile or daemon commands reject strong managed-task identity (`MULTICA_AGENT_ID` / `MULTICA_TASK_ID`, `MULTICA_TASK_CONFIG_ROOT`, or the workdir marker). `MULTICA_DAEMON_PORT` remains a weak fail-closed signal for general API/profile resolution but is not sufficient by itself to reject human/local commands, because older host/container setups may leave it in the startup environment; guarded login paths explicitly resolve and update the human profile.
-- `cmd_daemon.go` scopes the two read-only diagnostics instead of rejecting them: with strong task identity, `daemonStatusHealthPort` takes the injected `MULTICA_DAEMON_PORT` (never the `--profile` hash, which would report an unrelated daemon); when that port is the only signal in a host environment, it uses the selected profile's derived port. `resolveDiskUsageRoot` takes `daemon.TaskWorkspacesRootEnv` (never the `$HOME`-derived default), `checkTaskDiskUsageScope` rejects the flags that widen the scan past this daemon, and the STATUS column plus the other-roots hint are skipped because both reach for Owner profile state.
-- `server/internal/daemon/execenv/runtime_config.go` injects task/project/repo context into agent workdirs.
+## Runtime commands
+
+`multica runtime list` returns each runtime's `id`, `name`, `runtime_mode`, `provider`, `status`, and `last_seen_at`.
+
+`multica runtime update` initiates a runtime update via `POST /api/runtimes/{runtime-id}/update`.
+With `--wait`, it polls for completion. Only the runtime owner or a workspace owner/admin can initiate an update;
+a user who initiated the poll keeps access to the status endpoint even if their admin role changes mid-flight.
+
+`multica runtime delete` removes a runtime via `DELETE /api/runtimes/{runtime-id}`.
+With `--cascade`, it first reads the list of active agents bound to that runtime and
+posts them to an unbind-and-delete endpoint before deleting the runtime.
+The teardown sequence: user agents are unbound (their `runtime_id` is cleared),
+task history is detached so the deletion cannot cascade away past work,
+active tasks are cancelled for user-confirmed deletion, and only system agents are hard-deleted.
+Older installed clients that call the legacy archive-and-delete endpoint are routed to the same handler.
+
+## Repo checkout
+
+`multica repo checkout <url> [--ref]` checks out a repository inside the current task.
+It requires `MULTICA_DAEMON_PORT` and the task-scoped `MULTICA_TOKEN`.
+The checkout is authenticated against the running task: the daemon verifies the workspace, task, and
+workdir all belong to the active task, and derives the agent name from its own registry
+rather than from the request payload.
+
+Checkout ref resolution order:
+1. `--ref` flag from the request
+2. The project's pinned default ref (from a `github_repo` project resource)
+3. Repository default branch
+
+### Isolated checkout mode
+
+Linux and Windows Codex tasks use an isolated checkout mode (`MULTICA_REPO_CHECKOUT_MODE=isolated`).
+Isolated mode creates a local clone with task-local Git metadata, using the real repository as `origin`.
+On Windows this clone uses `--no-hardlinks` so each task's checkout objects are independent.
+Other runtimes use a linked-worktree layout instead.
+
+If the bare cache is a partial clone, the isolated checkout restores `remote.origin.promisor` /
+`partialclonefilter` before the first checkout, otherwise `git clone --local` would succeed
+with an empty working tree.
+
+## Daemon environment
+
+`MULTICA_TASK_CONFIG_ROOT` is exported by the daemon and pins the task's private config directory.
+The CLI resolves profiles under this root when the variable is present, leaving `HOME`-based resolution
+unchanged for non-task use.
+
+Each task gets a private `multica-config` directory (mode `0700`). The daemon does not copy the
+owner's profile into it — every task starts with a clean config slate.
+
+Task commands enforce the task boundary: API calls require task authentication; `MULTICA_DAEMON_PORT`
+alone is not sufficient to reject human/local commands because some host environments leave it in
+the startup environment.
+
+## Daemon APIs
+
+The daemon registers workspace repos and task claim under `/api/daemon`.
+It validates the task-scoped credential, launches provider CLIs, and reports completion.
+`MULTICA_TASK_CONFIG_ROOT` is kept ahead of custom environment assembly so agents cannot override it.
+
+Daemon diagnostics (`daemonStatusHealthPort`, disk usage) use the injected `MULTICA_DAEMON_PORT`
+under strong task identity rather than the profile-derived port.
