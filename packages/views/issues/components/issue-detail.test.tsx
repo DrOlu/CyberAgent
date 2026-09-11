@@ -1258,7 +1258,11 @@ describe("IssueDetail (shared)", () => {
     expect(agentBlock.querySelector(`[data-run-id="${taskId}"]`)).not.toBeNull();
     const running: AgentTask = { ...task, status: "running", started_at: task.created_at, delivered_comment_ids: [root.id] };
     act(() => client.setQueryData(issueKeys.tasks("issue-1"), [running]));
-    await screen.findByText("pnpm test");
+    // 5s timeout: the run summary only renders once the useTaskMessages query
+    // refetches after the task flips to "running" (the query is gated by
+    // loadTranscript). Under CI runner contention that refetch + render can
+    // drift past findByText's 1s default (turbo runs several packages at once).
+    await screen.findByText("pnpm test", {}, { timeout: 5000 });
     expect(container.querySelector(`[data-run-comment-id="${taskId}"]`)).toBe(agentBlock);
     expect(userBlock.querySelector("[data-run-id]")).toBeNull();
 
@@ -1395,7 +1399,11 @@ describe("IssueDetail (shared)", () => {
     const assignmentSlot = container.querySelector(`[data-run-slot-id="${task.id}"]`);
     const running: AgentTask = { ...task, status: "running", started_at: task.created_at };
     act(() => queryClient.setQueryData(issueKeys.tasks("issue-1"), [running]));
-    await screen.findByText("pnpm test");
+    // 5s timeout: the run summary only renders once the useTaskMessages query
+    // refetches after the task flips to "running" (the query is gated by
+    // loadTranscript). Under CI runner contention that refetch + render can
+    // drift past findByText's 1s default (turbo runs several packages at once).
+    await screen.findByText("pnpm test", {}, { timeout: 5000 });
     expect(container.querySelectorAll(`[data-run-id="${task.id}"]`)).toHaveLength(1);
     const reply: TimelineEntry = {
       ...mockTimeline[1]!, id: "assignment-reply", parent_id: parentId, source_task_id: task.id,
