@@ -738,13 +738,19 @@ func isDuplicatePendingTaskErr(err error) bool {
 // pendingSlotTakenErr reports whether err means "the (issue, agent) pending slot
 // was already occupied when we tried to enqueue".
 //
-// Two shapes reach RerunIssue. The issue-assignee path surfaces the raw unique
-// violation, while enqueueMentionTaskWithCommentPlan normalizes it into the bare
-// ErrDuplicatePendingTask sentinel — and that is the path taken by EVERY rerun
-// whose target is not the issue's current agent assignee: a squad leader, a
-// displaced agent re-fired by task_id, a mentioned agent. Matching only the raw
-// pgconn error meant the reclaim never ran for those, so a system retry winning
-// the slot surfaced as a hard error instead.
+// Both paths behind RerunIssue now normalize the unique violation into the bare
+// ErrDuplicatePendingTask sentinel: enqueueMentionTaskWithCommentPlan since
+// #5958, and enqueueIssueTaskWithCommentPlan as of #5914 above. The sentinel
+// half is therefore what matches in practice, and it has to be here — the
+// mention path is the one taken by EVERY rerun whose target is not the issue's
+// current agent assignee (a squad leader, a displaced agent re-fired by
+// task_id, a mentioned agent), and matching only the raw pgconn error meant the
+// reclaim never ran for those, so a system retry winning the slot surfaced as a
+// hard error instead.
+//
+// The raw-violation half is kept deliberately, as a cheap defensive net: one
+// errors.As, and it keeps this predicate honest for any caller that reaches it
+// without passing through one of those two normalizing paths.
 func pendingSlotTakenErr(err error) bool {
 	return isDuplicatePendingTaskErr(err) || errors.Is(err, ErrDuplicatePendingTask)
 }
@@ -1336,6 +1342,16 @@ func (s *TaskService) enqueueIssueTaskWithCommentPlan(ctx context.Context, issue
 		task, err = s.Queries.CreateAgentTask(ctx, createParams)
 	}
 	if err != nil {
+		// A concurrent enqueue for the same (issue, agent) won the race and the
+		// unique index rejected this insert. That is benign — a sibling run
+		// already covers this target — so log it at debug and return a typed
+		// sentinel the caller maps to a coalesced outcome / 409 rather than a
+		// 500 that leaks the raw constraint name (#5914). Mirrors the mention
+		// path in enqueueMentionTaskWithCommentPlan.
+		if isDuplicatePendingTaskErr(err) {
+			slog.Debug("task enqueue coalesced: pending task already exists", "issue_id", util.UUIDToString(issue.ID), "agent_id", util.UUIDToString(issue.AssigneeID))
+			return db.AgentTaskQueue{}, ErrDuplicatePendingTask
+		}
 		slog.Error("task enqueue failed", "issue_id", util.UUIDToString(issue.ID), "error", err)
 		return db.AgentTaskQueue{}, fmt.Errorf("create task: %w", err)
 	}
@@ -5492,7 +5508,18 @@ func (s *TaskService) RerunIssue(ctx context.Context, issueID pgtype.UUID, sourc
 		// when the caller didn't pass one explicitly.
 		if !triggerCommentID.Valid {
 			coalescedCommentIDs = append([]pgtype.UUID{}, sourceTask.CoalescedCommentIds...)
-			if sourceTask.TriggerCommentID.Valid {
+			sourceTriggerLive := sourceTask.TriggerCommentID.Valid
+			if sourceTriggerLive {
+				// A trigger deleted while it had replies keeps its row as a
+				// tombstone instead of clearing trigger_comment_id; repair the
+				// plan exactly as for a removed trigger.
+				trigger, err := s.Queries.GetComment(ctx, sourceTask.TriggerCommentID)
+				if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+					return nil, fmt.Errorf("load source trigger comment: %w", err)
+				}
+				sourceTriggerLive = err == nil && !trigger.DeletedAt.Valid
+			}
+			if sourceTriggerLive {
 				triggerCommentID = sourceTask.TriggerCommentID
 			} else if len(coalescedCommentIDs) > 0 {
 				triggerCommentID, coalescedCommentIDs, err = s.promoteNewestSurvivingComment(ctx, coalescedCommentIDs)
@@ -5618,10 +5645,11 @@ func (s *TaskService) RerunIssue(ctx context.Context, issueID pgtype.UUID, sourc
 }
 
 // promoteNewestSurvivingComment repairs a manual rerun whose original trigger
-// was deleted (the FK clears trigger_comment_id while the UUID-array plan
-// survives). Promoting before enqueue lets the normal enqueue path recompute
-// originator and user-scoped connected-app capabilities from the real comment,
-// rather than carrying the deleted trigger's stale security context.
+// was deleted (the FK clears trigger_comment_id, or the trigger is a tombstone,
+// while the UUID-array plan survives). Tombstones never count as survivors.
+// Promoting before enqueue lets the normal enqueue path recompute originator
+// and user-scoped connected-app capabilities from the real comment, rather
+// than carrying the deleted trigger's stale security context.
 func (s *TaskService) promoteNewestSurvivingComment(ctx context.Context, ids []pgtype.UUID) (pgtype.UUID, []pgtype.UUID, error) {
 	type survivingComment struct {
 		id        pgtype.UUID
@@ -5644,6 +5672,9 @@ func (s *TaskService) promoteNewestSurvivingComment(ctx context.Context, ids []p
 		}
 		if err != nil {
 			return pgtype.UUID{}, nil, err
+		}
+		if comment.DeletedAt.Valid {
+			continue
 		}
 		survivors = append(survivors, survivingComment{id: comment.ID, createdAt: comment.CreatedAt.Time})
 	}
@@ -7313,11 +7344,11 @@ func (s *TaskService) AutoUnresolveThreadOnReply(ctx context.Context, parent *db
 // field missing here is a field that reads back undefined until the next
 // refetch — see TestIssueToMap_KeysMatchIssueResponse, which fails if the two
 // renderings drift apart.
-// builtInStatusCategory returns a status's category when it can be known
-// without a catalog read — i.e. for the 7 built-ins, where key == category.
+// builtInStatusCategory returns a status's public lifecycle category when it
+// can be known without a catalog read.
 func builtInStatusCategory(status string) string {
-	if issuestatus.IsBuiltIn(status) {
-		return status
+	if category, ok := issuestatus.CategoryForBehavior(status); ok {
+		return issuestatus.WireCategory(status, category)
 	}
 	return ""
 }
@@ -7332,8 +7363,8 @@ func builtInStatusCategory(status string) string {
 // rendering already shares a single read through its Resolver. (MUL-6749)
 func IssueToMapResolved(ctx context.Context, q issuestatus.Querier, issue db.Issue, issuePrefix string) map[string]any {
 	m := IssueToMap(issue, issuePrefix)
-	category, name := issuestatus.EffectiveAndName(ctx, q, issue.WorkspaceID, issue.Status)
-	m["status_category"] = category
+	category, name := issuestatus.CategoryAndName(ctx, q, issue.WorkspaceID, issue.Status)
+	m["status_category"] = issuestatus.WireCategory(issue.Status, category)
 	m["status_name"] = name
 	return m
 }
@@ -7347,9 +7378,9 @@ func IssueToMap(issue db.Issue, issuePrefix string) map[string]any {
 		"title":        issue.Title,
 		"description":  util.TextToPtr(issue.Description),
 		"status":       issue.Status,
-		// Mirrors handler.IssueResponse.StatusCategory: a built-in status IS
-		// its own category, so this resolves with no catalog lookup. Empty for
-		// a custom status, which consumers resolve via the catalog. (MUL-6243)
+		// Mirrors handler.IssueResponse.StatusCategory. Built-ins map to a
+		// public lifecycle category without a catalog lookup; custom statuses
+		// are filled by IssueToMapResolved. (MUL-6243)
 		"status_category": builtInStatusCategory(issue.Status),
 		// Mirrors handler.IssueResponse.StatusName. A built-in carries no name
 		// — clients localize those from the key — and a CUSTOM one is filled in
