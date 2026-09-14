@@ -19,7 +19,7 @@
     "reorder_hint": "拖动分类内的状态，调整看板、列表和状态菜单中的顺序。",
     "built_in_dialog": {
       "title": "无法修改内置状态",
-      "description": "内置状态用于 Multica 的系统行为，不能编辑或归档。你仍可调整它们在分类内的顺序。",
+      "description": "内置状态用于 CyberAgent 的系统行为，不能编辑或归档。你仍可调整它们在分类内的顺序。",
       "confirm": "知道了"
     },
     "editor": {

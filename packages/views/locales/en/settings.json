@@ -19,7 +19,7 @@
     "reorder_hint": "Drag statuses within a category to set their order in boards, lists, and status menus.",
     "built_in_dialog": {
       "title": "Built-in status cannot be changed",
-      "description": "Built-in statuses are used by Multica and cannot be edited or archived. You can still change their order within the category.",
+      "description": "Built-in statuses are used by CyberAgent and cannot be edited or archived. You can still change their order within the category.",
       "confirm": "Got it"
     },
     "editor": {
