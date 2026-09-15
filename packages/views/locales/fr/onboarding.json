@@ -1,6 +1,6 @@
 {
   "step_nav": {
-    "wordmark": "Multica",
+    "wordmark": "CyberAgent",
     "label": "Étapes de prise en main",
     "about_you": {
       "label": "À propos de vous"
@@ -226,7 +226,7 @@
     "lede": "Connectez un ordinateur pour que Mika puisse travailler.",
     "hint_default": "Vous pouvez vous connecter plus tard.",
     "download_title": "Utiliser cet ordinateur",
-    "download_subtitle": "Installez Multica Desktop pour connecter cet ordinateur.",
+    "download_subtitle": "Installez CyberAgent Desktop pour connecter cet ordinateur.",
     "download_button": "Télécharger",
     "cli_title": "Connecter depuis le terminal",
     "cli_subtitle": "Connectez un serveur, une machine de développement distante, ou tout ordinateur sans interface graphique. Terminal requis.",

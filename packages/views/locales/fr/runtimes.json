@@ -262,7 +262,7 @@
     "cli_version_label": "Version du CLI :",
     "version_unknown": "inconnue",
     "managed_by_desktop": "Géré par l'application de bureau",
-    "managed_by_desktop_title": "Le binaire du CLI est géré par Multica Desktop — mettez Desktop à jour pour mettre à niveau le CLI.",
+    "managed_by_desktop_title": "Le binaire du CLI est géré par CyberAgent Desktop — mettez Desktop à jour pour mettre à niveau le CLI.",
     "read_only": "Lecture seule",
     "read_only_title": "Seuls les propriétaires du runtime et les administrateurs de l'espace de travail peuvent mettre le CLI à jour.",
     "local_build": "Build local",
