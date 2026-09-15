@@ -52,7 +52,6 @@ services:
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-cyberagent}:${POSTGRES_PASSWORD:-cyberagent}@postgres:5432/${POSTGRES_DB:-cyberagent}?sslmode=disable
       PORT: "8080"
-      MAINTENANCE_PORT: ${MAINTENANCE_PORT:-}
       METRICS_ADDR: ${METRICS_ADDR:-}
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
       FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:-http://localhost:3000}
