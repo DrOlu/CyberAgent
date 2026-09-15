@@ -248,18 +248,44 @@ func TestDelegatedFailureRecoveryPreservesSignalWhenStatusUnavailable(t *testing
 			if count != 0 || f.settled(t, comment.ID) {
 				t.Fatalf("unresolved recovery: tasks=%d; want no dispatch or permanent receipt", count)
 			}
+			// The sweep is a global outbox scan across every workspace, so asserting
+			// its batch result is brittle: an unrelated workspace's pending signal
+			// can make a passing sweep non-empty and skew Scanned/Replayed. Assert
+			// this signal's own state instead so concurrent work cannot fail the
+			// case (a missing catalog entry must pause dispatch without losing the
+			// durable obligation to retry).
+			recoveryDispatchCount := func() int {
+				var n int
+				if err := f.pool.QueryRow(ctx, `SELECT count(*) FROM agent_task_queue
+					WHERE trigger_evidence_kind = 'delegated_failure' AND trigger_evidence_ref_id = $1`, failedID).Scan(&n); err != nil {
+					t.Fatal(err)
+				}
+				return n
+			}
 			if !readError {
-				if result, err := svc.RecoverPendingDelegatedFailures(ctx, 100); err != nil || result != (DelegatedFailureRecoverySweepResult{}) {
-					t.Fatalf("unresolved signal occupies the batch: %+v, %v", result, err)
+				if _, err := svc.RecoverPendingDelegatedFailures(ctx, 100); err != nil {
+					t.Fatalf("unresolved sweep: %v", err)
+				}
+				if n := recoveryDispatchCount(); n != 0 || f.settled(t, comment.ID) {
+					t.Fatalf("unresolved signal dispatched: tasks=%d; want no dispatch or permanent receipt", n)
 				}
 				createStatus()
 			}
 			svc.Queries = queries
-			if result, err := svc.RecoverPendingDelegatedFailures(ctx, 100); err != nil || result != (DelegatedFailureRecoverySweepResult{Scanned: 1, Replayed: 1}) {
-				t.Fatalf("catalog repaired: %+v, %v; want one replay without repeating the failure hook", result, err)
+			if _, err := svc.RecoverPendingDelegatedFailures(ctx, 100); err != nil {
+				t.Fatalf("catalog repaired sweep: %v", err)
 			}
-			if result, err := svc.RecoverPendingDelegatedFailures(ctx, 100); err != nil || result != (DelegatedFailureRecoverySweepResult{}) {
-				t.Fatalf("repeat sweep: %+v, %v; want no duplicate", result, err)
+			if n := recoveryDispatchCount(); n != 1 {
+				t.Fatalf("catalog repaired: recovery tasks=%d; want one dispatch without repeating the failure hook", n)
+			}
+			if f.settled(t, comment.ID) {
+				t.Fatalf("catalog repaired: signal settled before delivery")
+			}
+			if _, err := svc.RecoverPendingDelegatedFailures(ctx, 100); err != nil {
+				t.Fatalf("repeat sweep: %v", err)
+			}
+			if n := recoveryDispatchCount(); n != 1 {
+				t.Fatalf("repeat sweep: recovery tasks=%d; want no duplicate dispatch", n)
 			}
 		})
 	}
