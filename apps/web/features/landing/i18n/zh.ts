@@ -1308,8 +1308,6 @@ export function createZhDict(allowSignup: boolean): LandingDict {
       countryRegion: "国家 / 地区",
       useCase: "你打算如何使用 CyberAgent 或与我们合作？",
       goals: "你的目标或挑战",
-      goalsHint:
-        "告诉我们你希望借助 CyberAgent 达成什么目标，或正在面临的挑战。信息越详细，我们越能给到合适的支持。",
       selectPlaceholder: "请选择",
       submit: "提交",
       submitting: "正在提交…",

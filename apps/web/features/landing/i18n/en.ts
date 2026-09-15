@@ -1310,8 +1310,6 @@ export function createEnDict(allowSignup: boolean): LandingDict {
       countryRegion: "Country / Region",
       useCase: "How do you plan to use or collaborate with CyberAgent?",
       goals: "Your goals or challenges",
-      goalsHint:
-        "Tell us what you’d like to achieve with CyberAgent or the challenges you’re facing. The more details you provide, the better we can support you.",
       selectPlaceholder: "Please select",
       submit: "Submit",
       submitting: "Submitting…",
