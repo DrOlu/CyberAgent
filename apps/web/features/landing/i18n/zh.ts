@@ -1292,11 +1292,6 @@ export function createZhDict(allowSignup: boolean): LandingDict {
       "了解如何在你的团队中落地 CyberAgent 的人类 + 智能体协作工作流。",
     eyebrow: "联系商务",
     title: "先了解你的需求",
-    subtitle: "在正式沟通之前，让我们为你定制最合适的方案。",
-    notice: {
-      badge: "系统仅识别企业邮箱域名。",
-      body: "来自个人邮箱（例如 @gmail.com、@outlook.com）的请求不会被处理。",
-    },
     fields: {
       firstName: "名",
       lastName: "姓",

@@ -1293,12 +1293,6 @@ export function createEnDict(allowSignup: boolean): LandingDict {
       "Talk to the CyberAgent team about rolling out human + agent workflows at your company.",
     eyebrow: "Contact Sales",
     title: "Let’s understand your needs",
-    subtitle:
-      "Help us tailor the best solution for you before we connect.",
-    notice: {
-      badge: "Our system only recognizes business email domains.",
-      body: "Requests from personal emails (e.g., @gmail.com, @outlook.com) will not be detected or processed.",
-    },
     fields: {
       firstName: "First name",
       lastName: "Last name",
