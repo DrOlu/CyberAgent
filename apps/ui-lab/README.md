@@ -1,6 +1,6 @@
 # Multica UI Lab
 
-An internal, independently running design workbench for Multica Web and Desktop.
+An internal, independently running design workbench for CyberAgent Web and Desktop.
 
 ```sh
 pnpm install
