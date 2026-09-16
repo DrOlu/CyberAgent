@@ -261,8 +261,8 @@ export function createEnDict(allowSignup: boolean): LandingDict {
     title: "About CyberAgent",
     nameLine: {
       prefix: "CyberAgent \u2014 ",
-      mul: "Mul",
-      tiplexed: "tiplexed ",
+      mult: "Mult",
+      iplexed: "iplexed ",
       i: "I",
       nformationAnd: "nformation and ",
       c: "C",

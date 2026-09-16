@@ -261,8 +261,8 @@ export function createZhDict(allowSignup: boolean): LandingDict {
     title: "\u5173\u4e8e CyberAgent",
     nameLine: {
       prefix: "CyberAgent\u2014\u2014",
-      mul: "Mul",
-      tiplexed: "tiplexed ",
+      mult: "Mult",
+      iplexed: "iplexed ",
       i: "I",
       nformationAnd: "nformation and ",
       c: "C",
