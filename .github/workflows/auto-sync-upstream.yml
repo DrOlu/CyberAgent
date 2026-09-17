@@ -397,7 +397,7 @@ jobs:
         # automatically cuts a new release without any manual input.
         if: >
           github.event.inputs.create_tag != '' ||
-          steps.check.outputs.new_upstream_release == 'true'
+          steps.check.outputs.has_changes == 'true'
         run: |
           set -e
 
