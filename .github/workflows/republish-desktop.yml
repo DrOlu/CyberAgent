@@ -64,18 +64,51 @@ jobs:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
         run: node scripts/package.mjs --${{ inputs.target }} ${{ inputs.target == 'mac' && '--arm64' || '--x64 --arm64' }} --publish never
 
+      - name: Stash installers as workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ inputs.target }}-${{ inputs.tag }}
+          path: |
+            apps/desktop/dist/**/*.AppImage
+            apps/desktop/dist/**/*.deb
+            apps/desktop/dist/**/*.rpm
+            apps/desktop/dist/**/*.yml
+            apps/desktop/dist/**/*.exe
+            apps/desktop/dist/**/*.dmg
+            apps/desktop/dist/**/*.zip
+            apps/desktop/dist/**/*.blockmap
+          if-no-files-found: error
+          retention-days: 5
+
       - name: Upload installers to ${{ inputs.tag }}
         working-directory: apps/desktop
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+          TAG: ${{ inputs.tag }}
+          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          mapfile -t files < <(find dist -type f \( -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' -o -name '*.yml' -o -name '*.exe' -o -name '*.dmg' -o -name '*.zip' -o -name '*.blockmap' \) ! -path '*unpacked*')
+          mapfile -t files < <(find dist -type f \( -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' -o -name '*.yml' -o -name '*.exe' -o -name '*.dmg' -o -name '*.zip' -o -name '*.blockmap' \) ! -path '*unpacked*' ! -name 'builder-debug.yml')
           if [[ ${#files[@]} -eq 0 ]]; then
             echo "No publishable artifacts under apps/desktop/dist"
             exit 1
           fi
-          printf 'Uploading %d artifact(s) to %s\n' "${#files[@]}" "${{ inputs.tag }}"
-          printf '  %s\n' "${files[@]}"
-          gh release upload "${{ inputs.tag }}" "${files[@]}" --clobber -R "${{ github.repository }}"
+          failed=0
+          for f in "${files[@]}"; do
+            echo "==> $(basename "$f")"
+            ok=0
+            for attempt in 1 2 3 4 5; do
+              if gh release upload "$TAG" "$f" --clobber -R "$REPO"; then
+                ok=1
+                break
+              fi
+              echo "upload failed (attempt ${attempt}/5), retrying in 20s"
+              sleep 20
+            done
+            if [[ "$ok" -ne 1 ]]; then
+              echo "giving up on $(basename "$f")"
+              failed=1
+            fi
+          done
+          exit "$failed"
