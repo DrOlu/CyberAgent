@@ -1,0 +1,81 @@
+name: Republish Desktop
+
+# Rebuild Desktop installers for an already-published tag and attach them
+# with `gh release upload --clobber`. Used when a Release desktop job
+# timed out or electron-builder skipped uploads because the GitHub
+# Release was more than 2 hours old.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing GitHub Release tag (e.g. v1.5.117)
+        required: true
+        type: string
+      target:
+        description: Desktop target to rebuild
+        required: true
+        type: choice
+        options:
+          - linux
+          - win
+          - mac
+        default: linux
+
+permissions:
+  contents: write
+
+jobs:
+  desktop:
+    if: github.repository_owner == 'DrOlu'
+    runs-on: ${{ inputs.target == 'win' && 'windows-latest' || inputs.target == 'mac' && 'macos-latest' || 'ubuntu-latest' }}
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.tag }}
+          fetch-depth: 0
+
+      - name: Install rpmbuild (Linux)
+        if: inputs.target == 'linux'
+        run: sudo apt-get update && sudo apt-get install -y rpm
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: server/go.mod
+          cache-dependency-path: server/go.sum
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Package Desktop installers (${{ inputs.target }})
+        working-directory: apps/desktop
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: "false"
+        run: node scripts/package.mjs --${{ inputs.target }} ${{ inputs.target == 'mac' && '--arm64' || '--x64 --arm64' }} --publish never
+
+      - name: Upload installers to ${{ inputs.tag }}
+        working-directory: apps/desktop
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          set -euo pipefail
+          mapfile -t files < <(find dist -type f \( -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' -o -name '*.yml' -o -name '*.exe' -o -name '*.dmg' -o -name '*.zip' -o -name '*.blockmap' \) ! -path '*unpacked*')
+          if [[ ${#files[@]} -eq 0 ]]; then
+            echo "No publishable artifacts under apps/desktop/dist"
+            exit 1
+          fi
+          printf 'Uploading %d artifact(s) to %s\n' "${#files[@]}" "${{ inputs.tag }}"
+          printf '  %s\n' "${files[@]}"
+          gh release upload "${{ inputs.tag }}" "${files[@]}" --clobber -R "${{ github.repository }}"
