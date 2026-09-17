@@ -1,17 +1,28 @@
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { tmpdir } from "node:os";
 import { delimiter, join, resolve } from "node:path";
 import { afterEach, describe, it, expect } from "vitest";
 import {
   builderArgsForTarget,
+  collectPublishArtifacts,
   deriveVersion,
   DESCRIBE_ARGS,
   envWithLocalBins,
+  ghReleaseUploadArgs,
   normalizeGitVersion,
   parsePackageArgs,
+  publishRequested,
   resolveBuildMatrix,
   stripLeadingSeparator,
+  tryGhReleaseUploadFallback,
 } from "./package.mjs";
 
 describe("normalizeGitVersion", () => {
@@ -472,5 +483,112 @@ describe("electron-builder.yml packaging config", () => {
     const entries = readFilesBlock(readFileSync(configPath, "utf-8"));
     expect(entries.length).toBeGreaterThan(0);
     expect(entries).toContain("!dist/**");
+  });
+});
+
+describe("publishRequested", () => {
+  it("is true for --publish always / onTag", () => {
+    expect(publishRequested(["--publish", "always"])).toBe(true);
+    expect(publishRequested(["--publish", "onTag"])).toBe(true);
+    expect(publishRequested(["--publish=always"])).toBe(true);
+  });
+
+  it("is false for --publish never and when publish is omitted", () => {
+    expect(publishRequested(["--publish", "never"])).toBe(false);
+    expect(publishRequested(["--publish=never"])).toBe(false);
+    expect(publishRequested(["--x64"])).toBe(false);
+    expect(publishRequested([])).toBe(false);
+  });
+});
+
+describe("collectPublishArtifacts", () => {
+  it("collects installer files and skips unpacked directories", () => {
+    const root = mkdtempSync(join(tmpdir(), "ca-dist-"));
+    try {
+      mkdirSync(join(root, "win-x64", "win-unpacked"), { recursive: true });
+      mkdirSync(join(root, "linux-arm64"), { recursive: true });
+      writeFileSync(
+        join(root, "win-x64", "cyberagent-desktop-1.0.0-windows-x64.exe"),
+        "exe",
+      );
+      writeFileSync(
+        join(root, "win-x64", "cyberagent-desktop-1.0.0-windows-x64.exe.blockmap"),
+        "map",
+      );
+      writeFileSync(join(root, "win-x64", "latest.yml"), "yml");
+      writeFileSync(
+        join(root, "win-x64", "win-unpacked", "CyberAgent.exe"),
+        "skip",
+      );
+      writeFileSync(
+        join(root, "linux-arm64", "cyberagent-desktop-1.0.0-linux-arm64.AppImage"),
+        "img",
+      );
+      writeFileSync(join(root, "notes.txt"), "nope");
+
+      const files = collectPublishArtifacts(root);
+      expect(files.map((f) => f.slice(root.length + 1).replaceAll("\\", "/"))).toEqual([
+        "linux-arm64/cyberagent-desktop-1.0.0-linux-arm64.AppImage",
+        "win-x64/cyberagent-desktop-1.0.0-windows-x64.exe",
+        "win-x64/cyberagent-desktop-1.0.0-windows-x64.exe.blockmap",
+        "win-x64/latest.yml",
+      ]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
+
+  it("returns an empty list when dist/ is missing", () => {
+    expect(collectPublishArtifacts(join(tmpdir(), "ca-dist-missing"))).toEqual(
+      [],
+    );
+  });
+});
+
+describe("tryGhReleaseUploadFallback", () => {
+  it("builds gh release upload --clobber args", () => {
+    expect(ghReleaseUploadArgs("v1.5.117", ["a.exe", "b.yml"])).toEqual([
+      "release",
+      "upload",
+      "v1.5.117",
+      "a.exe",
+      "b.yml",
+      "--clobber",
+    ]);
+  });
+
+  it("returns false when there are no artifacts", () => {
+    const calls = [];
+    const ok = tryGhReleaseUploadFallback("v1.5.117", join(tmpdir(), "missing"), {
+      spawn: (...args) => {
+        calls.push(args);
+        return { status: 0 };
+      },
+    });
+    expect(ok).toBe(false);
+    expect(calls).toEqual([]);
+  });
+
+  it("retries gh release upload and succeeds on a later attempt", () => {
+    const root = mkdtempSync(join(tmpdir(), "ca-dist-"));
+    try {
+      writeFileSync(join(root, "latest.yml"), "yml");
+      const sleeps = [];
+      let n = 0;
+      const ok = tryGhReleaseUploadFallback("v1.5.117", root, {
+        attempts: 3,
+        delayMs: 15_000,
+        sleep: (ms) => sleeps.push(ms),
+        spawn: () => {
+          n += 1;
+          return n === 1 ? { status: 1 } : { status: 0 };
+        },
+      });
+      expect(ok).toBe(true);
+      expect(n).toBe(2);
+      expect(sleeps).toEqual([15_000]);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
   });
 });
