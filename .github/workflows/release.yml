@@ -406,4 +406,9 @@ jobs:
           # trust boundary. Set CSC_LINK in repo secrets to enable
           # Windows signing later.
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
+          # electron-builder skips GitHub uploads when the target release
+          # was published more than 2 hours ago. Retries of a failed
+          # desktop job (asset timeout, missing installer) must still be
+          # able to publish onto that same tag.
+          EP_GH_IGNORE_TIME: "true"
         run: node scripts/package.mjs --${{ matrix.target }} ${{ matrix.arch && format('--{0}', matrix.arch) || '--x64 --arm64' }} --publish always
