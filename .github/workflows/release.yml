@@ -411,4 +411,7 @@ jobs:
           # desktop job (asset timeout, missing installer) must still be
           # able to publish onto that same tag.
           EP_GH_IGNORE_TIME: "true"
+          # Pin desktop version to the tag that triggered this run, even if
+          # git describe would pick an older tag on the same commit.
+          RELEASE_TAG: ${{ github.ref_name }}
         run: node scripts/package.mjs --${{ matrix.target }} ${{ matrix.arch && format('--{0}', matrix.arch) || '--x64 --arm64' }} --publish always

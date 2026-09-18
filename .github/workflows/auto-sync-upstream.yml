@@ -52,18 +52,28 @@ jobs:
             exit 0
           fi
 
-          # Use the SHA recorded in the last sync commit message as the baseline.
+          # Use the SHA recorded in the last sync commit subject as the baseline.
           # The merge-base approach over-counts because CyberAgent rebrand commits
           # diverge the history, causing it to always find "new" commits.
-          LAST_SYNCED_SHA=$(git log origin/main --oneline --grep="^sync: merge upstream" -1             | grep -oE "[0-9a-f]{8,40}" | tail -1 || echo "")
+          #
+          # Subject is `sync: merge upstream multica-ai/multica@<sha> + rebrand`.
+          # Do NOT grep every hex blob out of `git log --oneline` — that also
+          # matches the CyberAgent commit hash and, more importantly, yields a
+          # 7–12 char prefix that never equals the full `git rev-parse` SHA, so
+          # every hourly run looked like a new upstream commit and retagged HEAD.
+          LAST_SYNCED_SHA=$(git log origin/main -1 --grep="^sync: merge upstream" --format=%s \
+            | sed -n 's/.*@\([0-9a-f]\{7,\}\).*/\1/p' || true)
           UPSTREAM_HEAD=$(git rev-parse upstream/main)
 
           echo "Last synced upstream SHA: ${LAST_SYNCED_SHA:-none}"
           echo "Upstream HEAD:            ${UPSTREAM_HEAD}"
 
-          if [ -z "$LAST_SYNCED_SHA" ] || [ "$UPSTREAM_HEAD" != "$LAST_SYNCED_SHA" ]; then
+          if [ -z "$LAST_SYNCED_SHA" ]; then
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
-            NEW_COUNT=$(git rev-list --count "${LAST_SYNCED_SHA:-$(git rev-parse origin/main)}..upstream/main" 2>/dev/null || echo "?")
+            echo "No previous sync commit found."
+          elif [[ "$UPSTREAM_HEAD" != "$LAST_SYNCED_SHA"* ]]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            NEW_COUNT=$(git rev-list --count "${LAST_SYNCED_SHA}..upstream/main" 2>/dev/null || echo "?")
             echo "Found ${NEW_COUNT} new upstream commit(s) since last sync."
           else
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
@@ -400,6 +410,19 @@ jobs:
           steps.check.outputs.has_changes == 'true'
         run: |
           set -e
+
+          # Never auto-tag a commit that already has a semver release tag.
+          # A sync that reports has_changes but produces no new commit (rebrand
+          # is a no-op) used to bump vX.Y.Z → vX.Y.Z+1 on the same SHA. The
+          # duplicate tag retriggers Release; git describe then picks the older
+          # tag and desktop overwrites the previous release's assets.
+          if [ -z "${{ github.event.inputs.create_tag }}" ]; then
+            EXISTING=$(git tag --points-at HEAD | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | sort -V | tail -1 || true)
+            if [ -n "$EXISTING" ]; then
+              echo "HEAD already tagged as $EXISTING — skipping auto-bump."
+              exit 0
+            fi
+          fi
 
           if [ -n "${{ github.event.inputs.create_tag }}" ]; then
             # Manual override — use the exact tag provided.

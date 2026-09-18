@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 // Wrapper around `electron-builder` that keeps the Desktop version in
-// lockstep with the CLI. Both are derived from `git describe --tags
-// --match 'v[0-9]*' --always --dirty` — the same source GoReleaser reads
-// for the CLI
-// binary via the `main.version` ldflag — so a single `vX.Y.Z` tag push
-// produces matching CLI and Desktop versions.
+// lockstep with the CLI. On a tag-triggered Release, the version comes from
+// RELEASE_TAG / GITHUB_REF_NAME (the tag that fired the workflow). Locally
+// it falls back to `git describe --tags --match 'v[0-9]*' --always --dirty`
+// — the same source GoReleaser reads for the CLI binary via the
+// `main.version` ldflag. Preferring the triggering tag matters when two
+// semver tags point at the same commit: git describe may pick the older
+// one and electron-builder then overwrites the previous GitHub Release.
 //
 // Builds the Electron bundles once, then for each requested target
 // (platform + arch) compiles the matching Go CLI into resources/bin/ and
@@ -22,9 +24,10 @@
 // build, set `CSC_IDENTITY_AUTO_DISCOVERY=false` so electron-builder falls
 // back to an ad-hoc signature instead of requiring a Developer ID cert.
 //
-// The `normalizeGitVersion`, `deriveVersion`, and `DESCRIBE_ARGS` exports let
-// tests cover version derivation both as a pure string transform and as the
-// real `git describe` invocation against a throwaway repo.
+// The `normalizeGitVersion`, `deriveVersion`, `releaseTagFromEnv`, and
+// `DESCRIBE_ARGS` exports let tests cover version derivation both as a pure
+// string transform and as the real `git describe` invocation against a
+// throwaway repo.
 
 import { execFileSync, spawnSync } from "node:child_process";
 import { readdirSync, rmSync } from "node:fs";
@@ -150,10 +153,29 @@ export const DESCRIBE_ARGS = [
   "--dirty",
 ];
 
-// Exported (with an optional cwd) so tests can exercise the real describe
-// invocation against a throwaway repo, not just normalizeGitVersion in
-// isolation — the gap that let the Windows quoting regression through CI.
-export function deriveVersion(cwd) {
+const VERSION_TAG_RE = /^v?\d+\.\d+\.\d+/;
+
+/**
+ * Prefer the tag that triggered this workflow over `git describe`.
+ * Checked in order: RELEASE_TAG, DESKTOP_VERSION, GITHUB_REF_NAME, GITHUB_REF.
+ * Non-semver values (branch names like `main`) are ignored.
+ */
+export function releaseTagFromEnv(env = process.env) {
+  const candidates = [env.RELEASE_TAG, env.DESKTOP_VERSION, env.GITHUB_REF_NAME];
+  for (const raw of candidates) {
+    if (raw && VERSION_TAG_RE.test(raw)) return raw;
+  }
+  const ref = env.GITHUB_REF || "";
+  const m = ref.match(/^refs\/tags\/(v?\d+\.\d+\.\d+.*)$/);
+  return m ? m[1] : "";
+}
+
+// Exported (with an optional cwd / env) so tests can exercise the real
+// describe invocation against a throwaway repo, not just normalizeGitVersion
+// in isolation — the gap that let the Windows quoting regression through CI.
+export function deriveVersion(cwd, env = process.env) {
+  const fromEnv = releaseTagFromEnv(env);
+  if (fromEnv) return normalizeGitVersion(fromEnv);
   return normalizeGitVersion(git(DESCRIBE_ARGS, cwd));
 }
 
@@ -514,9 +536,11 @@ function main() {
   }
 
   // Step 2: derive the version that should be written into the app.
+  const fromEnv = releaseTagFromEnv();
   const version = deriveVersion();
   if (version) {
-    console.log(`[package] Desktop version → ${version} (from git describe)`);
+    const source = fromEnv ? "RELEASE_TAG/GITHUB_REF_NAME" : "git describe";
+    console.log(`[package] Desktop version → ${version} (from ${source})`);
   } else {
     console.warn(
       "[package] could not derive version from git; falling back to package.json",

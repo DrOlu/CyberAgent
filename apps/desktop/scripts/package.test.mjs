@@ -15,6 +15,7 @@ import {
   collectPublishArtifacts,
   deriveVersion,
   DESCRIBE_ARGS,
+  releaseTagFromEnv,
   envWithLocalBins,
   ghReleaseUploadArgs,
   normalizeGitVersion,
@@ -137,7 +138,7 @@ describe("deriveVersion (real git describe)", () => {
   it("resolves a clean semver tag to its bare version", () => {
     const { dir, run } = initRepo();
     run("tag", "v1.4.2");
-    expect(deriveVersion(dir)).toBe("1.4.2");
+    expect(deriveVersion(dir, {})).toBe("1.4.2");
   });
 
   it("selects the semver tag even when a nearer non-semver tag exists", () => {
@@ -150,14 +151,47 @@ describe("deriveVersion (real git describe)", () => {
     run("tag", "v1.4.2");
     run("commit", "-q", "--allow-empty", "-m", "sprint");
     run("tag", "release_iteration/Sprint_0705");
-    const version = deriveVersion(dir);
+    const version = deriveVersion(dir, {});
     expect(version).toMatch(/^1\.4\.2-1-g[0-9a-f]+$/);
     expect(version).not.toMatch(/^0\.0\.0/);
   });
 
   it("falls back to 0.0.0-g<hash> when no semver tag is reachable", () => {
     const { dir } = initRepo();
-    expect(deriveVersion(dir)).toMatch(/^0\.0\.0-g[0-9a-f]+$/);
+    expect(deriveVersion(dir, {})).toMatch(/^0\.0\.0-g[0-9a-f]+$/);
+  });
+
+  it("prefers RELEASE_TAG over git describe when both exist", () => {
+    const { dir, run } = initRepo();
+    run("tag", "v1.5.122");
+    expect(deriveVersion(dir, { RELEASE_TAG: "v1.5.123" })).toBe("1.5.123");
+    expect(deriveVersion(dir, {})).toBe("1.5.122");
+  });
+});
+
+describe("releaseTagFromEnv", () => {
+  it("reads RELEASE_TAG, then DESKTOP_VERSION, then GITHUB_REF_NAME", () => {
+    expect(releaseTagFromEnv({ RELEASE_TAG: "v1.5.123" })).toBe("v1.5.123");
+    expect(releaseTagFromEnv({ DESKTOP_VERSION: "v1.5.120" })).toBe("v1.5.120");
+    expect(releaseTagFromEnv({ GITHUB_REF_NAME: "v1.5.119" })).toBe("v1.5.119");
+    expect(
+      releaseTagFromEnv({
+        RELEASE_TAG: "v1.5.123",
+        GITHUB_REF_NAME: "v1.5.122",
+      }),
+    ).toBe("v1.5.123");
+  });
+
+  it("ignores branch names and empty values", () => {
+    expect(releaseTagFromEnv({ GITHUB_REF_NAME: "main" })).toBe("");
+    expect(releaseTagFromEnv({ RELEASE_TAG: "" })).toBe("");
+    expect(releaseTagFromEnv({})).toBe("");
+  });
+
+  it("parses GITHUB_REF refs/tags/…", () => {
+    expect(releaseTagFromEnv({ GITHUB_REF: "refs/tags/v1.5.123" })).toBe(
+      "v1.5.123",
+    );
   });
 });
 
