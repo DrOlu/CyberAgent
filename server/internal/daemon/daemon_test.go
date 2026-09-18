@@ -3196,6 +3196,18 @@ func TestShouldRetryWithFreshSession(t *testing.T) {
 			want:           false,
 		},
 		{
+			// Cursor can fail before emitting any session event when its provider
+			// connection times out. No returned ID is not a rejected resume.
+			name: "cursor connect timeout before session event keeps prior session",
+			result: agent.Result{
+				Status: "failed",
+				Error:  "cursor-agent exited with error: exit status 1 (result_seen=false, exit_code=1, scanner_error=false, event_count=0, invalid_event_count=0, last_event_type=none); actions completed before finalization may already have taken effect; cursor stderr: Error: [unavailable] connect ETIMEDOUT 192.0.2.1:443",
+			},
+			priorSessionID: "existing-cursor-session",
+			provider:       "cursor",
+			want:           false,
+		},
+		{
 			name:           "undetectable backend rate limit does not retry",
 			result:         agent.Result{Status: "failed", Error: "API Error: 429 rate limit exceeded"},
 			priorSessionID: "stale-id",
@@ -3847,6 +3859,283 @@ func TestExecuteAndDrain_IdleWatchdog_FiresOnInactivity(t *testing.T) {
 	// test from racing in slow CI.
 	if elapsed := time.Since(start); elapsed > 5*d.cfg.AgentIdleWatchdog {
 		t.Fatalf("watchdog took too long to fire: %s (window=%s)", elapsed, d.cfg.AgentIdleWatchdog)
+	}
+}
+
+// waitForAgentMessageBackend holds Execute until the wrapped backend has
+// processed a selected protocol message, then hands the full stream to the
+// daemon. It makes watchdog cancellation tests deterministic without changing
+// the production watchdog window or relying on child-process scheduling speed.
+type waitForAgentMessageBackend struct {
+	agent.Backend
+	match   func(agent.Message) bool
+	onMatch func()
+}
+
+func (b waitForAgentMessageBackend) Execute(ctx context.Context, prompt string, opts agent.ExecOptions) (*agent.Session, error) {
+	session, err := b.Backend.Execute(ctx, prompt, opts)
+	if err != nil {
+		return nil, err
+	}
+	messages := make(chan agent.Message, 256)
+	for {
+		select {
+		case <-ctx.Done():
+			return nil, ctx.Err()
+		case msg, ok := <-session.Messages:
+			if !ok {
+				return nil, errors.New("wrapped backend closed before the expected message")
+			}
+			messages <- msg
+			if !b.match(msg) {
+				continue
+			}
+			if b.onMatch != nil {
+				b.onMatch()
+			}
+			go func() {
+				defer close(messages)
+				for msg := range session.Messages {
+					messages <- msg
+				}
+			}()
+			return &agent.Session{
+				ToolActivity:             session.ToolActivity,
+				InterruptBackgroundTools: session.InterruptBackgroundTools,
+				TerminalObserved:         session.TerminalObserved,
+				Messages:                 messages,
+				Result:                   session.Result,
+			}, nil
+		}
+	}
+}
+
+func TestExecuteAndDrain_PiTurnErrorOutranksIdleWatchdogCancellation(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell-script fixture is POSIX-only")
+	}
+
+	const providerError = "OpenAI API error (413): Failed to buffer the request body: length limit exceeded"
+	fakePath := filepath.Join(t.TempDir(), "pi")
+	script := "#!/bin/sh\n" +
+		"cat > /dev/null\n" +
+		`printf '%s\n' '{"type":"agent_start"}'` + "\n" +
+		`printf '%s\n' '{"type":"turn_start"}'` + "\n" +
+		`printf '%s\n' '{"type":"turn_end","message":{"role":"assistant","model":"test","stopReason":"error","errorMessage":"` + providerError + `"}}'` + "\n" +
+		`printf '%s\n' '{"type":"message_update","assistantMessageEvent":{"type":"thinking_delta","delta":"post-error activity"}}'` + "\n" +
+		`printf '%s\n' '{"type":"agent_end","messages":[],"willRetry":false}'` + "\n" +
+		"exec sleep 300\n"
+	writeTestExecutable(t, fakePath, []byte(script))
+
+	backend, err := agent.New("pi", agent.Config{ExecutablePath: fakePath, Logger: slog.Default()})
+	if err != nil {
+		t.Fatalf("new pi backend: %v", err)
+	}
+	backend = waitForAgentMessageBackend{
+		Backend: backend,
+		match: func(msg agent.Message) bool {
+			return msg.Type == agent.MessageThinking && msg.Content == "post-error activity"
+		},
+	}
+	d := newTestDaemon(t)
+	d.cfg.AgentIdleWatchdog = 50 * time.Millisecond
+
+	result, _, err := d.executeAndDrain(
+		context.Background(),
+		backend,
+		"prompt-ignored",
+		agent.ExecOptions{ResumeSessionID: filepath.Join(t.TempDir(), "session.jsonl")},
+		slog.Default(),
+		"t-pi-provider-error",
+		"",
+		new(atomic.Int32),
+	)
+	if err != nil {
+		t.Fatalf("executeAndDrain: %v", err)
+	}
+	if result.Status != "failed" {
+		t.Fatalf("status = %q, want provider failure rather than idle_watchdog (error=%q)", result.Status, result.Error)
+	}
+	if result.Error != providerError {
+		t.Fatalf("error = %q, want original provider error %q", result.Error, providerError)
+	}
+}
+
+func TestExecuteAndDrain_PiWithoutTurnErrorKeepsIdleWatchdogResult(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell-script fixture is POSIX-only")
+	}
+
+	fakePath := filepath.Join(t.TempDir(), "pi")
+	script := "#!/bin/sh\n" +
+		"cat > /dev/null\n" +
+		`printf '%s\n' '{"type":"agent_start"}'` + "\n" +
+		"exec sleep 300\n"
+	writeTestExecutable(t, fakePath, []byte(script))
+
+	backend, err := agent.New("pi", agent.Config{ExecutablePath: fakePath, Logger: slog.Default()})
+	if err != nil {
+		t.Fatalf("new pi backend: %v", err)
+	}
+	d := newTestDaemon(t)
+	d.cfg.AgentIdleWatchdog = 200 * time.Millisecond
+
+	result, _, err := d.executeAndDrain(
+		context.Background(),
+		backend,
+		"prompt-ignored",
+		agent.ExecOptions{ResumeSessionID: filepath.Join(t.TempDir(), "session.jsonl")},
+		slog.Default(),
+		"t-pi-no-provider-error",
+		"",
+		new(atomic.Int32),
+	)
+	if err != nil {
+		t.Fatalf("executeAndDrain: %v", err)
+	}
+	if result.Status != "idle_watchdog" {
+		t.Fatalf("result = %+v, want the existing idle_watchdog disposition", result)
+	}
+	if result.Error != "execution cancelled" {
+		t.Fatalf("error = %q, want the existing no-provider-error cancellation text", result.Error)
+	}
+}
+
+func TestExecuteAndDrain_PiTurnErrorOutranksUpstreamCancellation(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell-script fixture is POSIX-only")
+	}
+
+	const providerError = "OpenAI API error (413): Failed to buffer the request body: length limit exceeded"
+	fakePath := filepath.Join(t.TempDir(), "pi")
+	script := "#!/bin/sh\n" +
+		"cat > /dev/null\n" +
+		`printf '%s\n' '{"type":"agent_start"}'` + "\n" +
+		`printf '%s\n' '{"type":"turn_start"}'` + "\n" +
+		`printf '%s\n' '{"type":"turn_end","message":{"role":"assistant","model":"test","stopReason":"error","errorMessage":"` + providerError + `"}}'` + "\n" +
+		`printf '%s\n' '{"type":"message_update","assistantMessageEvent":{"type":"thinking_delta","delta":"cancel now"}}'` + "\n" +
+		"exec sleep 300\n"
+	writeTestExecutable(t, fakePath, []byte(script))
+
+	backend, err := agent.New("pi", agent.Config{ExecutablePath: fakePath, Logger: slog.Default()})
+	if err != nil {
+		t.Fatalf("new pi backend: %v", err)
+	}
+	matched := make(chan struct{})
+	backend = waitForAgentMessageBackend{
+		Backend: backend,
+		match: func(msg agent.Message) bool {
+			return msg.Type == agent.MessageThinking && msg.Content == "cancel now"
+		},
+		onMatch: func() { close(matched) },
+	}
+	d := newTestDaemon(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	sessionPath := filepath.Join(t.TempDir(), "session.jsonl")
+
+	type outcome struct {
+		result agent.Result
+		err    error
+	}
+	done := make(chan outcome, 1)
+	go func() {
+		result, _, err := d.executeAndDrain(
+			ctx,
+			backend,
+			"prompt-ignored",
+			agent.ExecOptions{ResumeSessionID: sessionPath},
+			slog.Default(),
+			"t-pi-provider-error-upstream-cancel",
+			"",
+			new(atomic.Int32),
+		)
+		done <- outcome{result: result, err: err}
+	}()
+
+	select {
+	case <-matched:
+		cancel()
+	case <-time.After(5 * time.Second):
+		t.Fatal("Pi never emitted the post-error activity")
+	}
+
+	select {
+	case got := <-done:
+		if got.err != nil {
+			t.Fatalf("executeAndDrain: %v", got.err)
+		}
+		if got.result.Status != "failed" || got.result.Error != providerError {
+			t.Fatalf("result = %+v, want original provider failure", got.result)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("executeAndDrain did not return after upstream cancellation")
+	}
+}
+
+func TestExecuteAndDrain_PiWithoutTurnErrorKeepsUpstreamCancellation(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("shell-script fixture is POSIX-only")
+	}
+
+	fakePath := filepath.Join(t.TempDir(), "pi")
+	script := "#!/bin/sh\n" +
+		"cat > /dev/null\n" +
+		`printf '%s\n' '{"type":"agent_start"}'` + "\n" +
+		"exec sleep 300\n"
+	writeTestExecutable(t, fakePath, []byte(script))
+
+	backend, err := agent.New("pi", agent.Config{ExecutablePath: fakePath, Logger: slog.Default()})
+	if err != nil {
+		t.Fatalf("new pi backend: %v", err)
+	}
+	matched := make(chan struct{})
+	backend = waitForAgentMessageBackend{
+		Backend: backend,
+		match:   func(msg agent.Message) bool { return msg.Type == agent.MessageStatus },
+		onMatch: func() { close(matched) },
+	}
+	d := newTestDaemon(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	sessionPath := filepath.Join(t.TempDir(), "session.jsonl")
+
+	type outcome struct {
+		result agent.Result
+		err    error
+	}
+	done := make(chan outcome, 1)
+	go func() {
+		result, _, err := d.executeAndDrain(
+			ctx,
+			backend,
+			"prompt-ignored",
+			agent.ExecOptions{ResumeSessionID: sessionPath},
+			slog.Default(),
+			"t-pi-no-provider-error-upstream-cancel",
+			"",
+			new(atomic.Int32),
+		)
+		done <- outcome{result: result, err: err}
+	}()
+
+	select {
+	case <-matched:
+		cancel()
+	case <-time.After(5 * time.Second):
+		t.Fatal("Pi never started")
+	}
+
+	select {
+	case got := <-done:
+		if got.err != nil {
+			t.Fatalf("executeAndDrain: %v", got.err)
+		}
+		if got.result.Status != "cancelled" || !strings.Contains(got.result.Error, "task cancelled by upstream context") {
+			t.Fatalf("result = %+v, want existing upstream cancellation", got.result)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("executeAndDrain did not return after upstream cancellation")
 	}
 }
 
@@ -4897,10 +5186,10 @@ func TestReportTaskResult_TransientCompleteExhaustedDoesNotFallback(t *testing.T
 	}
 }
 
-// On permanent 4xx from /complete (e.g. 400 bad body, 404 task not found)
-// the helper bails immediately and the daemon falls back to /fail so the
-// UI shows a concrete failure rather than a perpetually-running task.
-func TestReportTaskResult_PermanentCompleteFallsBackToFail(t *testing.T) {
+// A permanent response can become recoverable after a daemon/server upgrade
+// or credential refresh. Preserve the successful result instead of replacing
+// it with a synthetic failure payload.
+func TestReportTaskResult_PermanentCompleteDoesNotReplaceOriginal(t *testing.T) {
 	defer noSleepRetry(t)()
 
 	var completeCalls, failCalls atomic.Int32
@@ -4927,12 +5216,12 @@ func TestReportTaskResult_PermanentCompleteFallsBackToFail(t *testing.T) {
 	if got := completeCalls.Load(); got != 1 {
 		t.Fatalf("permanent 400 should not retry, got %d complete attempts", got)
 	}
-	if got := failCalls.Load(); got != 1 {
-		t.Fatalf("permanent /complete should fall back to /fail exactly once, got %d", got)
+	if got := failCalls.Load(); got != 0 {
+		t.Fatalf("permanent /complete must not replace the original with /fail, got %d calls", got)
 	}
 }
 
-func TestReportTaskResult_CancelledParentStillRunsPermanentFailureFallback(t *testing.T) {
+func TestReportTaskResult_CancelledParentStillPreservesPermanentCompletion(t *testing.T) {
 	defer noSleepRetry(t)()
 
 	var completeCalls, failCalls atomic.Int32
@@ -4962,8 +5251,8 @@ func TestReportTaskResult_CancelledParentStillRunsPermanentFailureFallback(t *te
 	if got := completeCalls.Load(); got != 1 {
 		t.Fatalf("complete calls = %d, want 1", got)
 	}
-	if got := failCalls.Load(); got != 1 {
-		t.Fatalf("fallback fail calls = %d, want 1", got)
+	if got := failCalls.Load(); got != 0 {
+		t.Fatalf("fallback fail calls = %d, want 0", got)
 	}
 }
 
