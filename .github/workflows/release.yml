@@ -198,6 +198,10 @@ jobs:
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          # imagetools only needs the docker driver; docker-container
+          # pulls moby/buildkit from Docker Hub and flakes on timeouts.
+          driver: docker
 
       - name: Compute backend image tags
         id: meta
@@ -315,6 +319,10 @@ jobs:
 
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3
+        with:
+          # imagetools only needs the docker driver; docker-container
+          # pulls moby/buildkit from Docker Hub and flakes on timeouts.
+          driver: docker
 
       - name: Compute web image tags
         id: meta
