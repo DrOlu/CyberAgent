@@ -243,10 +243,15 @@ open('.goreleaser.yml', 'w').write(text)
   #    "Multica Agent Runtime") into agent config files. Go tests that assert
   #    on this string must check for the rebranded value, not the upstream one.
   #    We restrict to the specific string to avoid touching functional identifiers.
+  #
+  #    GitHub Releases API paths in tests must follow the snapshotted upgrade
+  #    redirect in server/internal/cli/update.go (DrOlu/CyberAgent). The test
+  #    file is NOT snapshotted, so rewrite the path after every upstream merge.
   find server -type f -name '*_test.go' \
     ! -path '*/node_modules/*' \
     -exec sed -i \
       -e 's|Multica Agent Runtime|CyberAgent Agent Runtime|g' \
+      -e 's|/repos/multica-ai/multica/releases|/repos/DrOlu/CyberAgent/releases|g' \
       {} + 2>/dev/null || true
 
 
