@@ -2676,6 +2676,7 @@ export function IssueDetail({ issueId, onDelete, onDone, defaultSidebarOpen = tr
             onReplyAccepted: scrollToTimelineBottom, onEdit: editComment, onDelete: deleteComment,
             onToggleReaction: handleToggleReaction, onCreateSubIssue: openCommentSubIssue,
             onResolveToggle: handleResolveToggle,
+            onCopyLink: actions.copyCommentLink,
             onCollapseResolved: reply.resolved_at ? () => toggleResolvedExpand(reply.id, false) : undefined,
             expandedResolvedIds: expandedResolved, onResolvedExpandChange: toggleResolvedExpand,
             highlightedCommentId: highlightedId,
@@ -2713,6 +2714,7 @@ export function IssueDetail({ issueId, onDelete, onDone, defaultSidebarOpen = tr
             onToggleReaction={handleToggleReaction}
             onCreateSubIssue={openCommentSubIssue}
             onResolveToggle={handleResolveToggle}
+            onCopyLink={actions.copyCommentLink}
             onCollapseResolved={isResolved ? () => toggleResolvedExpand(item.id, false) : undefined}
             expandedResolvedIds={expandedResolved}
             onResolvedExpandChange={toggleResolvedExpand}
