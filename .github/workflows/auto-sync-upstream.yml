@@ -454,8 +454,20 @@ jobs:
           fi
 
           git tag "$TAG"
-          git push origin "$TAG"
-          echo "✅ Created tag $TAG — Release workflow will trigger automatically."
+          if git push origin "$TAG"; then
+            echo "✅ Created tag $TAG — Release workflow will trigger automatically."
+          else
+            # GitHub can persist the tag then return
+            # "cannot lock ref 'refs/tags/X': reference already exists".
+            # Treat as success when the remote tag is present so this step
+            # stays idempotent and .upstream-release still gets written.
+            if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+              echo "::warning::Tag $TAG already exists on origin after push — treating as success."
+            else
+              echo "::error::Failed to push tag $TAG and it does not exist on origin."
+              exit 1
+            fi
+          fi
 
           # Update .upstream-release so subsequent sync runs don't re-tag.
           # This is the authoritative write — even if the commit step exited
