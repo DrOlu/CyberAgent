@@ -1,10 +1,11 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import { CoreProvider } from "@multica/core/platform";
 import { pickLocale, type SupportedLocale } from "@multica/core/i18n";
 import { useAuthStore } from "@multica/core/auth";
 import { useWelcomeStore } from "@multica/core/onboarding";
-import { workspaceKeys, workspaceListOptions } from "@multica/core/workspace/queries";
+import { workspaceKeys } from "@multica/core/workspace/queries";
+import { useWorkspaceList } from "@multica/core/workspace";
 import { api } from "@multica/core/api";
 import { useHasOnboarded } from "@multica/core/paths";
 import { setCurrentWorkspace } from "@multica/core/platform";
@@ -12,6 +13,7 @@ import { ThemeProvider } from "@multica/ui/components/common/theme-provider";
 import { MulticaIcon } from "@multica/ui/components/common/multica-icon";
 import { Toaster } from "@multica/ui/components/ui/sonner";
 import { DesktopLoginPage } from "./pages/login";
+import { DesktopAuthRecoveryPage } from "./pages/auth-recovery";
 import { DesktopShell } from "./components/desktop-layout";
 import { UpdateNotification } from "./components/update-notification";
 import { IssueWindow } from "./components/issue-window";
@@ -76,9 +78,11 @@ function useCmdWCloseTab() {
 function IssueWindowContent() {
   const user = useAuthStore((state) => state.user);
   const isLoading = useAuthStore((state) => state.isLoading);
+  const authStatus = useAuthStore((state) => state.status);
   const context = window.desktopAPI.windowContext ?? { kind: "main" as const };
 
   if (context.kind !== "issue") return null;
+  if (authStatus === "recovering") return <DesktopAuthRecoveryPage />;
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -112,6 +116,7 @@ function DesktopAuthSessionBridge() {
 function AppContent() {
   const user = useAuthStore((s) => s.user);
   const isLoading = useAuthStore((s) => s.isLoading);
+  const authStatus = useAuthStore((s) => s.status);
   const qc = useQueryClient();
 
   // Deep-link login runs loginWithToken → syncToken → listWorkspaces →
@@ -191,8 +196,13 @@ function AppContent() {
   // account switches (user A logout → user B login) should not trigger a
   // daemon restart here — daemon-manager already restarts on user change
   // via syncToken.
-  const { data: workspaces = [], isFetched: workspaceListFetched } = useQuery({
-    ...workspaceListOptions(),
+  const {
+    workspaces,
+    ready: workspaceListReady,
+    unavailable: workspaceListUnavailable,
+    isFetching: workspaceListRetrying,
+    refetch: retryWorkspaceList,
+  } = useWorkspaceList({
     enabled: !!user,
   });
   const wsCount = workspaces.length;
@@ -224,7 +234,7 @@ function AppContent() {
   // /onboarding — we also clear the active workspace so the dashboard
   // doesn't render under the overlay with stale workspace context.
   useEffect(() => {
-    if (!user || !workspaceListFetched) return undefined;
+    if (!user || !workspaceListReady) return undefined;
     const { overlay, open } = useWindowOverlayStore.getState();
     if (overlay) return undefined;
     if (hasOnboarded && wsCount > 0) return undefined;
@@ -265,7 +275,7 @@ function AppContent() {
     }
     open({ type: "new-workspace" });
     return undefined;
-  }, [user, workspaceListFetched, wsCount, workspaces, hasOnboarded, qc]);
+  }, [user, workspaceListReady, wsCount, workspaces, hasOnboarded, qc]);
 
 
   // Validate persisted tab state against the current user's workspace list,
@@ -277,20 +287,17 @@ function AppContent() {
   // TabBar is subscribed to. useLayoutEffect flushes both renders before
   // the user sees anything, so there's no visible flicker.
   //
-  // Gate on `workspaceListFetched`: useQuery defaults `data` to `[]` before
-  // the first fetch, so without this guard we'd run validation against an
-  // empty slug set, wipe the persisted `activeWorkspaceSlug`, then fall
-  // back to `workspaces[0]` once the real list arrives — losing the user's
-  // last-opened workspace on every app start.
+  // Gate on authoritative data: pending and initial errors expose no data,
+  // while a failed background refetch retains the last successful list.
   useLayoutEffect(() => {
-    if (!workspaceListFetched) return;
+    if (!workspaceListReady) return;
     const validSlugs = new Set(workspaces.map((w) => w.slug));
     useTabStore.getState().validateWorkspaceSlugs(validSlugs);
     const { activeWorkspaceSlug, switchWorkspace } = useTabStore.getState();
     if (!activeWorkspaceSlug && workspaces.length > 0) {
       switchWorkspace(workspaces[0].slug);
     }
-  }, [workspaces, workspaceListFetched]);
+  }, [workspaces, workspaceListReady]);
 
   // null = undecided (pre-login or list hasn't settled yet)
   // true  = session started with zero workspaces; next transition to >=1 triggers restart
@@ -301,7 +308,7 @@ function AppContent() {
       sessionStartedEmptyRef.current = null;
       return;
     }
-    if (!workspaceListFetched) return;
+    if (!workspaceListReady) return;
     if (sessionStartedEmptyRef.current === null) {
       sessionStartedEmptyRef.current = wsCount === 0;
       return;
@@ -310,13 +317,27 @@ function AppContent() {
       void window.daemonAPI.restart();
       sessionStartedEmptyRef.current = false;
     }
-  }, [user, workspaceListFetched, wsCount]);
+  }, [user, workspaceListReady, wsCount]);
 
+  if (authStatus === "recovering") {
+    return <DesktopAuthRecoveryPage />;
+  }
   if (isLoading || bootstrapping) {
     return (
       <div className="flex h-screen items-center justify-center">
         <MulticaIcon className="size-6 animate-pulse" />
       </div>
+    );
+  }
+
+  if (workspaceListUnavailable) {
+    return (
+      <DesktopAuthRecoveryPage
+        isRetrying={workspaceListRetrying}
+        onRetry={() => {
+          void retryWorkspaceList();
+        }}
+      />
     );
   }
 
