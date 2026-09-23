@@ -238,6 +238,16 @@ open('.goreleaser.yml', 'w').write(text)
       -e 's|by multica|by cyberagent|g' \
       {} + 2>/dev/null || true
 
+  # Help launcher docs href: the component is snapshotted to cyberagent.ng/docs.html
+  # (no locale suffixes). Upstream tests assert locale-aware multica.ai/docs URLs;
+  # rewrite those expectations after every merge. Longer paths first so /docs/zh
+  # does not become cyberagent.ng/docs.html/zh.
+  _sed packages/views/layout/help-launcher.test.tsx 's|https://multica.ai/docs/zh|https://cyberagent.ng/docs.html|g'
+  _sed packages/views/layout/help-launcher.test.tsx 's|https://multica.ai/docs/fr|https://cyberagent.ng/docs.html|g'
+  _sed packages/views/layout/help-launcher.test.tsx 's|https://multica.ai/docs/ja|https://cyberagent.ng/docs.html|g'
+  _sed packages/views/layout/help-launcher.test.tsx 's|https://multica.ai/docs/ko|https://cyberagent.ng/docs.html|g'
+  _sed packages/views/layout/help-launcher.test.tsx 's|https://multica.ai/docs|https://cyberagent.ng/docs.html|g'
+
   # ── Go server tests — patch brand-name string literals in test assertions.
   #    The server runtime injects "CyberAgent Agent Runtime" (rebranded from
   #    "Multica Agent Runtime") into agent config files. Go tests that assert
