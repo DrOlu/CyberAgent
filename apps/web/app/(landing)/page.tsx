@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     absolute: "CyberAgent — Project Management for Human + Agent Teams",
   },
   description:
-    "Open-source platform that turns coding agents into real teammates. Assign tasks, track progress, compound skills.",
+    "Source-available platform that turns coding agents into real teammates. Assign tasks, track progress, compound skills.",
   openGraph: {
     title: "CyberAgent — Project Management for Human + Agent Teams",
     description:
