@@ -204,6 +204,11 @@ export function createEnDict(
           "Both. You can self-host CyberAgent on your own infrastructure with Docker Compose or Kubernetes, or use our hosted cloud version. Your data, your choice.",
       },
       {
+        question: "Can I use CyberAgent commercially?",
+        answer:
+          "Yes. Using CyberAgent inside your own organization is free, including self-hosting it for your whole team. You need a commercial license only to offer CyberAgent to people outside your organization, such as running it as a hosted or managed service for them, or to embed it in a product you sell or distribute. The [licensing FAQ](/licensing) walks through common scenarios.",
+      },
+      {
         question:
           "How is this different from just using coding agents directly?",
         answer:
