@@ -166,6 +166,7 @@ export function createJaDict(
       description:
         "Multica は完全なオープンソースです。すべてのコードを確認し、自分の条件でセルフホストし、人間と AI エージェントが協働する未来を、ともに形づくっていけます。",
       cta: "GitHub でスターを付ける",
+      licensingCta: "ライセンスについて →",
       highlights: [
         {
           title: "どこでもセルフホスト",
@@ -3071,6 +3072,19 @@ export function createJaDict(
         "プラットフォームは完全なオープンソースで、セルフホスト可能です。データはあなたのインフラに残ります。すべてのコードを確認し、API を拡張し、好きな LLM プロバイダーを持ち込み、コミュニティに貢献できます。",
       ],
       cta: "GitHub で見る",
+      team: {
+        title: "CyberAgent をつくっているチーム",
+        paragraphs: [
+          "CyberAgent は、2021年から一緒に働いてきた小さなチームがつくっています。CyberAgent の前は、開発者向けの AI 検索エンジン devv.ai を開発していました。2025年、私たち自身が何度もぶつかってきた課題、つまり小さなチームが AI エージェントと一緒に実際に仕事を進めるにはどうすればいいのか、に取り組み始めました。それが CyberAgent です。",
+          "ソースコードは公開されていてセルフホストもできるので、CyberAgent の上に何かを築く前に、すべてのコードを確認できます。セルフホストした環境は、すべてあなた自身のインフラ上で動きます。商用利用のルールは[ライセンスについて](/licensing)のページで説明しています。",
+        ],
+        contacts: [
+          { label: "商用ライセンス・営業", linkLabel: "営業に相談", href: "/contact-sales" },
+          { label: "ライセンスの考え方", linkLabel: "ライセンス FAQ", href: "/licensing" },
+          { label: "コミュニティ・サポート", linkLabel: "Discord", href: discordUrl },
+          { label: "ソースコード・Issue", linkLabel: "GitHub", href: githubUrl },
+        ],
+      }
     },
     download: {
       hero: {

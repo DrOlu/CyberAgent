@@ -1,4 +1,4 @@
-import { githubUrl } from "../components/shared";
+import { githubUrl, discordUrl } from "../components/shared";
 import type { LandingDict } from "./types";
 
 export function createEnDict(
@@ -164,6 +164,7 @@ export function createEnDict(
     description:
       "CyberAgent is fully open source. Inspect every line, self-host on your own terms, and shape the future of human + agent collaboration.",
     cta: "Star on GitHub",
+    licensingCta: "How licensing works \u2192",
     highlights: [
       {
         title: "Self-host anywhere",
@@ -252,6 +253,8 @@ export function createEnDict(
         label: "Company",
         links: [
           { label: "About", href: "/about" },
+          { label: "Licensing", href: "/licensing" },
+          { label: "Privacy", href: "/privacy" },
           { label: "Open Source", href: "#open-source" },
           { label: "GitHub", href: githubUrl },
         ],
@@ -281,6 +284,225 @@ export function createEnDict(
       "The platform is fully open source and self-hostable. Your data stays on your infrastructure. Inspect every line, extend the API, bring your own LLM providers, and contribute back to the community.",
     ],
     cta: "View on GitHub",
+    team: {
+      title: "Who\u2019s behind CyberAgent",
+      paragraphs: [
+        "CyberAgent is built by a small team that has been working together since 2021. Before CyberAgent, we built devv.ai, an AI search engine for developers. In 2025 we turned to the problem we kept running into ourselves: how a small team actually gets work done alongside AI agents. That became CyberAgent.",
+        "The source code is public and you can self-host it, so you can read every line before you build on CyberAgent, and a self-hosted deployment runs entirely on your own infrastructure. How commercial use works is spelled out on our [licensing page](/licensing).",
+      ],
+      contacts: [
+        {
+          label: "Commercial licensing & sales",
+          linkLabel: "Contact Sales",
+          href: "/contact-sales",
+        },
+        {
+          label: "How licensing works",
+          linkLabel: "Licensing FAQ",
+          href: "/licensing",
+        },
+        { label: "Community & support", linkLabel: "Discord", href: discordUrl },
+        { label: "Source code & issues", linkLabel: "GitHub", href: githubUrl },
+      ],
+    }
+  },
+
+  licensing: {
+    title: "Licensing",
+    intro: [
+      "CyberAgent is released under the [CyberAgent License](https://github.com/DrOlu/CyberAgent/blob/main/LICENSE): the Apache License 2.0 with a few additional conditions. The source code is public, and using CyberAgent inside your own organization is free, including self-hosting it for your whole team.",
+      "The main additional condition covers hosted use: offering CyberAgent to people outside your organization requires a commercial license. This page shows where that line falls, using the questions we hear most often. It is a plain-language guide, not legal advice. If anything here differs from the LICENSE, the LICENSE controls.",
+    ],
+    rule: {
+      title: "The rule of thumb",
+      text: "Is anyone outside your organization driving the instance — creating issues, talking to agents, or triggering work? If so, through any interface (web, Slack, or API), that is a hosted service. If they only receive results your team produced with CyberAgent, that is internal use.",
+    },
+    scenarios: {
+      title: "Common scenarios",
+      scenarioColumn: "Scenario",
+      licenseColumn: "Commercial license",
+      required: "Required",
+      notRequired: "Not required",
+      items: [
+        {
+          scenario: "Your organization uses CyberAgent internally",
+          example: "Self-hosted, across any number of workspaces.",
+          required: false,
+        },
+        {
+          scenario:
+            "You deploy CyberAgent for a client, who owns it and uses it internally",
+          example: "Implementation, training, consulting, or customization work.",
+          required: false,
+        },
+        {
+          scenario:
+            "Your team uses CyberAgent to do work for clients, who only receive the deliverables",
+          example:
+            "An agency that runs its content production in CyberAgent and ships the finished work.",
+          required: false,
+        },
+        {
+          scenario:
+            "Agents only push reports or notifications to a client\u2019s Slack channel",
+          example:
+            "The client reads them but never interacts with the instance.",
+          required: false,
+        },
+        {
+          scenario:
+            "You run and manage CyberAgent instances for clients on your own infrastructure",
+          example: "A managed service, whether or not you charge for it.",
+          required: true,
+        },
+        {
+          scenario: "People outside your organization sign in to your instance",
+          example: "Clients, partners, or the public get their own accounts.",
+          required: true,
+        },
+        {
+          scenario:
+            "People outside your organization drive your instance through another entry point",
+          example:
+            "A public website backed by CyberAgent, a Slack integration, or an API \u2014 even when it is free.",
+          required: true,
+        },
+        {
+          scenario: "You embed CyberAgent in a product you sell or distribute",
+          example: "CyberAgent ships as a component of another commercial offering.",
+          required: true,
+        },
+      ],
+    },
+    sections: [
+      {
+        heading: "Other conditions",
+        bullets: [
+          "Branding: keep the CyberAgent logo, product name, and the copyright and attribution information shown in the CyberAgent interface, unless we have given you a written branding waiver.",
+          "Attribution: if you build on CyberAgent\u2019s backend, daemon, or CLI without the CyberAgent interface, keep the copyright and NOTICE information, and state in your user-facing documentation that your product is built on CyberAgent, with a link to the [GitHub repository](https://github.com/DrOlu/CyberAgent).",
+          "Forks: publishing the source code of a fork is not a hosted service and needs no commercial license. Anyone who operates a hosted service from that fork needs their own.",
+          "A commercial license and a branding waiver are separate grants. One does not include the other.",
+        ],
+      },
+      {
+        heading: "Getting a commercial license",
+        paragraphs: [
+          "Tell us about your use case through [Contact Sales](/contact-sales) and we\u2019ll get back to you within three business days. Not sure whether your setup needs a license? Ask us on [Discord](" + discordUrl + ") or through the same form.",
+        ],
+      },
+    ],
+  },
+
+  privacy: {
+    title: "Privacy Policy",
+    lastUpdated: "Last updated: September 24, 2026",
+    intro: [
+      "This Privacy Policy explains how CyberAgent, Inc. (“CyberAgent”, “we”, “us”) collects, uses, and shares personal information when you visit multica.ai, contact us, or use CyberAgent Cloud, our hosted service, including the web, desktop, and mobile apps.",
+      "It does not cover CyberAgent deployments you host yourself. The operator of a self-hosted deployment controls its data, and any AI providers, integrations, or analytics it uses depend on how they configure it. The only thing a self-hosted server sends us is a daily usage snapshot: a random ID for the deployment, so snapshots from the same server can be linked; the server version; approximate counts of workspaces, members, agents, and connected daemons; and the number of agent runs started, completed, failed, and cancelled that day. It contains no names, email addresses, or content. Setting DO_NOT_TRACK=1 turns off this snapshot.",
+    ],
+    sections: [
+      {
+        heading: "Information we collect",
+        bullets: [
+          "Account information: your name, email address, and profile picture. If you sign in with Google, we receive your name, email address, and profile picture from Google. You can also add profile details such as language, time zone, and a short bio, and answer onboarding questions such as your role, your use case, and how you heard about CyberAgent.",
+          "Content you create: workspaces, issues, comments, chat messages, attachments, agent instructions, and anything else you or your agents put into CyberAgent Cloud.",
+          "Contact Sales inquiries: your name, business email, company name and size, country or region, use case, goals, and communication preferences. To prevent abuse, we also record the IP address and browser user agent the form was sent from.",
+          "Billing information: subscription payments are handled by Stripe on pages hosted by Stripe. We never receive or store your full card details.",
+          "Usage and device information: app version, operating system, client type, and a randomly generated installation ID; the name of each machine you connect as a runtime (its hostname by default); and crash and error reports. Before a report is sent, we filter recognizable email addresses and credentials out of the error message, but reports can still contain other details about what went wrong.",
+          "Feedback: when you send feedback, we receive your message along with the page, app version, operating system, and any error details.",
+        ],
+      },
+      {
+        heading: "How we use information",
+        bullets: [
+          "To provide, operate, and secure CyberAgent Cloud, including signing you in, syncing your workspaces, and delivering notifications and invitations.",
+          "To respond to Contact Sales inquiries and support requests.",
+          "To send service messages such as sign-in codes and workspace invitations. We only send product updates or marketing if you opted in, and you can unsubscribe at any time.",
+          "To understand how CyberAgent is used, fix bugs, and improve the product.",
+          "To prevent abuse and meet our legal obligations.",
+        ],
+      },
+      {
+        heading: "Legal bases",
+        paragraphs: [
+          "Where the law requires a legal basis for processing, we rely on performing our contract with you, to provide CyberAgent Cloud; our legitimate interests in securing, supporting, and improving CyberAgent and responding to inquiries; your consent, for marketing messages; and compliance with our legal obligations.",
+        ],
+      },
+      {
+        heading: "AI features",
+        paragraphs: [
+          "Your coding agents run on your own machines or on runtimes you connect, using the coding tools and accounts you set up. An agent running on your machine does not mean the model runs there: those tools send prompts, code, files, and tool results to their model providers, under the terms of the tool and account you use. CyberAgent coordinates their work.",
+          "Some CyberAgent Cloud features, such as chat titles and suggested follow-ups, send your first chat message or a few recent messages to a third-party large language model provider we choose, to generate the result. CyberAgent does not use your content to train AI models.",
+        ],
+      },
+      {
+        heading: "Cookies and analytics",
+        paragraphs: [
+          "We use cookies that are needed to keep you signed in, protect against cross-site request forgery, and give you access to files you uploaded. We also use a cookie that remembers which campaign or website referred you, for up to 30 days, and cookies that remember your language and the last workspace you opened.",
+          "We use PostHog to understand product usage and to collect crash reports. When you are signed in, PostHog receives your account name and email so we can match reports to your account. We do not use advertising cookies, and we do not sell your personal information.",
+        ],
+      },
+      {
+        heading: "Who we share information with",
+        paragraphs: [
+          "Information you put into a workspace is visible to its other members and admins, and to the agents and integrations they authorize, according to the workspace’s permissions. If your workspace belongs to an organization, that organization manages its content and may handle requests about it.",
+          "We also disclose information when the law requires it, and to a buyer or successor if CyberAgent is involved in a merger, acquisition, or sale of assets.",
+          "Beyond that, we share personal information only with the service providers that help us run CyberAgent and with integrations you choose to connect:",
+        ],
+        bullets: [
+          "Amazon Web Services: hosting, file storage, and content delivery",
+          "Vercel: hosting for the website and web app",
+          "Stripe: payments and billing",
+          "Resend: sign-in and invitation emails",
+          "PostHog: product analytics and crash reports",
+          "Google: sign-in, if you choose Sign in with Google",
+          "Large language model providers: the AI features described above",
+          "Integrations you connect, such as Slack, Lark, DingTalk, WeCom, Telegram, GitHub, GitLab, or apps connected through Composio: the data you choose to exchange with them, which is also subject to their own terms",
+        ],
+      },
+      {
+        heading: "Where information is stored",
+        paragraphs: [
+          "CyberAgent Cloud is hosted on Amazon Web Services and Vercel. We and our service providers may process your information in the United States and other countries. Wherever it is processed, we protect it as described in this policy.",
+        ],
+      },
+      {
+        heading: "How long we keep information",
+        paragraphs: [
+          "We keep account information and workspace content for as long as your account or workspace exists. When a workspace owner deletes a workspace, its issues, comments, and other content are removed from CyberAgent Cloud, though backups we keep for recovery may still contain copies for a period afterwards. To have files uploaded to a deleted workspace erased from our file storage, email [support@multica.ai](mailto:support@multica.ai). We keep billing records for as long as accounting and tax rules require, and product analytics, crash reports, Contact Sales inquiries, and feedback for as long as they are useful for supporting you and improving CyberAgent. We delete inquiries and feedback on request.",
+        ],
+      },
+      {
+        heading: "Your choices and rights",
+        paragraphs: [
+          "Depending on where you live, you may have the right to access, correct, delete, or export your personal information; to object to or restrict certain processing; to withdraw consent you have given, such as for marketing messages; and to complain to your local data protection authority. You can update your profile in CyberAgent at any time and delete a workspace you own from its settings. For anything else, including deleting your account, email [support@multica.ai](mailto:support@multica.ai). We will respond within 30 days.",
+        ],
+      },
+      {
+        heading: "Security",
+        paragraphs: [
+          "We protect your information with encryption in transit, access controls, and encrypted storage for integration credentials. No system is perfectly secure, so please contact us right away if you believe your account has been compromised.",
+        ],
+      },
+      {
+        heading: "Children",
+        paragraphs: [
+          "CyberAgent is not directed to children under 16, and we do not knowingly collect their personal information.",
+        ],
+      },
+      {
+        heading: "Changes to this policy",
+        paragraphs: [
+          "We may update this policy from time to time. We will post the new version on this page and update the date at the top. If a change is significant, we will let you know before it takes effect.",
+        ],
+      },
+      {
+        heading: "Contact us",
+        paragraphs: [
+          "CyberAgent is operated by CyberAgent, Inc., which is responsible for your personal information. For privacy questions or requests, email [support@multica.ai](mailto:support@multica.ai).",
+        ],
+      },
+    ],
   },
 
   changelog: {
@@ -1384,7 +1606,7 @@ export function createEnDict(
       submitConsent:
         "By clicking “Submit,” you consent to allow CyberAgent, Inc. to store and process your information for the purpose of delivering the requested content.",
       privacyLinkLabel: "Privacy Policy.",
-      privacyLinkHref: "/about",
+      privacyLinkHref: "/privacy",
     },
     success: {
       title: "Thanks — we got it.",

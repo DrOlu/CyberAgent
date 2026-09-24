@@ -1,4 +1,4 @@
-import { githubUrl } from "../components/shared";
+import { githubUrl, discordUrl } from "../components/shared";
 import type { LandingDict } from "./types";
 
 export function createZhDict(
@@ -164,6 +164,7 @@ export function createZhDict(
     description:
       "CyberAgent \u5b8c\u5168\u5f00\u6e90\u3002\u5ba1\u67e5\u6bcf\u4e00\u884c\u4ee3\u7801\uff0c\u6309\u4f60\u7684\u65b9\u5f0f\u81ea\u6258\u7ba1\uff0c\u5851\u9020\u4eba\u7c7b + 智能体 \u534f\u4f5c\u7684\u672a\u6765\u3002",
     cta: "\u5728 GitHub \u4e0a Star",
+    licensingCta: "\u4e86\u89e3\u6388\u6743\u65b9\u5f0f \u2192",
     highlights: [
       {
         title: "\u968f\u5904\u81ea\u6258\u7ba1",
@@ -252,6 +253,8 @@ export function createZhDict(
         label: "\u5173\u4e8e",
         links: [
           { label: "\u5173\u4e8e\u6211\u4eec", href: "/about" },
+          { label: "\u6388\u6743\u8bf4\u660e", href: "/licensing" },
+          { label: "\u9690\u79c1\u653f\u7b56", href: "/privacy" },
           { label: "\u5f00\u6e90", href: "#open-source" },
           { label: "GitHub", href: githubUrl },
         ],
@@ -281,6 +284,210 @@ export function createZhDict(
       "\u8fd9\u4e2a\u5e73\u53f0\u662f\u5b8c\u5168\u5f00\u6e90\u5e76\u652f\u6301\u81ea\u6258\u7ba1\u7684\u3002\u4f60\u7684\u6570\u636e\u59cb\u7ec8\u4fdd\u7559\u5728\u81ea\u5df1\u7684\u57fa\u7840\u8bbe\u65bd\u4e2d\u3002\u4f60\u53ef\u4ee5\u5ba1\u67e5\u6bcf\u4e00\u884c\u4ee3\u7801\uff0c\u6269\u5c55 API\uff0c\u63a5\u5165\u81ea\u5df1\u7684 LLM providers\uff0c\u4e5f\u53ef\u4ee5\u5411\u793e\u533a\u8d21\u732e\u4ee3\u7801\u3002",
     ],
     cta: "\u5728 GitHub \u4e0a\u67e5\u770b",
+    team: {
+      title: "CyberAgent 背后的团队",
+      paragraphs: [
+        "CyberAgent 由一支从 2021 年起就一起工作的小团队打造。在 CyberAgent 之前，我们做过面向开发者的 AI 搜索引擎 devv.ai。2025 年，我们开始解决自己反复遇到的问题：一个小团队到底该怎样和 AI 智能体一起把事情做完。这就是 CyberAgent。",
+        "CyberAgent 的源代码公开，也可以自托管：在基于它构建之前，你可以读完每一行代码；自托管的部署完全运行在你自己的基础设施上。商业使用的规则，我们在[授权说明](/licensing)里写清楚了。",
+      ],
+      contacts: [
+        { label: "商业授权与合作", linkLabel: "联系商务", href: "/contact-sales" },
+        { label: "授权规则", linkLabel: "授权说明", href: "/licensing" },
+        { label: "社区与支持", linkLabel: "Discord", href: discordUrl },
+        { label: "源代码与问题反馈", linkLabel: "GitHub", href: githubUrl },
+      ],
+    }
+  },
+
+  licensing: {
+    title: "授权说明",
+    intro: [
+      "CyberAgent 采用 [CyberAgent License](https://github.com/DrOlu/CyberAgent/blob/main/LICENSE) 发布：在 Apache License 2.0 的基础上附加了几项条件。源代码公开，在你自己的组织内部使用 CyberAgent 是免费的，包括为整个团队自托管。",
+      "最主要的附加条件针对托管使用：把 CyberAgent 提供给组织外部的人使用，需要商业授权。这一页用大家最常问的问题，说明这条线划在哪里。这是一份通俗说明，不构成法律意见；如与 LICENSE 原文不一致，以 LICENSE 为准。",
+    ],
+    rule: {
+      title: "一条判断标准",
+      text: "看组织外部的人有没有在驱动这个实例——创建任务、和智能体对话、触发工作。只要有，不管通过什么界面（Web、Slack 还是 API），都算托管服务；如果他们只是收到你的团队用 CyberAgent 做出来的成果，就属于内部使用。",
+    },
+    scenarios: {
+      title: "常见场景",
+      scenarioColumn: "场景",
+      licenseColumn: "商业授权",
+      required: "需要",
+      notRequired: "不需要",
+      items: [
+        {
+          scenario: "你的组织内部使用 CyberAgent",
+          example: "自托管，不限工作区数量。",
+          required: false,
+        },
+        {
+          scenario: "你帮客户部署 CyberAgent，由客户自己拥有、在其组织内部使用",
+          example: "实施、培训、咨询或定制开发。",
+          required: false,
+        },
+        {
+          scenario: "你的团队用 CyberAgent 为客户干活，客户只收到交付物",
+          example: "例如 agency 在 CyberAgent 里管理内容生产，向客户交付成品。",
+          required: false,
+        },
+        {
+          scenario: "智能体只向客户的 Slack 频道单向推送报告或通知",
+          example: "客户只看消息，不与实例做任何交互。",
+          required: false,
+        },
+        {
+          scenario: "你在自己的基础设施上替客户运行和管理 CyberAgent 实例",
+          example: "即代运维服务（managed service），无论是否收费。",
+          required: true,
+        },
+        {
+          scenario: "组织外部的人登录你的实例",
+          example: "客户、合作伙伴或公众拥有自己的账号。",
+          required: true,
+        },
+        {
+          scenario: "组织外部的人通过其他入口驱动你的实例",
+          example: "例如接入 CyberAgent 后端的公开网站、Slack 集成或 API，免费提供也一样。",
+          required: true,
+        },
+        {
+          scenario: "你把 CyberAgent 嵌入到你销售或分发的产品中",
+          example: "CyberAgent 作为另一个商业产品的组件一起交付。",
+          required: true,
+        },
+      ],
+    },
+    sections: [
+      {
+        heading: "其他条件",
+        bullets: [
+          "品牌：除非获得我们的书面品牌豁免，请保留 CyberAgent 界面中显示的 CyberAgent Logo、产品名称以及版权和署名信息。",
+          "署名：如果你只基于 CyberAgent 的后端、守护进程或 CLI 构建产品、不使用 CyberAgent 界面，需要保留版权和 NOTICE 信息，并在面向用户的文档中注明产品基于 CyberAgent 构建，附上 [GitHub 仓库](https://github.com/DrOlu/CyberAgent)链接。",
+          "Fork：公开发布 fork 的源代码不算托管服务，不需要商业授权。但任何用这个 fork 运营托管服务的人，都需要各自获得商业授权。",
+          "商业授权和品牌豁免是两项独立的授权，获得其中一项不代表获得另一项。",
+        ],
+      },
+      {
+        heading: "获取商业授权",
+        paragraphs: [
+          "通过[联系商务](/contact-sales)告诉我们你的使用场景，我们会在三个工作日内回复。不确定自己的情况是否需要授权？可以在 [Discord](" + discordUrl + ") 上问我们，也可以通过同一个表单咨询。",
+        ],
+      },
+    ],
+  },
+
+  privacy: {
+    title: "隐私政策",
+    lastUpdated: "最后更新：2026 年 9 月 24 日",
+    intro: [
+      "本隐私政策说明 CyberAgent, Inc.（下称「CyberAgent」或「我们」）在你访问 multica.ai、联系我们或使用我们的托管服务 CyberAgent Cloud（包括网页端、桌面端和移动端）时，如何收集、使用和共享个人信息。",
+      "本政策不适用于你自行部署的 CyberAgent。自托管部署的数据由部署方控制，它使用哪些 AI 服务商、集成或分析工具，取决于部署方的配置。自托管服务器唯一会发送给我们的是每天一次的使用快照，内容包括：一个随机生成的部署 ID（用于关联同一台服务器的历次快照）、服务器版本、工作区、成员、智能体和已连接守护进程的大致数量，以及当天开始、完成、失败和取消的运行次数。快照不含任何姓名、邮箱或内容。设置 DO_NOT_TRACK=1 即可关闭这份快照。",
+      "本政策以英文版本为准。如中文版本与英文版本不一致，以英文版本为准。",
+    ],
+    sections: [
+      {
+        heading: "我们收集的信息",
+        bullets: [
+          "账户信息：你的姓名、邮箱地址和头像。如果你使用 Google 登录，我们会从 Google 获得你的姓名、邮箱地址和头像。你也可以填写语言、时区、个人简介等资料，以及回答上手引导中的问题，例如你的角色、使用场景、从哪里了解到 CyberAgent。",
+          "你创建的内容：工作区、任务、评论、聊天消息、附件、智能体指令，以及你或你的智能体放进 CyberAgent Cloud 的其他内容。",
+          "联系商务表单：你的姓名、工作邮箱、公司名称和规模、国家或地区、使用场景、目标，以及你的沟通偏好。为了防止滥用，我们还会记录提交表单时的 IP 地址和浏览器 user agent。",
+          "账单信息：订阅付款由 Stripe 在其托管的页面上处理，我们不会接收或存储你的完整银行卡信息。",
+          "使用和设备信息：应用版本、操作系统、客户端类型和一个随机生成的安装 ID；你连接为运行时的每台机器的名称（默认是其主机名）；以及崩溃和错误报告。报告发送前，我们会从错误信息中过滤掉能识别出的邮箱地址和凭据，但报告仍可能包含与出错情况相关的其他细节。",
+          "反馈：你提交反馈时，我们会收到反馈内容，以及所在页面、应用版本、操作系统和相关的错误信息。",
+        ],
+      },
+      {
+        heading: "我们如何使用信息",
+        bullets: [
+          "提供、运营和保护 CyberAgent Cloud，包括登录、同步工作区、发送通知和邀请。",
+          "回复联系商务表单和支持请求。",
+          "发送服务消息，例如登录验证码和工作区邀请。只有在你主动同意后，我们才会发送产品动态或营销信息，你可以随时退订。",
+          "了解 CyberAgent 的使用情况、修复问题并改进产品。",
+          "防止滥用，并履行法律义务。",
+        ],
+      },
+      {
+        heading: "法律依据",
+        paragraphs: [
+          "在法律要求说明处理依据的地区，我们依据以下几点处理个人信息：履行与你之间的合同，以提供 CyberAgent Cloud；我们在保障安全、提供支持、改进 CyberAgent 和回复咨询方面的正当利益；你对接收营销信息的同意；以及履行我们的法律义务。",
+        ],
+      },
+      {
+        heading: "AI 功能",
+        paragraphs: [
+          "你的编码智能体运行在你自己的机器或你连接的运行时上，使用的是你配置的编码工具和账户。智能体在本机运行，不代表模型也在本机推理：这些工具会把提示词、代码、文件和工具调用结果发送给各自的模型服务商，并受你所用工具和账户的条款约束。CyberAgent 负责协调智能体的工作。",
+          "CyberAgent Cloud 的部分功能（如生成聊天标题和推荐后续操作）会把你的第一条聊天消息或最近几条消息，发送给我们选用的第三方大语言模型服务商来生成结果。CyberAgent 不会用你的内容训练 AI 模型。",
+        ],
+      },
+      {
+        heading: "Cookie 与分析",
+        paragraphs: [
+          "我们使用必要的 Cookie 来保持你的登录状态、防范跨站请求伪造，以及让你访问自己上传的文件。我们还会用 Cookie 记住你是通过哪个推广活动或网站来到这里的（最长 30 天），以及你选择的语言和最近打开的工作区。",
+          "我们使用 PostHog 了解产品使用情况并收集崩溃报告。你登录后，PostHog 会收到你账户的姓名和邮箱，以便我们把报告和你的账户对应起来。我们不使用广告 Cookie，也不出售你的个人信息。",
+        ],
+      },
+      {
+        heading: "我们与谁共享信息",
+        paragraphs: [
+          "你放进工作区的信息，会按工作区的权限设置，被其他成员和管理员，以及他们授权的智能体和集成看到。如果你的工作区属于某个组织，其中的内容由该组织管理，相关请求也可能由该组织处理。",
+          "在法律要求时，我们会披露相关信息；如果 CyberAgent 发生合并、收购或资产出售，相关信息也可能转移给买方或继任方。",
+          "除此之外，我们只会与帮助我们运营 CyberAgent 的服务商，以及你选择连接的集成共享个人信息：",
+        ],
+        bullets: [
+          "Amazon Web Services：托管、文件存储和内容分发",
+          "Vercel：网站和网页应用托管",
+          "Stripe：付款和账单",
+          "Resend：登录和邀请邮件",
+          "PostHog：产品分析和崩溃报告",
+          "Google：当你选择使用 Google 登录时",
+          "大语言模型服务商：上文所述的 AI 功能",
+          "你连接的集成，如 Slack、飞书、钉钉、企业微信、Telegram、GitHub、GitLab、通过 Composio 连接的应用：你选择通过它们收发的数据，同时受这些服务商自身条款的约束",
+        ],
+      },
+      {
+        heading: "信息的存储位置",
+        paragraphs: [
+          "CyberAgent Cloud 托管在 Amazon Web Services 和 Vercel 上。我们和我们的服务商可能会在美国及其他国家或地区处理你的信息。无论在哪里处理，我们都会按照本政策保护这些信息。",
+        ],
+      },
+      {
+        heading: "信息的保留期限",
+        paragraphs: [
+          "账户信息和工作区内容会在你的账户或工作区存在期间一直保留。工作区所有者删除工作区后，其中的任务、评论等内容会从 CyberAgent Cloud 中移除，但用于恢复的备份在之后一段时间内仍可能包含副本。如需从我们的文件存储中清除已删除工作区里上传的文件，请发邮件至 [support@multica.ai](mailto:support@multica.ai)。账单记录按会计和税务规定要求的期限保留；产品分析数据、崩溃报告、联系商务表单和反馈，会在为你提供支持和改进 CyberAgent 所需的期间内保留。你可以要求我们删除联系商务表单和反馈。",
+        ],
+      },
+      {
+        heading: "你的选择和权利",
+        paragraphs: [
+          "根据你所在地的法律，你可能有权访问、更正、删除或导出你的个人信息，反对或限制某些处理，撤回你已给出的同意（例如接收营销信息的同意），以及向当地的数据保护机构投诉。你可以随时在 CyberAgent 中更新个人资料，也可以在设置中删除你拥有的工作区。其他请求（包括删除账户），请发邮件至 [support@multica.ai](mailto:support@multica.ai)，我们会在 30 天内回复。",
+        ],
+      },
+      {
+        heading: "安全",
+        paragraphs: [
+          "我们通过传输加密、访问控制以及对集成凭据的加密存储来保护你的信息。没有任何系统是绝对安全的；如果你认为自己的账户已被盗用，请尽快联系我们。",
+        ],
+      },
+      {
+        heading: "儿童",
+        paragraphs: [
+          "CyberAgent 并非面向 16 岁以下的儿童，我们也不会在知情的情况下收集他们的个人信息。",
+        ],
+      },
+      {
+        heading: "政策变更",
+        paragraphs: [
+          "我们可能会不时更新本政策。新版本会发布在本页面，并更新页首的日期。如有重大变更，我们会在生效前通知你。",
+        ],
+      },
+      {
+        heading: "联系我们",
+        paragraphs: [
+          "CyberAgent 由 CyberAgent, Inc. 运营，并由其负责你的个人信息。如有隐私相关的问题或请求，请发邮件至 [support@multica.ai](mailto:support@multica.ai)。",
+        ],
+      },
+    ],
   },
 
   changelog: {
@@ -1384,7 +1591,7 @@ export function createZhDict(
       submitConsent:
         "点击「提交」即表示你同意 CyberAgent, Inc. 存储并处理你提交的信息，以便交付你请求的内容。",
       privacyLinkLabel: "隐私政策。",
-      privacyLinkHref: "/about",
+      privacyLinkHref: "/privacy",
     },
     success: {
       title: "已收到，谢谢！",

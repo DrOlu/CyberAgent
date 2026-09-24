@@ -166,6 +166,7 @@ export function createKoDict(
       description:
         "Multica는 완전한 오픈소스입니다. 코드를 직접 들여다보고, 원하는 환경에 셀프 호스팅하고, 사람과 AI 에이전트가 함께 일하는 방식을 같이 만들어 갈 수 있습니다.",
       cta: "GitHub에서 스타 누르기",
+      licensingCta: "라이선스 안내 →",
       highlights: [
         {
           title: "어디서든 셀프 호스팅",
@@ -3092,6 +3093,19 @@ export function createKoDict(
         "Multica는 완전한 오픈소스이며 셀프 호스팅할 수 있습니다. 데이터는 여러분의 인프라 안에 그대로 남습니다. 모든 코드를 들여다보고, API를 확장하고, 원하는 LLM 제공자를 연결하고, 커뮤니티에 기여할 수 있습니다.",
       ],
       cta: "GitHub에서 보기",
+      team: {
+        title: "CyberAgent를 만드는 사람들",
+        paragraphs: [
+          "CyberAgent는 2021년부터 함께 일해 온 작은 팀이 만들고 있습니다. CyberAgent 이전에는 개발자를 위한 AI 검색 엔진 devv.ai를 만들었습니다. 2025년, 저희가 계속 부딪혀 온 문제, 즉 작은 팀이 AI 에이전트와 함께 실제로 일을 해내는 방법에 집중하기 시작했고, 그 결과가 CyberAgent입니다.",
+          "소스 코드가 공개되어 있고 셀프 호스팅도 가능하므로, CyberAgent 위에 무언가를 만들기 전에 모든 코드를 직접 확인할 수 있습니다. 셀프 호스팅한 배포는 전부 여러분의 인프라에서 실행됩니다. 상업적 이용 방식은 [라이선스 안내](/licensing) 페이지에서 자세히 설명합니다.",
+        ],
+        contacts: [
+          { label: "상용 라이선스 및 영업", linkLabel: "영업팀 문의", href: "/contact-sales" },
+          { label: "라이선스 안내", linkLabel: "라이선스 FAQ", href: "/licensing" },
+          { label: "커뮤니티 및 지원", linkLabel: "Discord", href: discordUrl },
+          { label: "소스 코드 및 이슈", linkLabel: "GitHub", href: githubUrl },
+        ],
+      }
     },
     download: {
       hero: {
