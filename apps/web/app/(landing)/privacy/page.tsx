@@ -4,7 +4,7 @@ import { PrivacyPageClient } from "@/features/landing/components/privacy-page-cl
 export const metadata: Metadata = {
   title: "Privacy Policy",
   description:
-    "How Multica collects, uses, and protects personal information on multica.ai and Multica Cloud.",
+    "How Multica collects, uses, and protects personal information on multica.ai and CyberAgent Cloud.",
   openGraph: {
     title: "Privacy Policy — Multica",
     description:
