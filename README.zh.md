@@ -190,7 +190,7 @@ Multica 不自带模型。它驱动的是你本来就装好、登录好的那些
 | 接上 Git 和聊天工具 | [GitHub](https://multica.ai/docs/zh/github-integration) · [自建 Git](https://multica.ai/docs/zh/vcs-integration) · [消息渠道](https://multica.ai/docs/zh/channels) |
 | 部署在自己的基础设施上 | [自托管快速上手](https://multica.ai/docs/zh/self-host-quickstart) · [安全模型](https://multica.ai/docs/zh/security-model) · [环境变量](https://multica.ai/docs/zh/environment-variables) · [完整自托管指南（英文）](SELF_HOSTING.md) |
 | 用脚本驱动它 | [CLI 参考](https://multica.ai/docs/zh/cli) · [CLI 与守护进程指南](CLI_AND_DAEMON.md) · [认证令牌](https://multica.ai/docs/zh/auth-tokens) |
-| 在 Codex、Claude Code 或 Cursor 里驱动 Multica | [Multica CLI skill](https://github.com/multica-ai/multica-cli) |
+| 在 Codex、Claude Code 或 Cursor 里驱动 Multica | [CyberAgent CLI skill](https://github.com/multica-ai/multica-cli) |
 | 查智能体为什么卡住了 | [运行](https://multica.ai/docs/zh/tasks) · [问题排查](https://multica.ai/docs/zh/troubleshooting) |
 
 文档另有 [English](https://multica.ai/docs)、[日本語](https://multica.ai/docs/ja)、[한국어](https://multica.ai/docs/ko)
