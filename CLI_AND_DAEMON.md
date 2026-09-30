@@ -383,6 +383,16 @@ multica issue status <id> in_progress
 
 Valid statuses: `backlog`, `todo`, `in_progress`, `in_review`, `done`, `blocked`, `cancelled`.
 
+To cancel an issue because it duplicates another, mark it so the original lists it:
+
+```bash
+multica issue status <id> cancelled --duplicate-of <original>
+```
+
+`--duplicate-of` takes an issue key or full UUID and requires status `cancelled`.
+`issue update <id> --duplicate-of <original>` does the same, but cannot be combined with
+description or attachment changes. Moving the issue to any other status removes the mark.
+
 ### Comments
 
 ```bash
