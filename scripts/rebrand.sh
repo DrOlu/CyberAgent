@@ -264,6 +264,12 @@ open('.goreleaser.yml', 'w').write(text)
       -e 's|/repos/multica-ai/multica/releases|/repos/DrOlu/CyberAgent/releases|g' \
       {} + 2>/dev/null || true
 
+  # Bare "18789" flakes on Linux CI: the wrapper $include path is a
+  # t.TempDir() whose random suffix is decimal, so those digits can appear
+  # without any user config being copied. Pin the marker to the JSON snippet.
+  _sed server/internal/daemon/execenv/openclaw_config_test.go \
+    's/assertEnvRootCarriesNoUserConfig(t, envRoot, "sk-user-secret", "global_one", "18789")/assertEnvRootCarriesNoUserConfig(t, envRoot, "sk-user-secret", "global_one", `"port": 18789`)/'
+
 
   # ── Docs site (.mdx) — CyberAgent's docs site (apps/docs/), so any
   #    "Multica" brand reference here is user-visible. URLs stay as-is

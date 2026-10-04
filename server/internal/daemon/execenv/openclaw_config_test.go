@@ -923,7 +923,11 @@ func TestPrepareOpenclawConfigStrictReplacesUserMcpServers(t *testing.T) {
 	// And the property that makes this design safe rather than merely working:
 	// no byte of the user's configuration is copied into the task directory, so
 	// there is nothing to redact, truncate or write back stale.
-	assertEnvRootCarriesNoUserConfig(t, envRoot, "sk-user-secret", "global_one", "18789")
+	//
+	// Marker is `"port": 18789` rather than the bare digits: the wrapper
+	// $include path is a t.TempDir() whose random suffix is decimal, so
+	// "18789" can appear in the path without any user config being copied.
+	assertEnvRootCarriesNoUserConfig(t, envRoot, "sk-user-secret", "global_one", `"port": 18789`)
 }
 
 // assertEnvRootCarriesNoUserConfig fails if any file the preparer wrote contains
