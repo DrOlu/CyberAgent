@@ -329,8 +329,7 @@ function createWindow(): BrowserWindow {
     minWidth: 900,
     minHeight: 600,
     titleBarStyle: "hiddenInset",
-    // Center the native controls in the main window's 40px tab toolbar.
-    trafficLightPosition: { x: 16, y: 13 },
+    trafficLightPosition: { x: 16, y: 17 },
     show: false,
     autoHideMenuBar: true,
     // Windows/Linux pick up the window/taskbar icon from this option.
