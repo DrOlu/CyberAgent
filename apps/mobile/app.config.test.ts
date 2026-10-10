@@ -15,15 +15,30 @@ describe("iOS scene lifecycle configuration", () => {
     const modulesCoreRoot = dirname(
       requireFromExpo.resolve("expo-modules-core/package.json"),
     );
-    const utilities = readFileSync(
-      join(modulesCoreRoot, "ios", "Utilities", "Utilities.swift"),
+    const utilitiesRoot = join(modulesCoreRoot, "ios", "Utilities");
+    const utilities = readFileSync(join(utilitiesRoot, "Utilities.swift"), "utf8");
+    const sceneGeometry = readFileSync(
+      join(utilitiesRoot, "SceneGeometry.swift"),
       "utf8",
     );
 
-    expect(utilities).toContain("return SceneGeometry.keyWindow()");
-    expect(utilities).not.toContain(
-      "UIApplication.shared.keyWindow?.rootViewController",
-    );
+    // expo-modules-core 57.x resolved presenters with
+    // `return SceneGeometry.keyWindow()` inside Utilities.swift; newer
+    // releases moved the lookup back into Utilities.currentViewController()
+    // (UIApplication.shared.keyWindow under MainActor.assumeIsolated) while
+    // the scene-aware helper now lives in SceneGeometry.swift. Both layouts
+    // provide a scene-capable presenter resolver — accept either, and require
+    // SceneGeometry to keep its keyWindow lookup either way.
+    const sceneAware =
+      utilities.includes("SceneGeometry.keyWindow()") ||
+      sceneGeometry.includes("static func keyWindow(");
+    const legacyOnly =
+      utilities.includes("UIApplication.shared.keyWindow?.rootViewController") &&
+      !sceneGeometry.includes("keyWindow");
+
+    expect(utilities).toContain("currentViewController()");
+    expect(sceneAware).toBe(true);
+    expect(legacyOnly).toBe(false);
   });
 
   it.each([
