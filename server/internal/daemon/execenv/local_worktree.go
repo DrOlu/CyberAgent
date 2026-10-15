@@ -940,6 +940,22 @@ func captureUserSnapshot(gitRoot, envRoot, headSHA string, logger *slog.Logger) 
 	// not a failure — read-tree rebuilds a correct index, merely a colder one —
 	// so the fallback runs on any error from the add, not just from the copy.
 	seeded := seedSnapshotIndex(gitRoot, indexPath)
+	if seeded {
+		// Git compares index timestamps at one-second granularity (USE_NSEC is
+		// compiled out of the git builds on every platform this runs on), so a
+		// tracked file modified within the same wall-clock second as the user's
+		// last `git add` is stat-indistinguishable from an unchanged one — and
+		// git would silently snapshot the stale blob. The fresh copy dodges
+		// git's own protection, too: the racily-clean rule only re-verifies
+		// entries dated at or after the index file itself, and the copy is
+		// always newer than every entry. Dating the copy to 1970 turns that
+		// rule back on for every entry, so git verifies file contents it would
+		// otherwise trust. The cost is one content hash of the tracked files
+		// per snapshot; the alternative is silently dropping the user's edit.
+		if err := os.Chtimes(indexPath, time.Unix(1, 0), time.Unix(1, 0)); err != nil {
+			seeded = false
+		}
+	}
 	addArgs := append([]string{"add", "-A", "--"}, snapshotExcludes()...)
 	if out, err := runGitEnv(gitRoot, env, addArgs...); err != nil {
 		if !seeded {
