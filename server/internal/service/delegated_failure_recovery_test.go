@@ -248,44 +248,45 @@ func TestDelegatedFailureRecoveryPreservesSignalWhenStatusUnavailable(t *testing
 			if count != 0 || f.settled(t, comment.ID) {
 				t.Fatalf("unresolved recovery: tasks=%d; want no dispatch or permanent receipt", count)
 			}
-			// The sweep is a global outbox scan across every workspace, so asserting
-			// its batch result is brittle: an unrelated workspace's pending signal
-			// can make a passing sweep non-empty and skew Scanned/Replayed. Assert
-			// this signal's own state instead so concurrent work cannot fail the
-			// case (a missing catalog entry must pause dispatch without losing the
-			// durable obligation to retry).
-			recoveryDispatchCount := func() int {
-				var n int
-				if err := f.pool.QueryRow(ctx, `SELECT count(*) FROM agent_task_queue
-					WHERE trigger_evidence_kind = 'delegated_failure' AND trigger_evidence_ref_id = $1`, failedID).Scan(&n); err != nil {
+			if !readError {
+				pending, err := queries.ListPendingDelegatedFailureRecoveries(ctx, 100)
+				if err != nil {
 					t.Fatal(err)
 				}
-				return n
-			}
-			if !readError {
-				if _, err := svc.RecoverPendingDelegatedFailures(ctx, 100); err != nil {
-					t.Fatalf("unresolved sweep: %v", err)
+				for _, candidate := range pending {
+					if candidate.ID == comment.ID {
+						t.Fatal("unresolved signal occupies the batch")
+					}
 				}
-				if n := recoveryDispatchCount(); n != 0 || f.settled(t, comment.ID) {
-					t.Fatalf("unresolved signal dispatched: tasks=%d; want no dispatch or permanent receipt", n)
+				if _, err := svc.RecoverPendingDelegatedFailures(ctx, 100); err != nil {
+					t.Fatalf("sweep with unresolved signal: %v", err)
 				}
 				createStatus()
 			}
+			// Packages share DATABASE_URL in CI. Keep another workspace's
+			// signal pending to exercise the global sweep without assuming
+			// this fixture is its only candidate.
+			other, otherSvc := seedDelegatedFailureFixture(t)
+			otherFailedID := other.insertWorkerTask(t, "failed", "comment", 1, 2)
+			if target, created, err := otherSvc.ensureDelegatedFailureRecoveryComment(ctx, otherFailedID); err != nil || target == nil || !created {
+				t.Fatalf("seed unrelated recovery signal: created=%v err=%v", created, err)
+			}
 			svc.Queries = queries
-			if _, err := svc.RecoverPendingDelegatedFailures(ctx, 100); err != nil {
-				t.Fatalf("catalog repaired sweep: %v", err)
-			}
-			if n := recoveryDispatchCount(); n != 1 {
-				t.Fatalf("catalog repaired: recovery tasks=%d; want one dispatch without repeating the failure hook", n)
-			}
-			if f.settled(t, comment.ID) {
-				t.Fatalf("catalog repaired: signal settled before delivery")
-			}
-			if _, err := svc.RecoverPendingDelegatedFailures(ctx, 100); err != nil {
-				t.Fatalf("repeat sweep: %v", err)
-			}
-			if n := recoveryDispatchCount(); n != 1 {
-				t.Fatalf("repeat sweep: recovery tasks=%d; want no duplicate dispatch", n)
+			for _, phase := range []string{"catalog repaired", "repeat sweep"} {
+				result, err := svc.RecoverPendingDelegatedFailures(ctx, 100)
+				if err != nil {
+					t.Fatalf("%s: %+v, %v", phase, result, err)
+				}
+				// Sweep totals include other workspaces. Each signal must have
+				// exactly one recovery task, including after the second sweep.
+				for _, sourceID := range []pgtype.UUID{failedID, otherFailedID} {
+					fx.QueryRow(t, `SELECT count(*) FROM agent_task_queue
+						WHERE trigger_evidence_kind = 'delegated_failure' AND trigger_evidence_ref_id = $1`, sourceID).Scan(&count)
+					if count != 1 {
+						t.Fatalf("%s: source %s has %d recovery tasks; want one replay without repeating the failure hook",
+							phase, util.UUIDToString(sourceID), count)
+					}
+				}
 			}
 		})
 	}
