@@ -1,5 +1,6 @@
 import "../global.css";
 import { RootProvider } from "fumadocs-ui/provider";
+import { DocsFrameworkProvider } from "@/components/i18n-frame-provider";
 import { DocsLayout } from "fumadocs-ui/layouts/docs";
 import { Inter, Geist_Mono, Source_Serif_4 } from "next/font/google";
 import type { ReactNode } from "react";
@@ -101,7 +102,8 @@ export default async function Layout({
           }}
           search={{ options: { api: "/docs/api/search" } }}
         >
-          <DocsLayout
+          <DocsFrameworkProvider>
+            <DocsLayout
             tree={source.getPageTree(lang)}
             // Suppress Fumadocs's default sidebar-footer icons (theme +
             // language + search). Our custom <DocsSettings> is mounted as
@@ -113,7 +115,8 @@ export default async function Layout({
             {...baseOptions}
           >
             {children}
-          </DocsLayout>
+            </DocsLayout>
+          </DocsFrameworkProvider>
         </RootProvider>
       </body>
     </html>
