@@ -239,6 +239,7 @@ describe("StatusPicker on an issue outside any project (MUL-8121)", () => {
   const DEFAULT: IssueWorkflow = {
     id: "wf-default",
     workspace_id: "workspace-1",
+    owner_id: null,
     name: "Default",
     description: "",
     is_default: true,
