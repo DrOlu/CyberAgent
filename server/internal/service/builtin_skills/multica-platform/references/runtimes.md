@@ -183,12 +183,12 @@ The bridge executes issue runs through Qoder's managed session API; it does not
 run a local coding-agent CLI. Model, tools, skills and credentials are configured
 on Qoder. Local-directory resources and Multica execution overrides are rejected.
 
-Each run's session ID is pinned to the Multica run. A follow-up run on the same
+Each run's session ID is pinned to the CyberAgent run. A follow-up run on the same
 issue continues the agent's previous session when it is idle; otherwise a fresh
 session starts. The prompt asks the agent to push a `multica/<identifier>-<slug>`
 branch and prefix the pull request title with the issue identifier, so the GitHub
 integration links the pull request. The service needs persistent state for
-restart recovery. Cancel from Multica to stop remote
+restart recovery. Cancel from CyberAgent to stop remote
 work; stopping the bridge process alone leaves remote execution running. Do not
 use `runtime update` to upgrade the bridge: deploy its binary through its service
 manager. For setup and recovery, consult the Qoder Cloud Agent section of the
@@ -215,7 +215,7 @@ changes. `GET/PUT /api/workspaces/{id}/qoder`, `POST .../qoder/check`, and
 `POST .../qoder/stop` expose this flow; writes/checks are admin-only and no
 credential plaintext is returned. Blank secrets retain saved values; an empty
 `github_tokens` object removes all repository credentials. `max_concurrency`
-(1–10, default 3) bounds simultaneous runs, with extra tasks queued in Multica;
+(1–10, default 3) bounds simultaneous runs, with extra tasks queued in CyberAgent;
 `run_timeout_minutes` (5–240, default 60) bounds each run. `GET` also reports
 `active_runs` and `queued_runs`.
 
