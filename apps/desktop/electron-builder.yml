@@ -2,6 +2,11 @@ appId: ng.hyperspace.cyberagent
 productName: CyberAgent
 directories:
   buildResources: build
+# BeforePack hook: inject the Darwin kernel floor (minimumSystemVersion:
+# 22.0.0) into latest-mac.yml so installed clients on macOS 12 skip the
+# update. See scripts/mac-update-floor.cjs for why the floor is a kernel
+# version and not the macOS 13 marketing version.
+beforePack: ./scripts/mac-update-floor.cjs
 files:
   # Regression guard (multica-ai/multica#5595): the multi-arch release build
   # writes each target's output to dist/<platform>-<arch> in this same dir.
@@ -27,6 +32,9 @@ asarUnpack:
   - resources/bin/**
 mac:
   entitlementsInherit: build/entitlements.mac.plist
+  # Hard bundle floor: macOS 13 Ventura. Complements the Darwin kernel floor
+  # (22.0.0) the beforePack hook writes into update metadata.
+  minimumSystemVersion: "13.0.0"
   target:
     - dmg
     - zip
