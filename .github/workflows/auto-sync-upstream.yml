@@ -36,7 +36,12 @@ jobs:
       - name: Add upstream remote
         run: |
           git remote add upstream https://github.com/multica-ai/multica.git
-          git fetch upstream main --depth=1000
+          # Full fetch, NOT --depth=1000. A shallow upstream fetch leaves
+          # grafted (truncated) history, and pushing a release tag from a
+          # repo with grafted history makes git compute an incomplete pack —
+          # GitHub rejects it with "missing necessary objects" and the sync
+          # fails after the merge commit is already on main (run 40319000219).
+          git fetch upstream main
 
       - name: Check for upstream changes
         id: check
@@ -457,12 +462,15 @@ jobs:
           if git push origin "$TAG"; then
             echo "✅ Created tag $TAG — Release workflow will trigger automatically."
           else
-            # GitHub can persist the tag then return
-            # "cannot lock ref 'refs/tags/X': reference already exists".
-            # Treat as success when the remote tag is present so this step
-            # stays idempotent and .upstream-release still gets written.
-            if git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
-              echo "::warning::Tag $TAG already exists on origin after push — treating as success."
+            # GitHub can persist the tag then return an error (either
+            # "cannot lock ref 'refs/tags/X': reference already exists" or
+            # "missing necessary objects" from ref-write eventual consistency).
+            # Retry once after a short wait, then treat as success when the
+            # remote tag is present so this step stays idempotent and
+            # .upstream-release still gets written.
+            sleep 15
+            if git push origin "$TAG" 2>/dev/null || git ls-remote --exit-code --tags origin "refs/tags/$TAG" >/dev/null 2>&1; then
+              echo "::warning::Tag $TAG persisted on origin after retry — treating as success."
             else
               echo "::error::Failed to push tag $TAG and it does not exist on origin."
               exit 1
