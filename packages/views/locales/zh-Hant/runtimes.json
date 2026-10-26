@@ -260,7 +260,7 @@
   "connect": {
     "title": "新增機器",
     "description": "在要新增的機器上執行這兩條命令。守護程序一上線，這裡就會自動識別。",
-    "step1_label": "安裝 Multica CLI",
+    "step1_label": "安裝 CyberAgent CLI",
     "platform_group": "選擇你的系統",
     "platform_macos_linux": "macOS / Linux",
     "platform_windows": "Windows",

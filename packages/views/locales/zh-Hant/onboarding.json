@@ -1,6 +1,6 @@
 {
   "step_nav": {
-    "wordmark": "Multica",
+    "wordmark": "CyberAgent",
     "label": "引導步驟",
     "about_you": {
       "label": "關於你"
@@ -112,7 +112,7 @@
   "cli_install": {
     "copy_aria": "複製",
     "intro": "這臺電腦上需要安裝一個智慧體執行時（Claude Code、Codex、Cursor 等）才能執行你的智慧體。也支援伺服器和遠端開發機。",
-    "step1_label": "安裝 Multica CLI",
+    "step1_label": "安裝 CyberAgent CLI",
     "platform_group": "選擇你的系統",
     "platform_macos_linux": "macOS / Linux",
     "platform_windows": "Windows",
