@@ -156,6 +156,23 @@ html[lang|="ja"] {
   --color-fd-ring: var(--ring);
 }
 
+/* Fumadocs 16 moved these slots out of preset.css into its color themes
+ * (neutral.css etc.). We don't import a theme — its `.dark` block would
+ * override the bridge above — so declare the remaining slots with the
+ * Fumadocs defaults. */
+@theme static {
+  --color-fd-overlay: hsla(0, 0%, 0%, 0.2);
+  --color-fd-info: oklch(62.3% 0.214 259.815);
+  --color-fd-warning: oklch(76.9% 0.188 70.08);
+  --color-fd-error: oklch(63.7% 0.237 25.331);
+  --color-fd-success: oklch(72.3% 0.219 149.579);
+  --color-fd-idea: oklch(70.5% 0.209 60.849);
+  --color-fd-diff-remove: rgba(200, 10, 100, 0.12);
+  --color-fd-diff-remove-symbol: rgb(230, 10, 100);
+  --color-fd-diff-add: rgba(14, 180, 100, 0.1);
+  --color-fd-diff-add-symbol: rgb(10, 200, 100);
+}
+
 /* Sidebar uses dedicated --sidebar-* tokens so it sits a hair off the main
  * canvas. Fumadocs renders it as #nd-sidebar (desktop) and
  * #nd-sidebar-mobile (mobile drawer); both IDs need the override. */
@@ -706,4 +723,58 @@ article figure.shiki button {
 article figure.shiki button:hover {
   color: var(--foreground) !important;
   background: var(--muted) !important;
+}
+
+/* Interactive demos: the pulse around the control a reader should use next. */
+@keyframes demo-halo {
+  from {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--brand) 45%, transparent);
+  }
+  to {
+    box-shadow: 0 0 0 10px color-mix(in oklab, var(--brand) 0%, transparent);
+  }
+}
+
+.demo-halo {
+  animation: demo-halo 1.4s ease-out infinite;
+}
+
+/* The coach-mark arrow nudges toward the control it points at. */
+@keyframes demo-nudge {
+  50% {
+    translate: var(--demo-nudge);
+  }
+}
+
+.demo-nudge-top,
+.demo-nudge-bottom,
+.demo-nudge-left,
+.demo-nudge-right {
+  animation: demo-nudge 1s ease-in-out infinite;
+}
+
+.demo-nudge-top {
+  --demo-nudge: 0 3px;
+}
+
+.demo-nudge-bottom {
+  --demo-nudge: 0 -3px;
+}
+
+.demo-nudge-left {
+  --demo-nudge: 3px 0;
+}
+
+.demo-nudge-right {
+  --demo-nudge: -3px 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-halo,
+  .demo-nudge-top,
+  .demo-nudge-bottom,
+  .demo-nudge-left,
+  .demo-nudge-right {
+    animation: none;
+  }
 }
