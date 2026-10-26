@@ -4847,7 +4847,9 @@ func executeFakeCodexCollectingMessagesWithConfig(t *testing.T, fakePath string,
 		mu       sync.Mutex
 		messages []Message
 	)
+	drainDone := make(chan struct{})
 	go func() {
+		defer close(drainDone)
 		for msg := range session.Messages {
 			mu.Lock()
 			messages = append(messages, msg)
@@ -4858,6 +4860,18 @@ func executeFakeCodexCollectingMessagesWithConfig(t *testing.T, fakePath string,
 	case result, ok := <-session.Result:
 		if !ok {
 			t.Fatal("result channel closed without a value")
+		}
+		// The backend forwards every message BEFORE it sends the Result, but
+		// this drain goroutine appends to the slice AFTER receiving from the
+		// channel. Under heavy CI load that final append can land after the
+		// snapshot below, making transcript assertions fail non-
+		// deterministically (run 40320037804). Wait briefly for the drain
+		// goroutine to land its appends; the backend closes the inner message
+		// stream before sending the Result, but the outer channel is never
+		// closed, so drainDone may not fire — hence the bounded wait.
+		select {
+		case <-drainDone:
+		case <-time.After(2 * time.Second):
 		}
 		mu.Lock()
 		collected := append([]Message(nil), messages...)
