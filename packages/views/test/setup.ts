@@ -1,4 +1,4 @@
-import { configure } from "@testing-library/dom";
+import { configure } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 
 // Slow-runner stability: under CI contention (turbo runs several packages'
