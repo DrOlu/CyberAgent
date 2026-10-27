@@ -110,13 +110,11 @@ multica issue comment add MUL-123 --content-stdin < review.md
 multica issue comment update <comment-id> --expected-revision 2 --content-file revised-review.md
 ```
 
-Consulter, arrêter ou relancer une exécution :
+Afficher les messages d'une exécution, ou l'arrêter :
 
 ```bash
 multica issue run-messages <task-id> --issue MUL-123
 multica issue cancel-task <task-id> --issue MUL-123
-multica issue rerun-task <run-id> --issue MUL-123
-multica issue rerun-task <run-id> --issue MUL-123 --fresh
 ```
 
 ## Agents et skills
@@ -254,7 +252,7 @@ Les tableaux ci-dessous couvrent toutes les commandes de premier niveau actuelle
 | | `runs <issue-id>` | Afficher l'historique des exécutions | `--full-id` |
 | | `run-messages <task-id>` | Afficher les messages d'une exécution | `--since`, `--issue` |
 | | `usage <issue-id>` | Afficher la consommation de tokens agrégée | |
-| | `rerun-task <run-id>` | Relancer une exécution précise avec son agent et son contexte de déclenchement d’origine | `--issue`, `--fresh` |
+| | `rerun <id>` | Remettre en file une exécution pour l'assigné actuel | |
 | | `cancel-task <task-id>` | Annuler une exécution en cours ou en file d'attente | `--issue` |
 | `project` | `list/get/create/update/delete` | Gérer les projets | |
 | | `status <id> <status>` | Changer le statut d'un projet | |
