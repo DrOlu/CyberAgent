@@ -114,6 +114,8 @@ A created agent can have **Skills** attached — **knowledge packs** (`SKILL.md`
 
 Agents you no longer use can be **archived** — they disappear from everyday views, but their historical data (tasks run, comments posted) is fully preserved. **Restore** them anytime to put them back to work.
 
+Arguments reserved by the runtime adapter are rejected when creating an agent, editing its custom arguments, or changing its runtime. The error names the conflicting argument. For example, Multica runs Claude Code with `--permission-mode bypassPermissions`; setting `--permission-mode dontAsk` in custom arguments is rejected. Clearing custom arguments with `[]` allows a runtime change when the saved arguments conflict with the target runtime.
+
 <Callout type="warning">
 **Archiving immediately cancels every unfinished task belonging to the agent** — running, dispatched, and queued tasks are all marked `cancelled` and won't continue. If you have an important task in flight, let it finish before archiving.
 </Callout>

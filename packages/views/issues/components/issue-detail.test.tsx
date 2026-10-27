@@ -123,6 +123,8 @@ vi.mock("@multica/core/paths", async () => {
   };
 });
 
+const settingsPush = vi.hoisted(() => vi.fn());
+
 // Mock navigation
 vi.mock("../../navigation", () => ({
   AppLink: ({ children, href, ...props }: any) => (
@@ -131,7 +133,7 @@ vi.mock("../../navigation", () => ({
     </a>
   ),
   useNavigation: () => ({
-    push: vi.fn(),
+    push: settingsPush,
     pathname: "/issues/issue-1",
     getShareableUrl: (p: string) => `https://app.multica.com${p}`,
   }),
@@ -1138,7 +1140,7 @@ describe("IssueDetail (shared)", () => {
     expect(screen.queryByText("Parent issue")).not.toBeInTheDocument();
     // The "+ Add property" affordance is always offered while any
     // optional field is still hidden.
-    expect(screen.getByText("Add property")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add property" })).toBeInTheDocument();
   });
 
   it("hides every optional property row when none are set", async () => {
@@ -1163,7 +1165,27 @@ describe("IssueDetail (shared)", () => {
     expect(screen.getByTestId("project-picker")).toBeInTheDocument();
     // No parent → no standalone Parent issue section either.
     expect(screen.queryByText("Parent issue")).not.toBeInTheDocument();
-    expect(screen.getByText("Add property")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Add property" })).toBeInTheDocument();
+  });
+
+  it("keeps the Properties header free of add and settings buttons", async () => {
+    renderIssueDetail();
+    const disclosure = await screen.findByRole("button", { name: "Properties" });
+    const header = disclosure.parentElement!;
+    expect(within(header).queryByRole("button", { name: "Add property" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Properties options" })).not.toBeInTheDocument();
+    // Folding the section hides the inline Add property row with the rest of the grid.
+    fireEvent.click(disclosure);
+    expect(screen.queryByRole("button", { name: "Add property" })).not.toBeInTheDocument();
+  });
+
+  it("adds an optional field from the inline Add property row and closes the popover", async () => {
+    renderIssueDetail();
+    fireEvent.click(await screen.findByRole("button", { name: "Add property" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Start date" }));
+    // The popover closes (its other options are gone) and the new row is rendered.
+    await waitFor(() => expect(screen.queryByRole("button", { name: "Labels" })).not.toBeInTheDocument());
+    expect(screen.getAllByText("Start date")[0]).toBeVisible();
   });
 
   it("uses a non-resizable layout with the sidebar sheet closed by default on mobile", async () => {
@@ -1295,21 +1317,15 @@ describe("IssueDetail (shared)", () => {
     fireEvent.click(within(composer).getByRole("button", { name: "Send" }));
 
     expect(scrollToIndexSpy).not.toHaveBeenCalled();
-    // 5s timeout: the effect's rAF + 100ms setTimeout pair can drift past
-    // waitFor's 1s default under CI runner contention (turbo runs several
-    // packages' tests at once, and jsdom's requestAnimationFrame is backed
-    // by setTimeout(16) which drifts with the event loop).
     await waitFor(() => {
       expect(scrollToIndexSpy).toHaveBeenCalledTimes(2);
-    }, { timeout: 5000 });
+    });
     expect(scrollToIndexSpy).toHaveBeenNthCalledWith(1, { index: 2, align: "end", offset: 0 });
     expect(scrollToIndexSpy).toHaveBeenNthCalledWith(2, { index: 2, align: "end", offset: 0 });
     expect(scrollIntoViewSpy).not.toHaveBeenCalled();
   });
 
-  it("hides metadata content from the sidebar and shows a button when the bag has keys", async () => {
-    // Metadata is agent-facing; the sidebar only exposes a button that opens
-    // the raw JSON on demand. Keys are NOT rendered inline anywhere.
+  it("keeps metadata collapsed by default when the bag has keys", async () => {
     mockApiObj.getIssue.mockResolvedValue({
       ...mockIssue,
       metadata: {
@@ -1321,43 +1337,25 @@ describe("IssueDetail (shared)", () => {
     renderIssueDetail();
 
     await waitFor(() => {
-      // Trigger label includes a "· N" count so users can see payload size
-      // before clicking — accept any count via regex.
       expect(screen.getByRole("button", { name: /^Metadata\b/ })).toBeInTheDocument();
     });
 
-    // Key names are not rendered in the sidebar prior to opening the dialog.
+    // Keys stay hidden until the section is expanded.
     expect(screen.queryByText("pr_url")).not.toBeInTheDocument();
     expect(screen.queryByText("pipeline_status")).not.toBeInTheDocument();
-  }, 15_000);
+  });
 
-  it("opens a dialog with formatted JSON when the Metadata button is clicked", async () => {
+  it("expands metadata inline from the shared sidebar header", async () => {
     mockApiObj.getIssue.mockResolvedValue({
       ...mockIssue,
-      metadata: {
-        pr_url: "https://example.com/pr/1",
-        pipeline_status: "running",
-      },
+      metadata: { pipeline_status: "running" },
     });
-
     renderIssueDetail();
-
-    const button = await screen.findByRole("button", { name: /^Metadata\b/ });
-    fireEvent.click(button);
-
-    // The dialog renders a <pre> containing the formatted JSON; checking the
-    // exact serialized payload also verifies the indent / structure.
-    const expected = JSON.stringify(
-      { pr_url: "https://example.com/pr/1", pipeline_status: "running" },
-      null,
-      2,
-    );
-    await waitFor(() => {
-      const pre = document.querySelector("pre");
-      expect(pre).not.toBeNull();
-      expect(pre!.textContent).toBe(expected);
-    });
-  }, 15_000);
+    fireEvent.click(await screen.findByRole("button", { name: /^Metadata\b/ }));
+    expect(screen.getByText("pipeline_status")).toBeVisible();
+    expect(screen.getByText("running")).toBeVisible();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
 
   it("hides the Metadata button entirely when the bag is empty", async () => {
     // Default fixture already has metadata: {}, asserted explicitly here.
@@ -1408,11 +1406,7 @@ describe("IssueDetail (shared)", () => {
     expect(agentBlock.querySelector(`[data-run-id="${taskId}"]`)).not.toBeNull();
     const running: AgentTask = { ...task, status: "running", started_at: task.created_at, delivered_comment_ids: [root.id] };
     act(() => client.setQueryData(issueKeys.tasks("issue-1"), [running]));
-    // 5s timeout: the run summary only renders once the useTaskMessages query
-    // refetches after the task flips to "running" (the query is gated by
-    // loadTranscript). Under CI runner contention that refetch + render can
-    // drift past findByText's 1s default (turbo runs several packages at once).
-    await screen.findByText("pnpm test", {}, { timeout: 5000 });
+    await screen.findByText("pnpm test");
     expect(container.querySelector(`[data-run-comment-id="${taskId}"]`)).toBe(agentBlock);
     expect(userBlock.querySelector("[data-run-id]")).toBeNull();
 
@@ -1549,11 +1543,7 @@ describe("IssueDetail (shared)", () => {
     const assignmentSlot = container.querySelector(`[data-run-slot-id="${task.id}"]`);
     const running: AgentTask = { ...task, status: "running", started_at: task.created_at };
     act(() => queryClient.setQueryData(issueKeys.tasks("issue-1"), [running]));
-    // 5s timeout: the run summary only renders once the useTaskMessages query
-    // refetches after the task flips to "running" (the query is gated by
-    // loadTranscript). Under CI runner contention that refetch + render can
-    // drift past findByText's 1s default (turbo runs several packages at once).
-    await screen.findByText("pnpm test", {}, { timeout: 5000 });
+    await screen.findByText("pnpm test");
     expect(container.querySelectorAll(`[data-run-id="${task.id}"]`)).toHaveLength(1);
     const reply: TimelineEntry = {
       ...mockTimeline[1]!, id: "assignment-reply", parent_id: parentId, source_task_id: task.id,
@@ -2622,10 +2612,6 @@ describe("IssueDetail (shared)", () => {
     // plain `comment` item, not a `resolved-bar`. The rail must still read it
     // as resolved — proof the flag comes from deriveThreadResolution and not
     // from the fold state.
-    // Timeout raised from the 5s default: this test mounts the full IssueDetail
-    // (timeline query → thread-view derivation → minimap rail) and the
-    // waitFor poll can exceed 5s under CI parallel-load (see run 30617531783,
-    // 610s suite). 15s matches the suite's other render-heavy specs.
     mockApiObj.listTimeline.mockResolvedValue([
       ...mockTimeline,
       {
@@ -2650,7 +2636,7 @@ describe("IssueDetail (shared)", () => {
       ).toBeInTheDocument();
     });
     expect(screen.getByRole("button", { name: "I can help with this" })).toBeInTheDocument();
-  }, 15000);
+  });
 
   describe("quick-jump rail replies", () => {
     const highlightTint = "bg-[color-mix(in_srgb,var(--card)_95%,var(--brand)_5%)]";

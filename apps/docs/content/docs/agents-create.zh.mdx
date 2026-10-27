@@ -114,6 +114,8 @@ claude --model <model> --max-turns 100 --append-system-prompt "always respond in
 
 不再用的智能体可以**归档**——它从日常视图里消失，但历史数据（跑过的任务、发过的评论）全部保留。想重新用时**恢复**即可。
 
+创建智能体、修改自定义参数或更换运行时时，运行时适配器保留的参数会被拒绝，错误信息会指出冲突的参数。例如，Multica 使用 `--permission-mode bypassPermissions` 运行 Claude Code，在自定义参数里设置 `--permission-mode dontAsk` 会被拒绝。已保存的参数与目标运行时冲突时，可以同时传入 `[]` 清空自定义参数，再完成更换。
+
 <Callout type="warning">
 **归档会立刻取消这个智能体所有未结束的任务**——正在跑的、已派发的、还在排队的都会被标为 `cancelled`，不会继续执行。如果有重要任务在跑，先让它完成再归档。
 </Callout>
