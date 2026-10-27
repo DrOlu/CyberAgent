@@ -68,7 +68,6 @@ apps/desktop/electron-builder.yml
 # scripts/rebrand.sh's reconcile_desktop_pkg step.
 apps/desktop/electron.vite.config.ts
 apps/desktop/scripts/brand-dev-electron.mjs
-apps/desktop/src/main/daemon-manager.ts
 apps/desktop/src/main/index.ts
 apps/desktop/src/renderer/index.html
 apps/desktop/src/renderer/src/App.tsx

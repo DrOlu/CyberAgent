@@ -351,6 +351,7 @@ open('.goreleaser.yml', 'w').write(text)
     -exec sed -i \
       -e 's|Multica Desktop|CyberAgent Desktop|g' \
       -e 's|Multica Desktop App|CyberAgent Desktop|g' \
+      -e 's|Multica\\.app|CyberAgent.app|g' \
       -e 's|multica://|cyberagent://|g' \
       {} + 2>/dev/null || true
 
