@@ -1,4 +1,13 @@
+import { configure } from "@testing-library/dom";
 import "@testing-library/jest-dom/vitest";
+
+// Slow-runner stability: under CI contention (turbo runs several packages'
+// suites at once) the heavy integration files' findBy*/waitFor queries can
+// poll past the 1s Testing Library default before the awaited state lands,
+// even though vitest's own testTimeout was already raised to 20s in
+// vitest.config.ts for the same reason. 10s keeps them stable without hiding
+// a genuinely hung test.
+configure({ asyncUtilTimeout: 10_000 });
 
 function createMemoryStorage(): Storage {
   const values = new Map<string, string>();
