@@ -53,10 +53,10 @@ fields inherit environment values. Unknown keys are rejected to catch typos.
 ./qoder-runtime --config /private/path/config.json
 ```
 
-`--check` only reads the Multica workspace and Qoder environment. It does
+`--check` only reads the CyberAgent workspace and Qoder environment. It does
 not register a runtime, claim a task or start execution.
 
-Start `./qoder-runtime`. Startup checks access to the Multica workspace and Qoder environment
+Start `./qoder-runtime`. Startup checks access to the CyberAgent workspace and Qoder environment
 before registering. Copy the `runtime_id` from its registration log and bind
 an existing Multica agent:
 
@@ -98,7 +98,7 @@ GitHub integration links the pull request back to the issue.
 
 - Up to `max_concurrency` runs (default 1 for this binary, 3 for managed
   connections, at most 10) execute at once per bridge; further tasks stay
-  queued in Multica. Deploy one instance per configuration with its dedicated
+  queued in CyberAgent. Deploy one instance per configuration with its dedicated
   persistent state volume; this is not an HA service.
 - A follow-up run on the same issue continues the agent's previous Qoder session
   when that session is idle, uses the same Qoder agent and environment, and no
@@ -141,10 +141,10 @@ attachments, arbitrary Git hosts, tag/commit checkout, full comment-history
 hydration, interactive tool approval, custom client-side tools, terminal access,
 file transfer and billing/usage conversion are not implemented. Set up a Qoder
 Agent that can execute autonomously with its configured tools. `requires_action`
-ends the Multica run as failed with the stop reason; approvals are not granted
+ends the CyberAgent run as failed with the stop reason; approvals are not granted
 implicitly.
 
-Multica custom skills and execution overrides are rejected; built-in Multica
+Multica custom skills and execution overrides are rejected; built-in CyberAgent
 CLI skills are omitted because their local tools are unavailable. Qoder sessions
 keep any artifacts they produce; textual result and PR/MR links are returned in
 the final summary, without parsing them into structured Multica branch fields.
@@ -228,11 +228,11 @@ After entering a PAT in the Web/Desktop runtime dialog, available environments
 load automatically; one available environment is selected automatically.
 Names are displayed instead of requiring copied IDs. Archived resources are excluded.
 
-In the Multica agent creation form, select the agent in Qoder Cloud Agents under execution settings.
+In the CyberAgent agent creation form, select the agent in Qoder Cloud Agents under execution settings.
 For existing agents, use the runtime configuration tab. The association is stored
 in `agent.runtime_config.qoder_agent_id` and copied into each run journal before
 session creation. Several Multica agents can share a runtime with different agents
-in Qoder Cloud Agents. Configure models, tools and skills in Qoder; the Multica page links
+in Qoder Cloud Agents. Configure models, tools and skills in Qoder; the CyberAgent page links
 existing agents in Qoder Cloud Agents rather than creating or editing those remote resources.
 
 The API exposes `POST /api/workspaces/{id}/qoder/environments` (admin-only,
