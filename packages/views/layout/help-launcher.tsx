@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, BookOpen, CircleHelp, Download, History, MessageCircle } from "lucide-react";
+import { ArrowUpRight, BookOpen, CircleHelp, Download, History, MessageCircle } from "@multica/ui/icons";
 import {
   DropdownMenu,
   DropdownMenuContent,
