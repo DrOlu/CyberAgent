@@ -1,5 +1,5 @@
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
-import { ArrowUpRight } from "@multica/ui/icons";
+import { ArrowUpRight } from "lucide-react";
 
 // Docs-local stateless CyberAgent mark — matches @multica/ui's MulticaIcon
 // visually (same 8-pointed-asterisk clip-path), but without useState/
