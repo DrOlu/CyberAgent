@@ -121,6 +121,16 @@ services:
       # in the database, so this single deployment-wide key is all the operator
       # needs to set here.
       MULTICA_SLACK_SECRET_KEY: ${MULTICA_SLACK_SECRET_KEY:-}
+      # WeCom (WeChat Work) bot integration. MULTICA_WECOM_SECRET_KEY is the
+      # opt-in: unset = integration disabled. It seals the per-installation
+      # bot secret at rest, the same way MULTICA_LARK_SECRET_KEY and
+      # MULTICA_SLACK_SECRET_KEY do above. The remaining knobs are optional
+      # deployment-wide overrides (media CIDR allowlist, trace logging,
+      # default reply locale); see .env.example for details.
+      MULTICA_WECOM_SECRET_KEY: ${MULTICA_WECOM_SECRET_KEY:-}
+      MULTICA_WECOM_DEFAULT_LOCALE: ${MULTICA_WECOM_DEFAULT_LOCALE:-}
+      MULTICA_WECOM_MEDIA_ALLOW_CIDRS: ${MULTICA_WECOM_MEDIA_ALLOW_CIDRS:-}
+      MULTICA_WECOM_TRACE: ${MULTICA_WECOM_TRACE:-}
       # Self-hosted Git provider integration (Forgejo / Gitea / GitLab). This
       # is a self-host-only feature, so the compose file turns it on by default;
       # the managed cloud leaves it unset (off). It still needs a valid
