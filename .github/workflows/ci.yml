@@ -126,4 +126,9 @@ jobs:
         run: cd server && go run ./cmd/migrate up
 
       - name: Test
-        run: cd server && go test ./...
+        # -p 1 serializes package test binaries. The DB-backed suites share one
+        # Postgres database, and global-scope queries (e.g. the lark legacy
+        # receipt backfill in internal/integrations/lark) count rows the
+        # concurrently-running handler suite inserts, flaking exact-count
+        # assertions. Within-package t.Parallel is unaffected.
+        run: cd server && go test ./... -p 1
