@@ -22,7 +22,7 @@ import { PANEL_ROW_CLASS, panelRowStateClass } from "../panel-nav";
 /** A working agent's issue title: dimmer at rest and a wider highlight than
  *  the default shimmer, so the sweep reads at sidebar size. */
 export const SIDEBAR_SHIMMER_CLASS =
-  "[--shimmer-text-base:var(--faint-foreground)] [--shimmer-text-spread:22%]";
+  "[--shimmer-text-title-sm:var(--faint-foreground)] [--shimmer-text-spread:22%]";
 
 export const TREE_ROW_BUTTON_CLASS =
   "relative z-10 flex size-5 shrink-0 items-center justify-center rounded-md outline-none transition-[color,opacity] hover:text-foreground focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-ring";
