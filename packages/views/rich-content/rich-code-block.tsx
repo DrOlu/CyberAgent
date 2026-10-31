@@ -24,7 +24,7 @@
  * does not pull the editor's Tiptap graph into Chat.
  */
 
-import { memo, useEffect, useMemo, useState, type ReactNode } from "react";
+import { memo, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { toHtml } from "hast-util-to-html";
 import { Check, Copy } from "@multica/ui/icons";
 import { cn } from "@multica/ui/lib/utils";
@@ -127,13 +127,24 @@ export function CodeBlockShell({
 }) {
   const { t } = useT("editor");
   const [copied, setCopied] = useState(false);
+  // Clear the copied-state reset timer on unmount: a leaked timer firing after
+  // the test environment tears down crashes react-dom (`window is not defined`)
+  // in vitest, and is a stray post-unmount state update in production.
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (copyTimer.current !== null) clearTimeout(copyTimer.current);
+    },
+    [],
+  );
   const copyLabel = t(($) => $.code_block.copy_code) || "Copy code";
 
   const handleCopy = async () => {
     if (!code) return;
     if (await copyText(code)) {
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (copyTimer.current !== null) clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => setCopied(false), 2000);
     }
   };
 

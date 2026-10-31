@@ -186,6 +186,14 @@ export function RichTableFrame({ model, getMarkdown, tableRef: onTable, children
   const [dragging, setDragging] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [copied, setCopied] = useState(false);
+  // Clear the copied-state reset timer on unmount (see rich-code-block.tsx).
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (copyTimer.current !== null) clearTimeout(copyTimer.current);
+    },
+    [],
+  );
   const tableRef = useRef<HTMLTableElement | null>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
   const setTable = useCallback(
@@ -384,7 +392,8 @@ export function RichTableFrame({ model, getMarkdown, tableRef: onTable, children
   const copyMarkdown = async () => {
     if (await copyText(getMarkdown())) {
       setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      if (copyTimer.current !== null) clearTimeout(copyTimer.current);
+      copyTimer.current = setTimeout(() => setCopied(false), 2000);
     }
   };
 

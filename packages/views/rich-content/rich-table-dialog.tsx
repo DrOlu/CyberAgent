@@ -8,7 +8,7 @@
  * Markdown cells, so links, mentions and inline code behave as they do inline.
  */
 
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
   getCoreRowModel,
   getFilteredRowModel,
@@ -66,10 +66,22 @@ function isNumeric(values: string[]): boolean {
 
 function useCopyFeedback() {
   const [copied, setCopied] = useState<string | null>(null);
+  // Clear the copied-state reset timer on unmount (see rich-code-block.tsx).
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(
+    () => () => {
+      if (timerRef.current !== null) clearTimeout(timerRef.current);
+    },
+    [],
+  );
   const copy = async (id: string, text: string) => {
     if (await copyText(text)) {
       setCopied(id);
-      setTimeout(() => setCopied((current) => (current === id ? null : current)), 2000);
+      if (timerRef.current !== null) clearTimeout(timerRef.current);
+      timerRef.current = setTimeout(
+        () => setCopied((current) => (current === id ? null : current)),
+        2000,
+      );
     }
   };
   return { copied, copy };
