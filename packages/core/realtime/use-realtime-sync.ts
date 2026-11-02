@@ -254,13 +254,14 @@ export function applyChatDoneToCache(
   // `=== true` — older servers omit the field entirely.
   qc.setQueryData<ChatQuickActionsPendingState | null>(
     chatKeys.quickActionsPending(sessionId),
-    payload.quick_actions_pending === true && messageId
-      ? {
-          message_id: messageId,
-          task_id: taskId,
-          expires_at: Date.now() + QUICK_ACTIONS_PENDING_TIMEOUT_MS,
-        }
-      : null,
+    () =>
+      payload.quick_actions_pending === true && messageId
+        ? {
+            message_id: messageId,
+            task_id: taskId,
+            expires_at: Date.now() + QUICK_ACTIONS_PENDING_TIMEOUT_MS,
+          }
+        : null,
   );
   // Authoritative refetch reconciles redaction / migrations / clients
   // that took the fallback branch above.

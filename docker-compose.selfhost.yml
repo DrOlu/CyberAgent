@@ -130,6 +130,7 @@ services:
       MULTICA_WECOM_SECRET_KEY: ${MULTICA_WECOM_SECRET_KEY:-}
       MULTICA_WECOM_DEFAULT_LOCALE: ${MULTICA_WECOM_DEFAULT_LOCALE:-}
       MULTICA_WECOM_MEDIA_ALLOW_CIDRS: ${MULTICA_WECOM_MEDIA_ALLOW_CIDRS:-}
+      MULTICA_WECOM_SOURCE_ID: ${MULTICA_WECOM_SOURCE_ID:-}
       MULTICA_WECOM_TRACE: ${MULTICA_WECOM_TRACE:-}
       # Self-hosted Git provider integration (Forgejo / Gitea / GitLab). This
       # is a self-host-only feature, so the compose file turns it on by default;
