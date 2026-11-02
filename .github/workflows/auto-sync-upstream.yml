@@ -305,6 +305,18 @@ jobs:
           # upstream. Regenerate the lockfile so it matches the merged
           # manifests exactly. --lockfile-only avoids running install
           # scripts and is fast.
+          #
+          # IMPORTANT: delete the lockfile first. git's textual auto-merge
+          # of pnpm-lock.yaml can produce a semantically broken file —
+          # importers keep peer-suffixed references to package entries the
+          # other side deleted (run 41439819602: importers still referenced
+          # typescript@5.9.3 after upstream's catalog switched to
+          # npm:@typescript/typescript6@6.0.2 and dropped that entry).
+          # pnpm's incremental --lockfile-only trusts the existing file and
+          # does not repair it, so the pre-flight --frozen-lockfile install
+          # fails with ERR_PNPM_LOCKFILE_MISSING_DEPENDENCY. Starting from
+          # nothing forces a full re-resolve from the merged manifests.
+          rm -f pnpm-lock.yaml
           pnpm install --lockfile-only
           if ! git diff --quiet pnpm-lock.yaml; then
             git add pnpm-lock.yaml
