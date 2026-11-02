@@ -343,7 +343,7 @@ export async function applyChatQuickActionsToCache(
   if (payload.failed === true) {
     qc.setQueryData<ChatQuickActionsFailureState | null>(
       chatKeys.quickActionsFailure(sessionId),
-      { message_id: payload.message_id, at: Date.now() },
+      () => ({ message_id: payload.message_id, at: Date.now() }),
     );
   }
 }
