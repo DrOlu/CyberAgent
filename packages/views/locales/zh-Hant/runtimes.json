@@ -565,7 +565,7 @@
     "cloud_description": "使用共享連線在 Qoder 雲端執行 AI 代理，無需維護本地主機。",
     "configure_credentials": "配置憑證",
     "add_agent": "新增 AI 代理",
-    "add_agent_description": "建立 Multica AI 代理並關聯已有的 Qoder Cloud Agents AI 代理，使用 Qoder 雲端已配置的環境和憑證。",
+    "add_agent_description": "建立 CyberAgent 代理並關聯已有的 Qoder Cloud Agents AI 代理，使用 Qoder 雲端已配置的環境和憑證。",
     "agent_name": "AI 代理名稱",
     "cancel": "取消",
     "shared_credentials_hint": "憑證在當前工作區內共享，PAT 加密儲存後不再顯示。",
