@@ -93,7 +93,11 @@ jobs:
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
-          mapfile -t files < <(find dist -type f \( -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' -o -name '*.yml' -o -name '*.exe' -o -name '*.dmg' -o -name '*.zip' -o -name '*.blockmap' \) ! -path '*unpacked*' ! -name 'builder-debug.yml')
+          # NOTE: macOS ships bash 3.2 (no mapfile). Use a portable loop.
+          files=()
+          while IFS= read -r f; do files+=("$f"); done < <(
+            find dist -type f \( -name '*.AppImage' -o -name '*.deb' -o -name '*.rpm' -o -name '*.yml' -o -name '*.exe' -o -name '*.dmg' -o -name '*.zip' -o -name '*.blockmap' \) ! -path '*unpacked*' ! -name 'builder-debug.yml'
+          )
           if [[ ${#files[@]} -eq 0 ]]; then
             echo "No publishable artifacts under apps/desktop/dist"
             exit 1
