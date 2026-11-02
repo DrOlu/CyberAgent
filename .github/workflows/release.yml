@@ -409,6 +409,9 @@ jobs:
       - name: Package Desktop installers (${{ matrix.target }})
         working-directory: apps/desktop
         env:
+          # mac packaging (Rollup + electron-builder) exhausts the default
+          # ~2GB V8 heap on GitHub runners; raise the limit.
+          NODE_OPTIONS: --max-old-space-size=6144
           GH_TOKEN: ${{ secrets.PAT_TOKEN }}
           # electron-builder's GitHub publisher reads this:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
