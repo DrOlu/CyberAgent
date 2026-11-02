@@ -139,7 +139,10 @@ const authSessionCoordinator = new AuthSessionCoordinator<BrowserWindow>(
   },
 );
 const notificationGate = new NotificationGate();
-const mainRendererMessages = new MainRendererMessageQueue();
+const mainRendererMessages = new MainRendererMessageQueue(
+  sendMainRendererMessage,
+  (window) => !window.isDestroyed(),
+);
 let desktopInitialized = false;
 let authSessionGeneration = 0;
 const rendererRouteContexts = new WeakMap<
@@ -154,11 +157,11 @@ let runtimeConfigResult: RuntimeConfigResult = {
 // --- Deep link helpers ---------------------------------------------------
 
 function sendMainRendererMessage(
+  window: BrowserWindow,
   channel: MainRendererMessageChannel,
   payload: unknown,
 ): void {
-  const window = mainWindow;
-  if (!window || window.isDestroyed()) return;
+  if (window.isDestroyed()) return;
   window.webContents.send(channel, payload);
 }
 
@@ -178,7 +181,7 @@ function dispatchToMainRenderer(
   channel: MainRendererMessageChannel,
   payload: unknown,
 ): void {
-  mainRendererMessages.enqueue(channel, payload, sendMainRendererMessage);
+  mainRendererMessages.enqueue(mainWindow, channel, payload);
   const window = ensureMainWindow();
   if (window) focusMainWindow(window);
 }
@@ -312,9 +315,9 @@ function createWindow(): BrowserWindow {
   const systemLocale = getSystemLocale();
   lastKnownSystemLocale = systemLocale;
 
-  mainRendererMessages.resetReady();
-
-  // Restore prior size/position/maximized/fullscreen (#5244), constraining
+  // Release the previous main window's readiness (if any) so queued
+  // messages retarget the window being created.
+  if (mainWindow) mainRendererMessages.release(mainWindow, null);
   // bounds to the work area of the display the window will land on.
   const stateFile = windowStateFilePath(app.getPath("userData"));
   const savedWindowState = loadWindowState(stateFile);
@@ -347,6 +350,7 @@ function createWindow(): BrowserWindow {
     webPreferences: createRendererWebPreferences(systemLocale),
   });
   const window = mainWindow;
+  authSessionCoordinator.registerMainWindow(window);
 
   // Persist bounds on resize/move (debounced) and on close so the next
   // launch restores size/position and max/fullscreen flags. getNormalBounds
@@ -368,9 +372,10 @@ function createWindow(): BrowserWindow {
   });
 
   window.on("closed", () => {
+    authSessionCoordinator.unregisterMainWindow(window);
     if (mainWindow === window) {
       mainWindow = null;
-      mainRendererMessages.resetReady();
+      mainRendererMessages.release(window, null);
     }
   });
 
@@ -753,11 +758,7 @@ if (!gotTheLock) {
         if (!mainWindow || event.sender !== mainWindow.webContents) return;
         const parsed = parseMainRendererChannelState(state);
         if (!parsed) return;
-        mainRendererMessages.setReady(
-          parsed.channel,
-          parsed.ready,
-          sendMainRendererMessage,
-        );
+        mainRendererMessages.setReady(mainWindow, parsed.channel, parsed.ready);
       },
     );
 
@@ -769,7 +770,10 @@ if (!gotTheLock) {
       if (!sourceWindow || userId === undefined) return;
 
       if (sourceWindow === mainWindow) {
-        const accountInvalidated = authSessionCoordinator.reportMain(userId);
+        const accountInvalidated = authSessionCoordinator.reportMain(
+          sourceWindow,
+          userId,
+        );
         if (accountInvalidated) {
           authSessionGeneration += 1;
           mainRendererMessages.clear("inbox:open");
@@ -798,7 +802,7 @@ if (!gotTheLock) {
       const sourceWindow = BrowserWindow.fromWebContents(event.sender);
       if (!sourceWindow) return;
       if (sourceWindow === mainWindow) {
-        if (!authSessionCoordinator.hasActiveMainSession()) return;
+        if (!authSessionCoordinator.hasActiveMainSession(sourceWindow)) return;
       } else if (
         !issueWindows.has(sourceWindow) ||
         !authSessionCoordinator.isCurrentIssueSession(sourceWindow)
@@ -854,7 +858,9 @@ if (!gotTheLock) {
     createWindow();
 
     // Register first so the update quit gate can block daemon autoStop.
-    setupAutoUpdater(() => mainWindow, {
+    setupAutoUpdater(
+      () => (mainWindow && !mainWindow.isDestroyed() ? [mainWindow] : []),
+      {
       // Windows only (the updater ignores it elsewhere): stop the bundled
       // daemon before the installer runs so multica.exe is replaced. #8823
       daemonGate: {
