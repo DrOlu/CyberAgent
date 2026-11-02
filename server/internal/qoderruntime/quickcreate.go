@@ -11,7 +11,7 @@ import (
 
 // quickCreate holds the modal selections for a quick-create run. The Qoder
 // agent only drafts the issue; the bridge creates it with the task credential,
-// because a managed session has no Multica CLI.
+// because a managed session has no CyberAgent CLI.
 type quickCreate struct {
 	Priority      string   `json:"priority,omitempty"`
 	DueDate       string   `json:"due_date,omitempty"`
