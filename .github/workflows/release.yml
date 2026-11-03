@@ -17,6 +17,14 @@ permissions:
   contents: write
   packages: write
 
+# Rapid successive pushes of the same tag fire two Release runs seconds
+# apart. They race on the GitHub release: the loser fails GoReleaser with
+# `422 already_exists` on every asset upload. Serialize per ref instead —
+# a newer run for the same tag cancels the stale one.
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   verify:
     runs-on: ubuntu-latest
