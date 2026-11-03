@@ -21,6 +21,12 @@ interface MulticaIconProps extends React.ComponentProps<"span"> {
    */
   mode?: string;
   /**
+   * Icon shape hint: "square" (default tile) or "circle". Only "circle" has
+   * a visual effect — it rounds the tile — matching upstream's avatar form;
+   * also exposed as `data-shape` for CSS targeting.
+   */
+  shape?: "square" | "circle";
+  /**
    * Size of the bordered icon: "sm" (default), "md", "lg".
    * A plain number is also accepted as an explicit pixel size — it renders the
    * icon at exactly that diameter (bordered mode scales the inner icon and
@@ -46,6 +52,7 @@ export function MulticaIcon({
   noSpin = false,
   bordered = false,
   mode,
+  shape = "square",
   size = "sm",
   style,
   ...props
@@ -78,6 +85,7 @@ export function MulticaIcon({
       <span
         className={cn(
           "inline-flex items-center justify-center border border-border rounded-md",
+          shape === "circle" && "rounded-full",
           sizeConfig.wrapper,
           className
         )}
@@ -114,6 +122,7 @@ export function MulticaIcon({
       )}
       aria-hidden="true"
       data-mode={mode}
+      data-shape={shape}
       style={{ ...sizeStyle, ...style }}
       {...props}
     >
