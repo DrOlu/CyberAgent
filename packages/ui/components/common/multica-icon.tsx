@@ -15,9 +15,18 @@ interface MulticaIconProps extends React.ComponentProps<"span"> {
    */
   bordered?: boolean;
   /**
-   * Size of the bordered icon: "sm" (default), "md", "lg"
+   * Semantic mode hint ("think" | "launch" | "intro" | …). Exposed as a
+   * `data-mode` attribute so callers/consumers can target or restyle a
+   * specific usage; has no built-in visual effect.
    */
-  size?: "sm" | "md" | "lg";
+  mode?: string;
+  /**
+   * Size of the bordered icon: "sm" (default), "md", "lg".
+   * A plain number is also accepted as an explicit pixel size — it renders the
+   * icon at exactly that diameter (bordered mode scales the inner icon and
+   * keeps the tier padding). Keeps legacy numeric call sites type-safe.
+   */
+  size?: number | "sm" | "md" | "lg";
 }
 
 const borderedSizes = {
@@ -36,10 +45,17 @@ export function MulticaIcon({
   animate = false,
   noSpin = false,
   bordered = false,
+  mode,
   size = "sm",
+  style,
   ...props
 }: MulticaIconProps) {
   const [entranceDone, setEntranceDone] = useState(!animate);
+
+  // Explicit pixel size (legacy numeric API): fixed diameter for the icon.
+  const numericSize = typeof size === "number" ? size : undefined;
+  const sizeStyle =
+    numericSize != null ? { width: numericSize, height: numericSize } : undefined;
 
   useEffect(() => {
     if (!animate) return;
@@ -57,7 +73,7 @@ export function MulticaIcon({
   )`;
 
   if (bordered) {
-    const sizeConfig = borderedSizes[size];
+    const sizeConfig = borderedSizes[typeof size === "number" ? "sm" : size];
     return (
       <span
         className={cn(
@@ -66,15 +82,17 @@ export function MulticaIcon({
           className
         )}
         aria-hidden="true"
+        data-mode={mode}
         {...props}
       >
         <span
           className={cn(
             "block",
-            sizeConfig.icon,
+            numericSize == null && sizeConfig.icon,
             !entranceDone && "animate-entrance-spin",
             entranceDone && !noSpin && "hover:animate-spin"
           )}
+          style={sizeStyle}
         >
           <span
             className="block size-full bg-current"
@@ -89,11 +107,14 @@ export function MulticaIcon({
     <span
       className={cn(
         "inline-block size-[1em]",
+        numericSize == null || "!size-auto",
         !entranceDone && "animate-entrance-spin",
         entranceDone && !noSpin && "hover:animate-spin",
         className
       )}
       aria-hidden="true"
+      data-mode={mode}
+      style={{ ...sizeStyle, ...style }}
       {...props}
     >
       <span
