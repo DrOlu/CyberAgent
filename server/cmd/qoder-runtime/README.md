@@ -53,10 +53,10 @@ fields inherit environment values. Unknown keys are rejected to catch typos.
 ./qoder-runtime --config /private/path/config.json
 ```
 
-`--check` only reads the CyberAgent workspace and Qoder environment. It does
+`--check` only reads the Multica workspace and Qoder environment. It does
 not register a runtime, claim a task or start execution.
 
-Start `./qoder-runtime`. Startup checks access to the CyberAgent workspace and Qoder environment
+Start `./qoder-runtime`. Startup checks access to the Multica workspace and Qoder environment
 before registering. Copy the `runtime_id` from its registration log and bind
 an existing Multica agent:
 
@@ -98,7 +98,7 @@ GitHub integration links the pull request back to the issue.
 
 - Up to `max_concurrency` runs (default 1 for this binary, 3 for managed
   connections, at most 10) execute at once per bridge; further tasks stay
-  queued in CyberAgent. Deploy one instance per configuration with its dedicated
+  queued in Multica. Deploy one instance per configuration with its dedicated
   persistent state volume; this is not an HA service.
 - A follow-up run on the same issue, or the next turn in the same chat,
   continues the agent's previous Qoder session when that session is idle, uses
@@ -106,13 +106,42 @@ GitHub integration links the pull request back to the issue.
   a fresh session starts with the current issue and triggering/coalesced comment
   context, or with the current chat message. Do not send additional messages
   directly to a bridge-owned session while its run is active.
-- Issue attachments: text files (Qoder Files' accepted types, up to 5 MB) are
-  uploaded through Qoder Files and mounted under `/data/attachments/`, which
-  always starts a fresh session. PNG, JPEG, WebP and GIF images (at most 8000 px
+- Issue and chat attachments: PNG, JPEG, WebP and GIF images (at most 8000 px
   per side, about 4.5 MB in total per run so Qoder's echo of the message stays
-  readable) are sent as base64 image blocks in the task message;
-  use a Qoder Agent model with image input. Other files are listed in the prompt
-  as unavailable. Uploaded Qoder files are not deleted by the bridge.
+  readable) are sent as base64 image blocks in the task message; use a Qoder
+  Agent model with image input. Other files up to 5 MB, PDFs and Office
+  documents included, are uploaded through Qoder Files and mounted under
+  `/data/attachments/`, a chat message's files under
+  `/data/attachments/<run id>/`. Reading a binary format needs a tool for it in
+  the Qoder environment. An issue run uploads every issue attachment again, so
+  it always starts a fresh session. A chat turn that continues a session mounts
+  its files into that session before sending the message, and starts a fresh
+  session if Qoder refuses them. Larger files, files Qoder Files rejects,
+  images over the limits, and chat attachments deleted before the run are
+  listed in the prompt as unavailable; the run does not fail. Uploaded Qoder
+  files are not deleted by the bridge.
+- Files returned in chat: files the agent delivers with `DeliverArtifacts`
+  during a chat turn (up to 10 MB each) are downloaded from Qoder Files and
+  uploaded to Multica with the task credential, which attaches them to the
+  agent's reply. Only files Qoder scopes to the run's session are passed on.
+  Each file transfer gets its own guarded poll, alternating with normal run
+  polling so other runs and heartbeats continue. Transfers do not share the
+  event poll's deadline, and the task status check is limited to 5 seconds.
+  One file is transferred per poll, before the reply is completed, with a
+  20-second budget per attempt and at most three attempts for reads. Uploads
+  are never automatically replayed: a timeout, 5xx, or unreadable response
+  may mean the file was saved, so the reply asks the user to check its
+  attachments before retrying. A successful upload must return a non-empty
+  attachment ID. Larger files, files of another session, files Qoder does
+  not offer for download, files Multica refuses, and files not yet attached
+  when the bridge restarts are logged and skipped. Delivery notices name
+  files not attached or whose delivery could not be confirmed; the reply
+  still completes. Notices survive journal reloads and completion retries.
+  Notices use the direct chat reader's profile language (English, simplified
+  or traditional Chinese, Japanese, Korean, or French). IM rooms use the
+  channel's default language, including WeCom's deployment setting. Missing
+  locale metadata defaults to English; task credentials are never persisted.
+  Issue runs do not return delivered files.
 - Progress uses cursor-paginated persisted events, polled every three seconds.
   Event IDs and opaque page cursors are tracked separately. A turn is successful
   only after its user message and `session.status_idle` with `end_turn`, without
@@ -144,15 +173,28 @@ GitHub integration links the pull request back to the issue.
 
 ## Current boundaries
 
-This is a PoC for issue runs and chat turns. Squad coordination, local
-directories, chat message attachments, binary non-image issue attachments, arbitrary Git hosts,
+This is a PoC for issue runs, chat turns and squad leader turns. A squad leader
+has no Multica CLI in its Qoder session: it ends its turn with an `OUTCOME:` /
+`REASON:` header and the delegation comment, and the bridge posts the comment
+(which triggers the mentioned members) and records the squad evaluation with the
+task credential. A leader cannot change the issue status. Local
+directories, arbitrary Git hosts,
 tag/commit checkout, full comment-history hydration, interactive tool approval, custom client-side tools, terminal access,
-file transfer and billing/usage conversion are not implemented. Set up a Qoder
+files delivered by issue runs and billing/usage conversion are not implemented. Set up a Qoder
 Agent that can execute autonomously with its configured tools. `requires_action`
-ends the CyberAgent run as failed with the stop reason; approvals are not granted
+ends the Multica run as failed with the stop reason; approvals are not granted
 implicitly.
 
-Multica custom skills and execution overrides are rejected; built-in CyberAgent
+Squad quick-create supports Qoder leaders, but quick-create attachments remain
+unsupported. A blocked delegation target fails the leader run and records the
+target ID and admission reason; successfully triggered members keep running.
+Check these results before delegating again. If a comment or evaluation response
+is lost, the bridge fails the run without automatically replaying that write.
+After a restart, delivery that still needs the task credential fails with a
+notice to inspect comments and activity before retrying. Fully delivered turns
+can still finish reporting completion after a restart.
+
+Multica custom skills and execution overrides are rejected; built-in Multica
 CLI skills are omitted because their local tools are unavailable. Qoder sessions
 keep any artifacts they produce; textual result and PR/MR links are returned in
 the final summary, without parsing them into structured Multica branch fields.
@@ -236,11 +278,11 @@ After entering a PAT in the Web/Desktop runtime dialog, available environments
 load automatically; one available environment is selected automatically.
 Names are displayed instead of requiring copied IDs. Archived resources are excluded.
 
-In the CyberAgent agent creation form, select the agent in Qoder Cloud Agents under execution settings.
+In the Multica agent creation form, select the agent in Qoder Cloud Agents under execution settings.
 For existing agents, use the runtime configuration tab. The association is stored
 in `agent.runtime_config.qoder_agent_id` and copied into each run journal before
 session creation. Several Multica agents can share a runtime with different agents
-in Qoder Cloud Agents. Configure models, tools and skills in Qoder; the CyberAgent page links
+in Qoder Cloud Agents. Configure models, tools and skills in Qoder; the Multica page links
 existing agents in Qoder Cloud Agents rather than creating or editing those remote resources.
 
 The API exposes `POST /api/workspaces/{id}/qoder/environments` (admin-only,
