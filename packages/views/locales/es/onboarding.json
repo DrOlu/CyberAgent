@@ -1,6 +1,6 @@
 {
   "step_nav": {
-    "wordmark": "Multica",
+    "wordmark": "CyberAgent",
     "label": "Pasos de incorporación",
     "about_you": {
       "label": "Sobre ti"
@@ -18,8 +18,8 @@
     "headline_line2": "en",
     "headline_emphasis": "un solo espacio de trabajo.",
     "lede": "Asígnales trabajo como lo harías con un compañero: lo recogen, actualizan el estado y comentan cuando terminan.",
-    "lede_web": "Multica Desktop incluye el runtime: no hay nada que instalar. Continúa en la web para conectar tu propia CLI.",
-    "download_desktop": "Descargar Multica Desktop",
+    "lede_web": "CyberAgent Desktop incluye el runtime: no hay nada que instalar. Continúa en la web para conectar tu propia CLI.",
+    "download_desktop": "Descargar CyberAgent Desktop",
     "continue_on_web": "Continuar en la web",
     "start_exploring": "Empezar a explorar",
     "skip_existing": "Ya lo he hecho antes",
@@ -199,7 +199,7 @@
     "lede": "Conecta un ordenador para que Mika pueda empezar a trabajar.",
     "hint_default": "Puedes conectarlo más tarde.",
     "download_title": "Usar este ordenador",
-    "download_subtitle": "Instala Multica Desktop para conectar este ordenador.",
+    "download_subtitle": "Instala CyberAgent Desktop para conectar este ordenador.",
     "download_button": "Descargar",
     "cli_title": "Conectar desde la terminal",
     "cli_subtitle": "Conecta un servidor, una máquina de desarrollo remota o cualquier ordenador sin pantalla. Requiere terminal.",
@@ -219,8 +219,8 @@
     "stage_slow_prefix": "Está tardando más de lo habitual. Revisa la terminal donde ejecutaste ",
     "stage_slow_suffix": " por si hay errores.",
     "stage_stalled_prefix": "Todavía no llega nada. Si la terminal no es lo tuyo, ",
-    "stage_stalled_term": "Multica Desktop",
-    "stage_stalled_suffix": " es el camino más sencillo: un clic y este ordenador queda conectado. Cierra este diálogo y elige Multica Desktop, o pulsa Saltar para continuar."
+    "stage_stalled_term": "CyberAgent Desktop",
+    "stage_stalled_suffix": " es el camino más sencillo: un clic y este ordenador queda conectado. Cierra este diálogo y elige CyberAgent Desktop, o pulsa Saltar para continuar."
   },
   "errors": {
     "skip_failed": "No se ha podido terminar la incorporación",

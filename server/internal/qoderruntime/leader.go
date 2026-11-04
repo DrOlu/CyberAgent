@@ -13,7 +13,7 @@ import (
 
 // squadLeader holds what a squad-leader run needs to deliver its turn. The
 // Squad Operating Protocol tells a leader to delegate with a mention comment
-// and record its evaluation through the Multica CLI; a managed Qoder session
+// and record its evaluation through the CyberAgent CLI; a managed Qoder session
 // has no CLI, so the agent states both in its final message and the bridge
 // posts them with the task credential. Only a comment created through the
 // comments API triggers the mentioned members.
@@ -32,7 +32,7 @@ type squadLeader struct {
 }
 
 const leaderBridgeNote = `
-Squad leader on Qoder Cloud Agents: this session has no Multica CLI. Never run ` + "`multica`" + ` commands; the bridge performs the delegation comment and the evaluation record from the Squad Operating Protocol for you. Do not change code or open pull requests. End your turn with a final message in exactly this form:
+Squad leader on Qoder Cloud Agents: this session has no CyberAgent CLI. Never run ` + "`multica`" + ` commands; the bridge performs the delegation comment and the evaluation record from the Squad Operating Protocol for you. Do not change code or open pull requests. End your turn with a final message in exactly this form:
 
 OUTCOME: action | no_action | failed
 REASON: <one short line>

@@ -334,7 +334,7 @@
     "cli_version_label": "Versión de la CLI:",
     "version_unknown": "desconocida",
     "managed_by_desktop": "Gestionado por el escritorio",
-    "managed_by_desktop_title": "El binario de la CLI lo gestiona Multica Desktop: actualiza la app de escritorio para actualizar la CLI.",
+    "managed_by_desktop_title": "El binario de la CLI lo gestiona CyberAgent Desktop: actualiza la app de escritorio para actualizar la CLI.",
     "read_only": "Solo lectura",
     "read_only_title": "Solo los propietarios del runtime y los administradores del espacio de trabajo pueden actualizar la CLI.",
     "local_build": "Compilación local",

@@ -114,10 +114,10 @@ describe("HelpLauncher", () => {
   });
 
   it.each([
-    ["en", "https://multica.ai/docs"],
-    ["zh-Hans", "https://multica.ai/docs/zh"],
-    ["zh-Hant", "https://multica.ai/docs/zh-Hant"],
-    ["fr", "https://multica.ai/docs/fr"],
+    ["en", "https://cyberagent.ng/docs.html"],
+    ["zh-Hans", "https://cyberagent.ng/docs.html"],
+    ["zh-Hant", "https://cyberagent.ng/docs.html-Hant"],
+    ["fr", "https://cyberagent.ng/docs.html"],
   ])("links Docs to the %s docs", (language, href) => {
     i18nState.language = language;
     render(<HelpLauncher />);
