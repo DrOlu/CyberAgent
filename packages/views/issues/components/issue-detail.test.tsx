@@ -1,6 +1,13 @@
 import { forwardRef, useEffect, useRef, useState, useImperativeHandle } from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, waitFor, within, configure } from "@testing-library/react";
+
+// This 110-test suite runs 3+ minutes on the CI runner while other vitest
+// shards share the same cores. The library's default 1s async-util timeout
+// makes the findBy*/waitFor assertions here flake nondeterministically under
+// that load (different tests fail on every run). Give DOM polling room to
+// breathe; genuine regressions still fail on assertion, not on the clock.
+configure({ asyncUtilTimeout: 5000 });
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { AgentTask, Attachment, Issue, IssueStatusEntry, Label, TimelineEntry } from "@multica/core/types";
 import { issueKeys } from "@multica/core/issues/queries";
