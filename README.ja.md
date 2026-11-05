@@ -122,7 +122,7 @@ Multica は、こうしたエージェントとチームメイトを 1 つのワ
 ## はじめに
 
 - **クラウド** — **[multica.ai](https://multica.ai)** でサインアップしてください。ターミナルは必要ありません。
-- **デスクトップ** — macOS、Windows、Linux 向けの **[Multica Desktop](https://multica.ai/download)** をダウンロードしてください。
+- **デスクトップ** — macOS、Windows、Linux 向けの **[CyberAgent Desktop](https://multica.ai/download)** をダウンロードしてください。
   実行しているコンピューターが、自動的にランタイムとして接続されます。
 - **セルフホスト** — スタック全体を自前のインフラで動かします。手順は下記をご覧ください。
 
@@ -211,7 +211,7 @@ Multica はモデルを同梱していません。インストールと認証を
 | Git やチャットのツールを接続したい | [GitHub](https://multica.ai/docs/ja/github-integration) · [セルフホストの Git](https://multica.ai/docs/ja/vcs-integration) · [チャネル](https://multica.ai/docs/ja/channels) |
 | 自分のインフラストラクチャで動かしたい | [セルフホスト](SELF_HOSTING.md) · [セキュリティモデル](https://multica.ai/docs/ja/security-model) · [環境変数](https://multica.ai/docs/ja/environment-variables) |
 | スクリプトから操作したい | [CLI リファレンス](https://multica.ai/docs/ja/cli) · [CLI とデーモンのガイド](CLI_AND_DAEMON.md) · [認証トークン](https://multica.ai/docs/ja/auth-tokens) |
-| Codex、Claude Code、Cursor から Multica を操作したい | [Multica CLI skill](https://github.com/multica-ai/multica-cli) |
+| Codex、Claude Code、Cursor から Multica を操作したい | [CyberAgent CLI skill](https://github.com/multica-ai/multica-cli) |
 | エージェントが止まっている理由を突き止めたい | [実行](https://multica.ai/docs/ja/tasks) · [トラブルシューティング](https://multica.ai/docs/ja/troubleshooting) |
 
 ドキュメントは [English](https://multica.ai/docs)、[简体中文](https://multica.ai/docs/zh)、
