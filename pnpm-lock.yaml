@@ -62,7 +62,7 @@ catalogs:
       version: 11.17.2
     posthog-js:
       specifier: ^1.176.1
-      version: 1.445.5
+      version: 1.446.0
     react:
       specifier: 19.2.3
       version: 19.2.3
@@ -388,7 +388,7 @@ importers:
         version: 2.0.2(@babel/runtime@7.29.13)(react-native@0.86.3(@babel/core@7.29.13)(@react-native/metro-config@0.86.3(@babel/core@7.29.13))(@types/react@19.3.0)(react@19.2.3))(react@19.2.3)
       '@tanstack/react-query':
         specifier: ^5.96.2
-        version: 5.105.3(@types/react@19.3.0)(react@19.2.3)
+        version: 5.106.0(@types/react@19.3.0)(react@19.2.3)
       class-variance-authority:
         specifier: ^0.7.1
         version: 0.7.1
@@ -639,7 +639,7 @@ importers:
         version: 26.7.1(@typescript/typescript6@6.0.2)
       posthog-js:
         specifier: 'catalog:'
-        version: 1.445.5(@types/react@19.3.0)(react@19.2.3)
+        version: 1.446.0(@types/react@19.3.0)(react@19.2.3)
       react-i18next:
         specifier: 'catalog:'
         version: 17.1.12(@typescript/typescript6@6.0.2)(i18next@26.7.1(@typescript/typescript6@6.0.2))(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -2700,8 +2700,8 @@ packages:
   '@posthog/core@1.63.1':
     resolution: {integrity: sha512-LcUSRUM8zoTdwQFH1kWDQDMOFwiFjJ2lVxOOtpOwp6ezcHdr94KjO84YcoEeYtMuIFVMjasDFWyrOuuMAAg52g==}
 
-  '@posthog/types@1.419.0':
-    resolution: {integrity: sha512-XX7zRYt/vK8AzaD6V+oDquAzacZf5exJv971dja9En8Qf6g84Qvc3rpT0w6hDYYLWrjaSSkdjFfvvoXI0ouJDg==}
+  '@posthog/types@1.420.0':
+    resolution: {integrity: sha512-WrfsR3hynbNOkQor6TrQJrI+7UzStZs2rjFzQ+xK9mRCUH6TLMLfBSR+ibGoKreatb76Uh30b6lSZLWbOgdTsg==}
 
   '@radix-ui/number@1.1.3':
     resolution: {integrity: sha512-Road2bidD0uu/1BGDOWNdPI06g0lIRy6IF9GZcIrDK2KGItfor8IQwQa+yM2ERgHM1MmHxaxpTzk0/Jp42lNfA==}
@@ -3837,8 +3837,8 @@ packages:
   '@tanstack/query-core@5.105.1':
     resolution: {integrity: sha512-B/rNlZoZ54w1dlddiUt9oEe1SLM+37c00SKLJEg9YH+7as3Y54P81o9Fh+2ujZ36tXPnQJ5oVe7AcyEWkyFhPg==}
 
-  '@tanstack/query-core@5.105.3':
-    resolution: {integrity: sha512-v1rbNy7MB/4Akth7CQH+CerV13K7Ok9hAusEsfz4sCjDdu3/kOSJPoWfoB+YjdEX1eBFBWKNAGE5nqZCgdlHDw==}
+  '@tanstack/query-core@5.106.0':
+    resolution: {integrity: sha512-3GuqVrhCG0bBfmLt4AU0SIm8UuZ1rzeRjDiQBnYuzW3lkri1RdawWN73jZYvB4kC8WyDUoDgBx3kyO3TbNH/6Q==}
 
   '@tanstack/react-query@5.105.1':
     resolution: {integrity: sha512-qcu+/+PtBOjW8qU4/0l47QVmNG7hPOWsCLzP0bTRhE1X7HYa757C4732wXTUH0QhCjTV1yedX8onsCiEwlNYrA==}
@@ -3849,8 +3849,8 @@ packages:
       '@types/react':
         optional: true
 
-  '@tanstack/react-query@5.105.3':
-    resolution: {integrity: sha512-dj5hGWZmwoc9NG4enoXuYbiYwb5FxgJYPVv06eUgicMTfEMTRXn08Xv9D/r1V8TfjAv+BpxdvZFzJ1h3hSWZcQ==}
+  '@tanstack/react-query@5.106.0':
+    resolution: {integrity: sha512-OuP/ST9dEMBwHhisE5A/bBSWMhMmB/xKPfeZ2U0Wy8W/txb9QiGd7iXhxJPQ7jGbfcKlV13sJUHip9Nki54yyg==}
     peerDependencies:
       '@types/react': ^19.2.0
       react: ^18 || ^19
@@ -4351,8 +4351,8 @@ packages:
     peerDependencies:
       '@types/react': ^19.2.0
 
-  '@types/react-test-renderer@19.3.0':
-    resolution: {integrity: sha512-TX4p2D4Z2oigM3SXU7+QyLSUnSR0vR1S1Pfxm/qFL9nHQ3jclgi6ioGoWQmlIr1DeKRVmPJrmNlhgM0JlWlLUg==}
+  '@types/react-test-renderer@19.3.1':
+    resolution: {integrity: sha512-9AwMfeBOcXsN5kC4oAauNTOKEwqLHtc69tkJC2CihQ5fCELDwzfQvookvtyaxm6i+vc5LLD0V5OLB8arzY8Smw==}
 
   '@types/react@19.3.0':
     resolution: {integrity: sha512-N0rFCuH9YoxG9/m61l9MfpJKfmLOVU0em7ipIz6TRgSSkvReLB9vL85GB+yr8Bs5leqpvg96JSwF4ZS1s4viQg==}
@@ -5890,8 +5890,8 @@ packages:
   electron-publish@26.18.0:
     resolution: {integrity: sha512-MagnqaZSALSWjcdKu5HEVhYUZD/2BDL3q7XzrqWwub6gf/UfD3ItMgmthVDv9w5y9E0gH1C3JWqKaXwf6f4ROg==}
 
-  electron-to-chromium@1.5.476:
-    resolution: {integrity: sha512-LnPnRZ0esKB9NjsSIaC+mffW+5dAtBui6kbK5f9Qykblj4Q33cn6yIhuCcTVjwpvL3YJPqqQ4IlsNyriGNpyFQ==}
+  electron-to-chromium@1.5.477:
+    resolution: {integrity: sha512-PN++F4zWZoVDGWinxMnSCpVqKhqFOJfLXxdU8bYJKudAEsHL/XKVITOKWVbfMt1r276Mi9RDLU9VHx9uKJ4RMQ==}
 
   electron-updater@6.8.11:
     resolution: {integrity: sha512-12U/mbzaIKQS3Q543aQ7DjyAZMXeVJy1Wpu0qdq5ne4RXpIQDpWYm25zRjgXngAoo6swMrm4C4owGyiIipelsg==}
@@ -8845,8 +8845,8 @@ packages:
     resolution: {integrity: sha512-9ZhXKM/rw350N1ovuWHbGxnGh/SNJ4cnxHiM0rxE4VN41wsg8P8zWn9hv/buK00RP4WvlOyr/RBDiptyxVbkZQ==}
     engines: {node: '>=0.10.0'}
 
-  posthog-js@1.445.5:
-    resolution: {integrity: sha512-r1ddGK3eW8WdiOs8McW4h0QA9Pp4KJhUon9kN3uS14R0GLIdTwpzD1ghmPcg7Bp1qGFFMoWd+o5TSMC5M2bstw==}
+  posthog-js@1.446.0:
+    resolution: {integrity: sha512-qyOQrupMynfZXNwWVFlM151LPmdEF2rHZMAaNHsL1wsl980WanA9JDtASWGgkkR4skRgTnkeRZG85+rR6jpxcg==}
     peerDependencies:
       '@types/react': ^19.2.0
       react: '>=16.8.0'
@@ -8960,8 +8960,8 @@ packages:
   prosemirror-tables@1.8.5:
     resolution: {integrity: sha512-V/0cDCsHKHe/tfWkeCmthNUcEp1IVO3p6vwN8XtwE9PZQLAZJigbw3QoraAdfJPir4NKJtNvOB8oYGKRl+t0Dw==}
 
-  prosemirror-transform@1.12.4:
-    resolution: {integrity: sha512-2/WuPum3pn+O/Vi2vzpi8210ICUe2kIPXdLYjQ09Pv5DtT5bcKWMJhAKPBwvpPjpp5iOYUVwVEr0gOM1BY1Mgw==}
+  prosemirror-transform@1.12.5:
+    resolution: {integrity: sha512-3EBXZBM4h3MKuWvs9sQ7IA0/v6jCqCZ4wC08PIvzY1VSQWDL90KEyfg5C0Ex52UJesf/QVogxvuBsZdKmLc3NQ==}
 
   prosemirror-view@1.42.9:
     resolution: {integrity: sha512-bKbfzeKZOu2H2JQU2TaJmYu6EBcor3VnGIR4jR31cbEt1ztUnfUB6bKGV1+fJzOJdrVWR+tRU0208zM3oQx4wA==}
@@ -12460,7 +12460,7 @@ snapshots:
   '@posthog/browser-common@0.10.6':
     dependencies:
       '@posthog/core': 1.63.1
-      '@posthog/types': 1.419.0
+      '@posthog/types': 1.420.0
       dompurify: 3.4.17
       preact: 10.29.8
     transitivePeerDependencies:
@@ -12468,9 +12468,9 @@ snapshots:
 
   '@posthog/core@1.63.1':
     dependencies:
-      '@posthog/types': 1.419.0
+      '@posthog/types': 1.420.0
 
-  '@posthog/types@1.419.0': {}
+  '@posthog/types@1.420.0': {}
 
   '@radix-ui/number@1.1.3': {}
 
@@ -13574,7 +13574,7 @@ snapshots:
 
   '@tanstack/query-core@5.105.1': {}
 
-  '@tanstack/query-core@5.105.3': {}
+  '@tanstack/query-core@5.106.0': {}
 
   '@tanstack/react-query@5.105.1(@types/react@19.3.0)(react@19.2.3)':
     dependencies:
@@ -13583,9 +13583,9 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.3.0
 
-  '@tanstack/react-query@5.105.3(@types/react@19.3.0)(react@19.2.3)':
+  '@tanstack/react-query@5.106.0(@types/react@19.3.0)(react@19.2.3)':
     dependencies:
-      '@tanstack/query-core': 5.105.3
+      '@tanstack/query-core': 5.106.0
       react: 19.2.3
     optionalDependencies:
       '@types/react': 19.3.0
@@ -13819,7 +13819,7 @@ snapshots:
       prosemirror-schema-list: 1.6.0
       prosemirror-state: 1.4.4
       prosemirror-tables: 1.8.5
-      prosemirror-transform: 1.12.4
+      prosemirror-transform: 1.12.5
       prosemirror-view: 1.42.9
 
   '@tiptap/react@3.31.3(@floating-ui/dom@1.8.0)(@tiptap/core@3.31.3(@tiptap/pm@3.31.3))(@tiptap/pm@3.31.3)(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
@@ -14126,7 +14126,7 @@ snapshots:
     dependencies:
       '@types/react': 19.3.0
 
-  '@types/react-test-renderer@19.3.0':
+  '@types/react-test-renderer@19.3.1':
     dependencies:
       '@types/react': 19.3.0
 
@@ -14996,7 +14996,7 @@ snapshots:
     dependencies:
       baseline-browser-mapping: 2.11.35
       caniuse-lite: 1.0.30001820
-      electron-to-chromium: 1.5.476
+      electron-to-chromium: 1.5.477
       node-releases: 2.0.63
       update-browserslist-db: 1.3.4(browserslist@4.29.5)
 
@@ -15812,7 +15812,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  electron-to-chromium@1.5.476: {}
+  electron-to-chromium@1.5.477: {}
 
   electron-updater@6.8.11:
     dependencies:
@@ -19614,11 +19614,11 @@ snapshots:
     dependencies:
       xtend: 4.0.2
 
-  posthog-js@1.445.5(@types/react@19.3.0)(react@19.2.3):
+  posthog-js@1.446.0(@types/react@19.3.0)(react@19.2.3):
     dependencies:
       '@posthog/browser-common': 0.10.6
       '@posthog/core': 1.63.1
-      '@posthog/types': 1.419.0
+      '@posthog/types': 1.420.0
       core-js: 3.51.0
       dompurify: 3.4.17
       fflate: 0.4.9
@@ -19701,18 +19701,18 @@ snapshots:
 
   prosemirror-changeset@2.4.6:
     dependencies:
-      prosemirror-transform: 1.12.4
+      prosemirror-transform: 1.12.5
 
   prosemirror-commands@1.7.2:
     dependencies:
       prosemirror-model: 1.25.12
       prosemirror-state: 1.4.4
-      prosemirror-transform: 1.12.4
+      prosemirror-transform: 1.12.5
 
   prosemirror-dropcursor@1.8.4:
     dependencies:
       prosemirror-state: 1.4.4
-      prosemirror-transform: 1.12.4
+      prosemirror-transform: 1.12.5
       prosemirror-view: 1.42.9
 
   prosemirror-gapcursor@1.4.1:
@@ -19725,14 +19725,14 @@ snapshots:
   prosemirror-history@1.5.1:
     dependencies:
       prosemirror-state: 1.4.4
-      prosemirror-transform: 1.12.4
+      prosemirror-transform: 1.12.5
       prosemirror-view: 1.42.9
       rope-sequence: 1.3.4
 
   prosemirror-inputrules@1.5.1:
     dependencies:
       prosemirror-state: 1.4.4
-      prosemirror-transform: 1.12.4
+      prosemirror-transform: 1.12.5
 
   prosemirror-keymap@1.2.3:
     dependencies:
@@ -19747,12 +19747,12 @@ snapshots:
     dependencies:
       prosemirror-model: 1.25.12
       prosemirror-state: 1.4.4
-      prosemirror-transform: 1.12.4
+      prosemirror-transform: 1.12.5
 
   prosemirror-state@1.4.4:
     dependencies:
       prosemirror-model: 1.25.12
-      prosemirror-transform: 1.12.4
+      prosemirror-transform: 1.12.5
       prosemirror-view: 1.42.9
 
   prosemirror-tables@1.8.5:
@@ -19760,10 +19760,10 @@ snapshots:
       prosemirror-keymap: 1.2.3
       prosemirror-model: 1.25.12
       prosemirror-state: 1.4.4
-      prosemirror-transform: 1.12.4
+      prosemirror-transform: 1.12.5
       prosemirror-view: 1.42.9
 
-  prosemirror-transform@1.12.4:
+  prosemirror-transform@1.12.5:
     dependencies:
       prosemirror-model: 1.25.12
 
@@ -19771,7 +19771,7 @@ snapshots:
     dependencies:
       prosemirror-model: 1.25.12
       prosemirror-state: 1.4.4
-      prosemirror-transform: 1.12.4
+      prosemirror-transform: 1.12.5
 
   pump@3.0.4:
     dependencies:
@@ -19923,7 +19923,7 @@ snapshots:
   react-native-gesture-handler@2.32.0(react-native@0.86.3(@babel/core@7.29.13)(@react-native/metro-config@0.86.3(@babel/core@7.29.13))(@types/react@19.3.0)(react@19.2.3))(react@19.2.3):
     dependencies:
       '@egjs/hammerjs': 2.0.17
-      '@types/react-test-renderer': 19.3.0
+      '@types/react-test-renderer': 19.3.1
       hoist-non-react-statics: 3.3.2
       invariant: 2.2.4
       react: 19.2.3
