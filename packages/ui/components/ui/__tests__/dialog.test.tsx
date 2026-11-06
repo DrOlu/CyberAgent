@@ -29,7 +29,9 @@ function NestedPicker() {
 }
 
 describe("nested dialog dismissal", () => {
-  it("dismisses only the picker when its backdrop is clicked, preserving the parent draft", async () => {
+  // Dialog open/close runs real CSS animations; on loaded CI runners this test
+  // has been observed exceeding the default 5s budget (MUL autopilot, run 42189971155).
+  it("dismisses only the picker when its backdrop is clicked, preserving the parent draft", { timeout: 15_000 }, async () => {
     render(<NestedPicker />);
     await click(screen.getByRole("button", { name: "Choose parent" }));
     expect(screen.getByPlaceholderText("Search parents")).toBeVisible();
@@ -45,7 +47,7 @@ describe("nested dialog dismissal", () => {
     expect(screen.getByRole("dialog", { name: "Create issue" })).toBeVisible();
   });
 
-  it("still dismisses a standalone dialog from its backdrop", async () => {
+  it("still dismisses a standalone dialog from its backdrop", { timeout: 15_000 }, async () => {
     render(<Dialog><DialogTrigger>Open dialog</DialogTrigger><DialogContent><DialogTitle>Standalone</DialogTitle></DialogContent></Dialog>);
     await click(screen.getByRole("button", { name: "Open dialog" }));
     await click(document.querySelector("[data-slot=dialog-overlay]")!);
