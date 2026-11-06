@@ -62,7 +62,15 @@ jobs:
           node scripts/check-style-tokens.mjs
 
       - name: Build, type check, lint, and test
-        run: pnpm exec turbo build typecheck lint test --filter='!@multica/docs'
+        # --concurrency caps turbo at 4 simultaneous tasks. Turbo's default (10)
+        # oversubscribes the 4-core hosted runner once next/electron-vite builds
+        # and vitest pools fan out together: the runner thrashes into swap and
+        # tests starve — three consecutive red runs each failed at a different
+        # point (ui dialog 5s timeout, core perf 5s timeout, views
+        # getByRole miss after a 17-minute module import), all while the code
+        # passed locally and in the surrounding green suites. A modest cap
+        # trades a few minutes of wall time for deterministic task scheduling.
+        run: pnpm exec turbo build typecheck lint test --filter='!@multica/docs' --concurrency=4
 
       # Post-build assertion: scan the desktop renderer bundle for
       # rolldown-emitted $N duplicate-identifier suffixes on
