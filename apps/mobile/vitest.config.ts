@@ -34,5 +34,8 @@ export default defineConfig({
       "components/inbox/inbox-screen.test.ts",
     ],
     passWithNoTests: true,
+    // Shared CI runners execute many turbo tasks in parallel; raise the 5s
+    // default like apps/web and packages/views already do.
+    testTimeout: 20_000,
   },
 });

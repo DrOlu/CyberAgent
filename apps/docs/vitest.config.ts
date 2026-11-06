@@ -10,6 +10,9 @@ export default defineConfig({
     globals: true,
     include: ["**/*.test.{ts,tsx}"],
     exclude: ["node_modules/**", ".next/**", ".source/**"],
+    // Shared CI runners execute many turbo tasks in parallel; raise the 5s
+    // default like apps/web and packages/views already do.
+    testTimeout: 20_000,
   },
   resolve: {
     alias: {
