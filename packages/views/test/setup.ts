@@ -1,5 +1,12 @@
+import { configure } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import "@multica/vitest-setup/web-storage";
+
+// findBy*/waitFor default to a 1s poll budget. Under CI runner contention
+// (turbo runs many packages' suites at once) even simple mounts can take
+// longer, which flakes element lookups long before vitest's testTimeout
+// fires. Give async queries a 5s budget.
+configure({ asyncUtilTimeout: 5_000 });
 
 // Everything below patches gaps in jsdom. Pure-logic suites opt out of jsdom
 // with `// @vitest-environment node` and share this file, so there is no DOM to

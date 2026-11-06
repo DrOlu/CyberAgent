@@ -1,6 +1,13 @@
 import { afterEach } from "vitest";
+import { configure } from "@testing-library/react";
 import "@testing-library/jest-dom/vitest";
 import "@multica/vitest-setup/web-storage";
+
+// findBy*/waitFor default to a 1s poll budget. Under CI runner contention
+// (turbo runs many packages' suites at once) even simple mounts can take
+// longer, which flakes element lookups long before vitest's testTimeout
+// fires. Give async queries a 5s budget.
+configure({ asyncUtilTimeout: 5_000 });
 
 // jsdom ships neither class. use-scroll-fade observes both.
 const roInstances: ResizeObserverStub[] = [];
