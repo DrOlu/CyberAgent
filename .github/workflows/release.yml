@@ -422,6 +422,11 @@ jobs:
       # for a hard gate ahead of asset publication.
       - name: Verify desktop main bundle inlines ESM-only dependencies
         working-directory: apps/desktop
+        env:
+          # The Vite client bundle (6k+ modules) exhausts the default ~2GB
+          # V8 heap while rendering chunks on mac runners, killing
+          # electron-vite build with OOM before the check below can run.
+          NODE_OPTIONS: --max-old-space-size=6144
         run: |
           pnpm exec electron-vite build
           node ../../scripts/check-main-bundle-esm-deps.mjs
