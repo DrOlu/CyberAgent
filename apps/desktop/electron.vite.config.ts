@@ -5,7 +5,20 @@ import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   main: {
-    plugins: [externalizeDepsPlugin()],
+    // fix-path v5 is ESM-only ("type": "module", exports has no "require"
+    // condition). With plain externalization, `import fixPath from
+    // "fix-path"` compiles to a bare CJS `require("fix-path")` and the
+    // binding ends up holding the ESM module namespace object — not a
+    // function — so the top-level fixPath() PATH-recovery call in
+    // src/main/index.ts crashed every macOS/Linux launch with
+    //   TypeError: fixPath is not a function
+    // (Electron's "A JavaScript error occurred in the main process" dialog;
+    // v1.5.x desktop releases were dead on arrival). Excluding it here
+    // makes Rollup inline the ESM module into out/main/index.js and bind
+    // the real default-export function instead. Guarded post-build by
+    // scripts/check-main-bundle-esm-deps.mjs, which fails CI if any
+    // ESM-only production dependency ever gets externalized again.
+    plugins: [externalizeDepsPlugin({ exclude: ["fix-path"] })],
   },
   preload: {
     plugins: [externalizeDepsPlugin()],

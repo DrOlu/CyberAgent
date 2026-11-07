@@ -85,6 +85,17 @@ jobs:
       - name: Verify desktop renderer is single-instance for React contexts
         run: node scripts/check-renderer-dedupe.mjs
 
+      # Post-build assertion: confirm the desktop MAIN bundle did not
+      # externalize an ESM-only production dependency. This bit v1.5.x:
+      # fix-path v5 ("type": "module") was externalized to a bare CJS
+      # require(), and the top-level fixPath() call crashed every macOS/
+      # Linux launch with `TypeError: fixPath is not a function`. Packaging
+      # alone never executes out/main/index.js (and desktop-smoke only
+      # covers Linux/Windows, where the crash path is platform-guarded
+      # off), so a bundle scan is the only gate that catches the class.
+      - name: Verify desktop main bundle inlines ESM-only dependencies
+        run: node scripts/check-main-bundle-esm-deps.mjs
+
   backend:
     runs-on: ubuntu-latest
     services:
