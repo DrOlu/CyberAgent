@@ -530,7 +530,24 @@ func (b *piBackend) Execute(ctx context.Context, prompt string, opts ExecOptions
 	}
 	closePipes := func() {
 		closePiReadPipe(stdout)
+		// Give the stderr watcher a bounded chance to drain the child's last
+		// words before the read end disappears. Closing the read end while the
+		// copy goroutine has not drained the kernel buffer yet silently
+		// discards whatever is still buffered, and the resume-refusal verdict
+		// (Result.ResumeRejected) is decided from exactly those bytes: under
+		// load the copy goroutine can lose that race, a refused resume is then
+		// misclassified as a generic process failure and the stale session
+		// pointer is served again — the crash loop #8082 reported. The timeout
+		// only bounds the pathological case; on any normal exit the child is
+		// already gone, so the copy goroutine sees EOF and finishes at once.
+		// The trailing closePiReadPipe force-ends a still-blocked read, so the
+		// copy goroutine always terminates and this can never hang a run.
+		select {
+		case <-stderrDone:
+		case <-time.After(2 * time.Second):
+		}
 		closePiReadPipe(stderrRead)
+		<-stderrDone
 	}
 	finishCleanup := func() error { return cleanup.finish(cmd, closeStdin, closePipes, grace) }
 

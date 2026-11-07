@@ -18,7 +18,12 @@ func writeTestExecutable(tb testing.TB, path string, content []byte) {
 	tb.Helper()
 	syscall.ForkLock.RLock()
 	defer syscall.ForkLock.RUnlock()
-	f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o755)
+	// Write to a sibling temp file and rename into place. Exec'ing a file
+	// written in place can hit ETXTBSY ("text file busy") on overlayfs CI
+	// runners, the same flake already fixed inline in the zcode, muse and
+	// dim fake helpers; a same-directory rename is atomic and avoids it.
+	tmp := path + ".tmp"
+	f, err := os.OpenFile(tmp, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o755)
 	if err != nil {
 		tb.Fatalf("write test executable %s: open: %v", path, err)
 	}
@@ -28,5 +33,8 @@ func writeTestExecutable(tb testing.TB, path string, content []byte) {
 	}
 	if err := f.Close(); err != nil {
 		tb.Fatalf("write test executable %s: close: %v", path, err)
+	}
+	if err := os.Rename(tmp, path); err != nil {
+		tb.Fatalf("write test executable %s: rename: %v", path, err)
 	}
 }
