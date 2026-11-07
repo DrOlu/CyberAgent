@@ -414,6 +414,18 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # Pre-publish guardrail: fail BEFORE electron-builder uploads if the
+      # main bundle externalized an ESM-only dependency. v1.5.x shipped
+      # launch-crashing installers (`TypeError: fixPath is not a function`)
+      # because packaging alone never executes out/main/index.js. The extra
+      # bundle here duplicates the one package.mjs runs — acceptable cost
+      # for a hard gate ahead of asset publication.
+      - name: Verify desktop main bundle inlines ESM-only dependencies
+        working-directory: apps/desktop
+        run: |
+          pnpm exec electron-vite build
+          node ../../scripts/check-main-bundle-esm-deps.mjs
+
       - name: Package Desktop installers (${{ matrix.target }})
         working-directory: apps/desktop
         env:

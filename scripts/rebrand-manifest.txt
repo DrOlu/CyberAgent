@@ -52,6 +52,7 @@ scripts/rebrand-manifest.txt
 scripts/check-landing-i18n.mjs
 scripts/check-renderer-dedupe.mjs
 scripts/check-style-tokens.mjs
+scripts/check-main-bundle-esm-deps.mjs
 
 # Install scripts — upstream URLs changed
 scripts/install.sh

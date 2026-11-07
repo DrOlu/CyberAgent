@@ -355,6 +355,24 @@ jobs:
           fi
           echo "✅ apps/desktop lint passed."
 
+      # Bundle the desktop MAIN process and scan it for externalized
+      # ESM-only dependencies. apps/desktop/package.json is NOT snapshotted,
+      # so upstream dependency changes flow through every sync — if an
+      # upstream change ever pairs a new ESM-only dependency (like fix-path
+      # v5) with a main-process import, the bare CJS require() would crash
+      # every macOS/Linux launch (the exact v1.5.x `fixPath is not a
+      # function` outage). electron.vite.config.ts IS snapshotted, so our
+      # exclude list survives merges; this check catches any dep NOT
+      # covered by that list BEFORE the sync commit is pushed and
+      # auto-tagged — a failing sync means no commit, no tag, no release.
+      - name: Verify desktop main bundle inlines ESM-only dependencies
+        if: steps.check.outputs.has_changes == 'true'
+        run: |
+          cd apps/desktop
+          pnpm exec electron-vite build
+          cd ../..
+          node scripts/check-main-bundle-esm-deps.mjs
+
       # Run a fast, zero-dep guardrail BEFORE pushing the sync commit.
       # If upstream added a new top-level field to the landing-page
       # LandingDict type (apps/web/features/landing/i18n/types.ts) that
