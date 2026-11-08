@@ -813,7 +813,7 @@ importers:
         version: 10.1.0(@types/react@19.3.0)(react@19.2.3)
       react-resizable-panels:
         specifier: ^4.7.5
-        version: 4.19.1(@types/react@19.3.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        version: 4.20.0(@types/react@19.3.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       recharts:
         specifier: 3.8.0
         version: 3.8.0(@types/react@19.3.0)(react-dom@19.2.3(react@19.2.3))(react-is@19.3.1)(react@19.2.3)(redux@5.0.1)
@@ -1048,7 +1048,7 @@ importers:
         version: 2.2.0(react@19.2.3)
       react-resizable-panels:
         specifier: ^4.7.5
-        version: 4.19.1(@types/react@19.3.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+        version: 4.20.0(@types/react@19.3.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react-virtuoso:
         specifier: 'catalog:'
         version: 4.18.20(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
@@ -4901,8 +4901,8 @@ packages:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
     engines: {node: '>=8'}
 
-  ansi-regex@6.5.0:
-    resolution: {integrity: sha512-zhvbbbdt1kbw7EJ9OQoxmQcuaNR9P5kTj7e/YdmOSU10aHWbycofJxA6jKfoEy3vlLdctOF9ZHaxLtmSm998wQ==}
+  ansi-regex@6.6.0:
+    resolution: {integrity: sha512-XZ5apbzreCbXSKwPjJstu8R0zOi247w3XYwWxtwBXgpZrCyc1Ka7p9/xY0A9/diMewmHbEKz+FIraWaEWjlN5g==}
     engines: {node: '>=12'}
 
   ansi-styles@3.2.1:
@@ -5499,11 +5499,6 @@ packages:
 
   css.escape@1.5.1:
     resolution: {integrity: sha512-YUifsXXuknHlUsmlgyY0PKzgPOr7/FjCePfHNt0jxm83wHZi44VDMQ7/fGNkjY3/jV1MC+1CmZbaHzugyeRtpg==}
-
-  cssesc@3.0.0:
-    resolution: {integrity: sha512-/Tb/JcjK111nNScGob5MNtsntNM1aCNUDipB/TkwZFhyDrrE47SOx/18wF2bbjgc3ZzCSKW1T5nt5EbFoAz/Vg==}
-    engines: {node: '>=4'}
-    hasBin: true
 
   csstype@3.2.3:
     resolution: {integrity: sha512-z1HGKcYy2xA8AGQfwrn0PAy+PB7X/GSj3UVJW9qKyn43xWa+gl5nXmU4qqLMRzWVLFC8KusUX8T/0kCiOYpAIQ==}
@@ -8852,12 +8847,12 @@ packages:
     peerDependencies:
       postcss: 8.5.10
 
-  postcss-selector-parser@6.1.5:
-    resolution: {integrity: sha512-TEHFzb5KRDKaOgJ4TYE+0jyJtFbjLvkdVOu0fZ2b6MTWzoqZd4Le+61aEppWkvTlYePgOX4ATL1wsAIPMLTw6Q==}
+  postcss-selector-parser@6.1.6:
+    resolution: {integrity: sha512-BK87/Qgti3DIcgS2PaCVoteFIkjIFvCJBizZDIVSjdlFNg4Jv+SRqbN2JONb/qQUH4ZFqfXYF+izg15W2HVRvA==}
     engines: {node: '>=4'}
 
-  postcss-selector-parser@7.1.7:
-    resolution: {integrity: sha512-wWBro/7hJ40ye6TPiXkUQoXKCw23xSsjriUvqd7Uls9Sso3oLiON1flc18cCdnjgCRXw4fBVqUJJeOdDTh3P3g==}
+  postcss-selector-parser@7.1.8:
+    resolution: {integrity: sha512-4CrD1SdKVx3bWOXG6Mh5YI9s/NTEgMq4T+O0T4wj2JqGhxbi8BAPc8BJYDVrVOqXBbWGX7YMO3f3ldOSscdCew==}
     engines: {node: '>=4'}
 
   postcss-value-parser@4.2.0:
@@ -9268,8 +9263,8 @@ packages:
       '@types/react':
         optional: true
 
-  react-resizable-panels@4.19.1:
-    resolution: {integrity: sha512-nXhB03Lt0fKzVy4wJyv83cWt1sx05/oWkfIXaZQ6FBka5FsnYGqX32hTLo8BIANNojLGXnadzJTspTa1Um5P2w==}
+  react-resizable-panels@4.20.0:
+    resolution: {integrity: sha512-8a+cf9i/K0IKmnVPeXP2MqMCrY3vToMJty84kZ9M+wstKLnA/jWvc2Sxl4wEs9cAKnrin7QbPvTT5yKkIeXGeQ==}
     peerDependencies:
       '@types/react': ^19.2.0
       react: ^18.0.0 || ^19.0.0
@@ -10643,8 +10638,8 @@ packages:
       utf-8-validate:
         optional: true
 
-  ws@8.22.1:
-    resolution: {integrity: sha512-oyL6OPYme/CmiFvNuGzeoxCJ4nOrZE2O1FwM9MWM1AsGri6nLXB2pg+lNA8aLeXMSav0J6eIVS1j6vUPzUtK9g==}
+  ws@8.22.2:
+    resolution: {integrity: sha512-/rEZ2ejown2N5gxVTHUu9bVVC7ttu0/Tgzf5hbTOixR3Fs7mbbXgn2DbdbcKgJOmpQMtrIUWivtYuVMnp/W/yA==}
     engines: {node: '>=10.0.0'}
     peerDependencies:
       bufferutil: ^4.0.1
@@ -11754,7 +11749,7 @@ snapshots:
       '@expo/router-server': 57.0.15(@expo/metro-runtime@57.0.18)(expo-constants@57.0.23)(expo-font@57.0.4)(expo-router@57.0.30)(expo-server@57.0.3)(expo@57.0.32)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@expo/schema-utils': 57.0.3
       '@expo/spawn-async': 1.8.0
-      '@expo/ws-tunnel': 2.0.1(ws@8.22.1)
+      '@expo/ws-tunnel': 2.0.1(ws@8.22.2)
       '@expo/xcpretty': 4.4.7
       '@react-native/dev-middleware': 0.86.3
       accepts: 1.3.8
@@ -11792,7 +11787,7 @@ snapshots:
       terminal-link: 2.1.1
       toqr: 0.1.1
       wrap-ansi: 7.0.0
-      ws: 8.22.1
+      ws: 8.22.2
     optionalDependencies:
       expo-router: 57.0.30(220de61c30988a2def1c421f9f33e52e)
       react-native: 0.86.3(@babel/core@7.29.13)(@react-native/metro-config@0.86.3(@babel/core@7.29.13))(@types/react@19.3.0)(react@19.2.3)
@@ -12114,9 +12109,9 @@ snapshots:
       react: 19.2.3
       react-native: 0.86.3(@babel/core@7.29.13)(@react-native/metro-config@0.86.3(@babel/core@7.29.13))(@types/react@19.3.0)(react@19.2.3)
 
-  '@expo/ws-tunnel@2.0.1(ws@8.22.1)':
+  '@expo/ws-tunnel@2.0.1(ws@8.22.2)':
     dependencies:
-      ws: 8.22.1
+      ws: 8.22.2
 
   '@expo/xcpretty@4.4.7':
     dependencies:
@@ -14689,7 +14684,7 @@ snapshots:
 
   ansi-regex@5.0.1: {}
 
-  ansi-regex@6.5.0: {}
+  ansi-regex@6.6.0: {}
 
   ansi-styles@3.2.1:
     dependencies:
@@ -15403,8 +15398,6 @@ snapshots:
   css-what@6.2.2: {}
 
   css.escape@1.5.1: {}
-
-  cssesc@3.0.0: {}
 
   csstype@3.2.3: {}
 
@@ -19634,16 +19627,14 @@ snapshots:
   postcss-nested@6.2.0(postcss@8.5.10):
     dependencies:
       postcss: 8.5.10
-      postcss-selector-parser: 6.1.5
+      postcss-selector-parser: 6.1.6
 
-  postcss-selector-parser@6.1.5:
+  postcss-selector-parser@6.1.6:
     dependencies:
-      cssesc: 3.0.0
       util-deprecate: 1.0.2
 
-  postcss-selector-parser@7.1.7:
+  postcss-selector-parser@7.1.8:
     dependencies:
-      cssesc: 3.0.0
       util-deprecate: 1.0.2
 
   postcss-value-parser@4.2.0: {}
@@ -20150,7 +20141,7 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.3.0
 
-  react-resizable-panels@4.19.1(@types/react@19.3.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
+  react-resizable-panels@4.20.0(@types/react@19.3.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3):
     dependencies:
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
@@ -20733,7 +20724,7 @@ snapshots:
       open: 11.0.4
       ora: 8.2.0
       postcss: 8.5.10
-      postcss-selector-parser: 7.1.7
+      postcss-selector-parser: 7.1.8
       prompts: 2.4.2
       recast: 0.23.21
       socks: 2.8.10
@@ -21028,7 +21019,7 @@ snapshots:
 
   strip-ansi@7.2.0:
     dependencies:
-      ansi-regex: 6.5.0
+      ansi-regex: 6.6.0
 
   strip-bom@3.0.0: {}
 
@@ -21135,7 +21126,7 @@ snapshots:
       postcss-js: 4.1.0(postcss@8.5.10)
       postcss-load-config: 6.0.1(jiti@1.21.7)(postcss@8.5.10)(yaml@2.9.1)
       postcss-nested: 6.2.0(postcss@8.5.10)
-      postcss-selector-parser: 6.1.5
+      postcss-selector-parser: 6.1.6
       resolve: 1.22.14
       sucrase: 3.35.1
     transitivePeerDependencies:
@@ -21875,7 +21866,7 @@ snapshots:
 
   ws@7.5.13: {}
 
-  ws@8.22.1: {}
+  ws@8.22.2: {}
 
   wsl-utils@1.0.1:
     dependencies:
