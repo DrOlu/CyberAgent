@@ -288,7 +288,7 @@
   "connect": {
     "title": "Добавить машину",
     "description": "Выполните эти две команды на машине, которую хотите добавить. Мы обнаружим её, как только демон выйдет в сеть.",
-    "step1_label": "Установите Multica CLI",
+    "step1_label": "Установите CyberAgent CLI",
     "platform_group": "Выберите вашу платформу",
     "platform_macos_linux": "macOS / Linux",
     "platform_windows": "Windows",
@@ -352,7 +352,7 @@
     "cli_version_label": "Версия CLI:",
     "version_unknown": "неизвестно",
     "managed_by_desktop": "Управляется Desktop",
-    "managed_by_desktop_title": "CLI-бинарник управляется Multica Desktop — обновите Desktop, чтобы обновить CLI.",
+    "managed_by_desktop_title": "CLI-бинарник управляется CyberAgent Desktop — обновите Desktop, чтобы обновить CLI.",
     "read_only": "Только чтение",
     "read_only_title": "Обновлять CLI могут только владельцы среды выполнения и администраторы рабочего пространства.",
     "local_build": "Локальная сборка",
