@@ -52,7 +52,7 @@ const ui = (children: ReactNode = <IssueDeepLinkBridge />) => (
   </I18nProvider>
 );
 const link = (path: string, origin = "https://tasks.example") =>
-  `multica://open/issue?url=${encodeURIComponent(origin + path)}`;
+  `cyberagent://open/issue?url=${encodeURIComponent(origin + path)}`;
 
 beforeEach(() => {
   vi.clearAllMocks();

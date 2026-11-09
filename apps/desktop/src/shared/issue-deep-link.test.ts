@@ -2,7 +2,7 @@
 import { describe, expect, it } from "vitest";
 import { parseIssueDeepLink } from "./issue-deep-link";
 
-const link = (url: string) => `multica://open/issue?url=${encodeURIComponent(url)}`;
+const link = (url: string) => `cyberagent://open/issue?url=${encodeURIComponent(url)}`;
 
 describe("parseIssueDeepLink", () => {
   it("keeps the workspace, query and comment on a self-hosted instance", () => {
@@ -34,9 +34,9 @@ describe("parseIssueDeepLink", () => {
   });
 
   it.each([
-    "multica://open/issue",
+    "cyberagent://open/issue",
     "https://open/issue?url=https://tasks.example/acme/issues/ACM-42",
-    "multica://auth/callback?token=secret",
+    "cyberagent://auth/callback?token=secret",
     link("javascript:alert(1)"),
     link("file:///acme/issues/ACM-42"),
     link("https://user:secret@tasks.example/acme/issues/ACM-42"),
