@@ -306,21 +306,27 @@ jobs:
           # manifests exactly. --lockfile-only avoids running install
           # scripts and is fast.
           #
-          # IMPORTANT: delete the lockfile first. git's textual auto-merge
-          # of pnpm-lock.yaml can produce a semantically broken file —
-          # importers keep peer-suffixed references to package entries the
-          # other side deleted (run 41439819602: importers still referenced
-          # typescript@5.9.3 after upstream's catalog switched to
-          # npm:@typescript/typescript6@6.0.2 and dropped that entry).
-          # pnpm's incremental --lockfile-only trusts the existing file and
-          # does not repair it, so the pre-flight --frozen-lockfile install
-          # fails with ERR_PNPM_LOCKFILE_MISSING_DEPENDENCY. Starting from
-          # nothing forces a full re-resolve from the merged manifests.
-          rm -f pnpm-lock.yaml
+          # IMPORTANT: do NOT start from an empty lockfile. A fresh full
+          # re-resolve floats every ^/catalog: range to the latest
+          # published version, so we end up testing dependency versions
+          # upstream never tested (CI run 42582651390: catalog '^1.3.0'
+          # resolved @base-ui/react to 1.9.0 while upstream's committed
+          # lockfile pins the tested 1.3.0 — five views tests broke on
+          # Base UI's changed slider roles / dialog / input behavior).
+          # Instead, seed from upstream's committed lockfile — taken
+          # straight from upstream/main so git's textual merge can never
+          # hand us a semantically broken artifact (the original reason
+          # this step deleted the file, run 41439819602) — then let pnpm
+          # reconcile it against the merged manifests. Existing tested
+          # resolutions are kept; only deps we alone have get resolved.
+          if ! git show upstream/main:pnpm-lock.yaml > pnpm-lock.yaml 2>/dev/null; then
+            echo "::warning::upstream/main has no pnpm-lock.yaml — regenerating from scratch"
+            rm -f pnpm-lock.yaml
+          fi
           pnpm install --lockfile-only
           if ! git diff --quiet pnpm-lock.yaml; then
             git add pnpm-lock.yaml
-            echo "Lockfile regenerated."
+            echo "Lockfile reconciled from upstream's committed resolutions."
           else
             echo "Lockfile already in sync."
           fi
