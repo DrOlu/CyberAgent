@@ -54,6 +54,14 @@ Changes take effect after restarting the backend / compose stack. The web UI rea
 
 Changes take effect after restarting the backend / compose stack. The web UI reads `ALLOW_SIGNUP` from `/api/config` at runtime, so no web rebuild is needed.
 
+### GitHub Star Prompt (Optional)
+
+| Variable | Description |
+|----------|-------------|
+| `DISABLE_STAR_PROMPT` | Set to `true` to stop the app from asking users to star Multica on GitHub |
+
+The prompt is a small card that can appear after an agent has completed a few issues: at most twice per account, at least 30 days apart, and never again once the user clicks Star. Users can still star Multica from the Help menu. While the card or Help menu is open, the browser asks `api.github.com` for the star count; with the switch on, the server rejects new showings and the card never appears. Changes take effect after restarting the backend; the web UI reads the switch from `/api/config`, so no web rebuild is needed.
+
 ### File Storage (Optional)
 
 For file uploads and attachments, configure S3 and (optionally) CloudFront:
