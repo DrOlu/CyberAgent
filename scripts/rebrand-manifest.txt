@@ -113,6 +113,7 @@ apps/docs/content/docs
 # Locale glossary (we maintain our own glossary; per-key locale JSON files
 # are NOT snapshotted — they're rebranded purely by sed against upstream so
 # new upstream keys are picked up automatically).
+packages/views/vitest.config.ts
 packages/views/locales/glossary.md
 
 # Server — UPGRADE PATH redirect (GitHub Releases endpoint points to

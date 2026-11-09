@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   ArrowUpRight,
   BookOpen,
@@ -9,6 +10,7 @@ import {
   History,
   Megaphone,
   MessageCircle,
+  Star,
 } from "@multica/ui/icons";
 import {
   DropdownMenu,
@@ -21,6 +23,14 @@ import {
 } from "@multica/ui/components/ui/dropdown-menu";
 import { useModalStore } from "@multica/core/modals";
 import { useConfigStore } from "@multica/core/config";
+import {
+  formatStarCount,
+  githubStarsOptions,
+  MULTICA_GITHUB_URL,
+} from "@multica/core/github/stars";
+import { createLogger } from "@multica/core/logger";
+import { markStarPromptStarred } from "@multica/core/star-prompt";
+import { GitHubIcon } from "../onboarding/components/brand-icons";
 import { useT } from "../i18n";
 import { isDesktopShell } from "../platform/local-directory";
 import { isTraditionalChinese } from "../common/docs-locale";
@@ -32,6 +42,8 @@ import {
 const DOCS_URL = "https://cyberagent.ng/docs.html";
 const CHANGELOG_URL = "https://cyberagent.ng";
 const DOWNLOAD_URL = "https://multica.ai/download";
+
+const logger = createLogger("help-launcher");
 
 // cyberagent.ng ships one page per script variant: Traditional Chinese gets
 // the "-Hant" suffix, every other language shares the English page.
@@ -47,9 +59,12 @@ export function HelpLauncher() {
   const desktop = isDesktopShell();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const whatsNew = useWhatsNewMenuPanel();
+  const [open, setOpen] = useState(false);
+  // Asked only once the menu opens, so closed sessions never call GitHub.
+  const { data: stars } = useQuery({ ...githubStarsOptions(), enabled: open });
   return (
     <>
-      <DropdownMenu>
+      <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger
           ref={triggerRef}
           aria-label={t(($) => $.help.trigger)}
@@ -121,6 +136,27 @@ export function HelpLauncher() {
             <History className="h-3.5 w-3.5" />
             {t(($) => $.help.changelog)}
             <ArrowUpRight className="size-3 translate-y-px text-faint-foreground" />
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            render={
+              <a href={MULTICA_GITHUB_URL} target="_blank" rel="noopener noreferrer" />
+            }
+            onClick={() => {
+              markStarPromptStarred().catch((err) =>
+                logger.warn("failed to record star click", err),
+              );
+            }}
+          >
+            <GitHubIcon className="h-3.5 w-3.5" />
+            {t(($) => $.help.star_on_github)}
+            {typeof stars === "number" ? (
+              <span className="ml-auto inline-flex shrink-0 items-center gap-1 text-caption whitespace-nowrap text-muted-foreground tabular-nums">
+                <Star aria-hidden="true" className="size-3" />
+                {formatStarCount(stars)}
+              </span>
+            ) : (
+              <ArrowUpRight className="size-3 translate-y-px text-faint-foreground" />
+            )}
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => useModalStore.getState().open("feedback")}

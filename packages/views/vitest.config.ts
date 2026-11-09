@@ -10,5 +10,12 @@ export default defineConfig({
     setupFiles: ["./test/setup.ts"],
     include: ["**/*.test.{ts,tsx}"],
     sequence: { sequencer: BalancedSequencer },
+    // setup.ts raises RTL's asyncUtilTimeout to 5s (CI contention flake fix).
+    // Tests that assert a findBy* lookup REJECTS — e.g. thinking-prop-row's
+    // MUL-7412 "row must never appear" — only pass if that rejection lands
+    // inside vitest's test window, so testTimeout must stay strictly above
+    // asyncUtilTimeout. 10s also leaves headroom for slow lookups under turbo
+    // parallel load, which were getting killed at exactly 5s in CI.
+    testTimeout: 10_000,
   },
 });
