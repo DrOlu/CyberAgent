@@ -12,7 +12,7 @@ export function parseIssueDeepLink(
   try {
     const link = new URL(value);
     if (
-      link.protocol !== "multica:" ||
+      link.protocol !== "cyberagent:" ||
       link.host !== "open" ||
       link.pathname !== "/issue"
     ) return null;

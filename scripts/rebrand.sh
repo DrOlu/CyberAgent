@@ -355,6 +355,23 @@ open('.goreleaser.yml', 'w').write(text)
       -e 's|multica://|cyberagent://|g' \
       {} + 2>/dev/null || true
 
+  # The bare scheme string (no trailing //) escapes the rule above. The
+  # shared parser compares WHATWG URL.protocol, which is always scheme + ":".
+  # Without this, upstream syncs restore `multica:` there while the blanket
+  # rule rebrands every test URL to cyberagent:// — the mismatch that broke
+  # issue-deep-link tests (CI run 42672933737).
+  _sed apps/desktop/src/shared/issue-deep-link.ts 's|"multica:"|"cyberagent:"|g'
+
+  # ── Web — OS deep-link protocol handoff to the desktop app ────────────
+  # apps/web only emits multica:// for OS deep links (auth callback redirect
+  # and open-issue handoff). Those MUST match the desktop's registered
+  # scheme (electron-builder.yml registers cyberagent), or the OS routes the
+  # link nowhere and login/issue handoff silently dies.
+  find apps/web -type f '(' -name '*.ts' -o -name '*.tsx' ')' \
+    ! -path '*/node_modules/*' \
+    -exec sed -i -e 's|multica://|cyberagent://|g' \
+    {} + 2>/dev/null || true
+
   # ── Styles (CSS) ───────────────────────────────────────────────────────
   find . -type f -name '*.css' \
     ! -path './.git/*' ! -path './node_modules/*' ! -path './.cyberagent-snapshot/*' \
