@@ -437,6 +437,11 @@ jobs:
           # mac packaging (Rollup + electron-builder) exhausts the default
           # ~2GB V8 heap on GitHub runners; raise the limit.
           NODE_OPTIONS: --max-old-space-size=6144
+          # Download electron-builder packaging binaries (nsis, appimage,
+          # winCodeSign, 7zip) from npmmirror instead of GitHub releases —
+          # GitHub's release asset CDN has recurring 504 outages that fail
+          # desktop packaging (4 failed Release runs on 2026-11-09).
+          ELECTRON_BUILDER_BINARIES_MIRROR: https://npmmirror.com/mirrors/electron-builder-binaries/
           GH_TOKEN: ${{ secrets.PAT_TOKEN }}
           # electron-builder's GitHub publisher reads this:
           GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
