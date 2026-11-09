@@ -69,6 +69,14 @@ apps/desktop/electron-builder.yml
 # scripts/rebrand.sh's reconcile_desktop_pkg step.
 apps/desktop/electron.vite.config.ts
 apps/desktop/scripts/brand-dev-electron.mjs
+# package.mjs carries CyberAgent's release contract that upstream dropped:
+# RELEASE_TAG-first version derivation (used by release.yml and
+# republish-desktop.yml) plus the `gh release upload --clobber` fallback for
+# flaky GitHub asset uploads. package.test.mjs pins that contract. Upstream
+# removed both the helpers and their tests; without snapshotting, every sync
+# auto-resolves these files to upstream (--theirs) and breaks CI + releases.
+apps/desktop/scripts/package.mjs
+apps/desktop/scripts/package.test.mjs
 apps/desktop/src/main/index.ts
 apps/desktop/src/renderer/index.html
 apps/desktop/src/renderer/src/App.tsx
