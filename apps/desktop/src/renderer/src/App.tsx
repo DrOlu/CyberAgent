@@ -38,6 +38,7 @@ const HTML_LANG: Record<SupportedLocale, string> = {
   ja: "ja-JP",
   fr: "fr-FR",
   es: "es",
+  ru: "ru",
 };
 
 
