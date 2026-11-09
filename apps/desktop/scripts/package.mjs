@@ -1,12 +1,10 @@
 #!/usr/bin/env node
 // Wrapper around `electron-builder` that keeps the Desktop version in
-// lockstep with the CLI. On a tag-triggered Release, the version comes from
-// RELEASE_TAG / GITHUB_REF_NAME (the tag that fired the workflow). Locally
-// it falls back to `git describe --tags --match 'v[0-9]*' --always --dirty`
-// — the same source GoReleaser reads for the CLI binary via the
-// `main.version` ldflag. Preferring the triggering tag matters when two
-// semver tags point at the same commit: git describe may pick the older
-// one and electron-builder then overwrites the previous GitHub Release.
+// lockstep with the CLI. Both are derived from `git describe --tags
+// --match 'v[0-9]*' --always --dirty` — the same source GoReleaser reads
+// for the CLI
+// binary via the `main.version` ldflag — so a single `vX.Y.Z` tag push
+// produces matching CLI and Desktop versions.
 //
 // Builds the Electron bundles once, then for each requested target
 // (platform + arch) compiles the matching Go CLI into resources/bin/ and
@@ -24,15 +22,14 @@
 // build, set `CSC_IDENTITY_AUTO_DISCOVERY=false` so electron-builder falls
 // back to an ad-hoc signature instead of requiring a Developer ID cert.
 //
-// The `normalizeGitVersion`, `deriveVersion`, `releaseTagFromEnv`, and
-// `DESCRIBE_ARGS` exports let tests cover version derivation both as a pure
-// string transform and as the real `git describe` invocation against a
-// throwaway repo.
+// The `normalizeGitVersion`, `deriveVersion`, and `DESCRIBE_ARGS` exports let
+// tests cover version derivation both as a pure string transform and as the
+// real `git describe` invocation against a throwaway repo.
 
 import { execFileSync, spawnSync } from "node:child_process";
-import { readdirSync, rmSync } from "node:fs";
+import { realpathSync, rmSync } from "node:fs";
 import { delimiter, dirname, resolve } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { fileURLToPath } from "node:url";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const desktopRoot = resolve(here, "..");
@@ -153,29 +150,10 @@ export const DESCRIBE_ARGS = [
   "--dirty",
 ];
 
-const VERSION_TAG_RE = /^v?\d+\.\d+\.\d+/;
-
-/**
- * Prefer the tag that triggered this workflow over `git describe`.
- * Checked in order: RELEASE_TAG, DESKTOP_VERSION, GITHUB_REF_NAME, GITHUB_REF.
- * Non-semver values (branch names like `main`) are ignored.
- */
-export function releaseTagFromEnv(env = process.env) {
-  const candidates = [env.RELEASE_TAG, env.DESKTOP_VERSION, env.GITHUB_REF_NAME];
-  for (const raw of candidates) {
-    if (raw && VERSION_TAG_RE.test(raw)) return raw;
-  }
-  const ref = env.GITHUB_REF || "";
-  const m = ref.match(/^refs\/tags\/(v?\d+\.\d+\.\d+.*)$/);
-  return m ? m[1] : "";
-}
-
-// Exported (with an optional cwd / env) so tests can exercise the real
-// describe invocation against a throwaway repo, not just normalizeGitVersion
-// in isolation — the gap that let the Windows quoting regression through CI.
-export function deriveVersion(cwd, env = process.env) {
-  const fromEnv = releaseTagFromEnv(env);
-  if (fromEnv) return normalizeGitVersion(fromEnv);
+// Exported (with an optional cwd) so tests can exercise the real describe
+// invocation against a throwaway repo, not just normalizeGitVersion in
+// isolation — the gap that let the Windows quoting regression through CI.
+export function deriveVersion(cwd) {
   return normalizeGitVersion(git(DESCRIBE_ARGS, cwd));
 }
 
@@ -377,111 +355,6 @@ export function builderArgsForTarget(
   return builderArgs;
 }
 
-const PUBLISH_ARTIFACT_RE =
-  /\.(exe|dmg|zip|AppImage|deb|rpm|yml|blockmap)$/i;
-
-/**
- * True when electron-builder was asked to publish to GitHub (`always` or
- * `onTag`). `--publish never` (local `package:all`) is not a publish.
- */
-export function publishRequested(sharedArgs) {
-  for (let i = 0; i < sharedArgs.length; i += 1) {
-    const token = sharedArgs[i];
-    if (token === "--publish") {
-      const value = sharedArgs[i + 1];
-      return value === "always" || value === "onTag";
-    }
-    if (token.startsWith("--publish=")) {
-      const value = token.slice("--publish=".length);
-      return value === "always" || value === "onTag";
-    }
-  }
-  return false;
-}
-
-/**
- * Collect installer / auto-update files electron-builder writes under dist/.
- * Skips unpacked app directories and anything that is not a shippable artifact.
- */
-export function collectPublishArtifacts(distDir) {
-  const out = [];
-  function walk(dir) {
-    let entries;
-    try {
-      entries = readdirSync(dir, { withFileTypes: true });
-    } catch {
-      return;
-    }
-    for (const entry of entries) {
-      const full = resolve(dir, entry.name);
-      if (entry.isDirectory()) {
-        if (/unpacked/i.test(entry.name)) continue;
-        walk(full);
-        continue;
-      }
-      if (PUBLISH_ARTIFACT_RE.test(entry.name)) out.push(full);
-    }
-  }
-  walk(distDir);
-  return out.sort();
-}
-
-export function ghReleaseUploadArgs(tag, files) {
-  return ["release", "upload", tag, ...files, "--clobber"];
-}
-
-function sleepSync(ms) {
-  if (ms <= 0) return;
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
-}
-
-/**
- * GitHub's release asset API 500s / times out on large desktop installers
- * (200MB+ AppImage / NSIS exe). electron-builder treats that as a hard
- * failure even when the packages themselves built. If the artifacts are
- * still on disk, upload them with `gh release upload --clobber`, which is
- * more resilient than electron-builder's publisher.
- */
-export function tryGhReleaseUploadFallback(
-  tag,
-  distDir,
-  {
-    spawn = spawnSync,
-    attempts = 3,
-    delayMs = 15_000,
-    sleep = sleepSync,
-    cwd = desktopRoot,
-  } = {},
-) {
-  const files = collectPublishArtifacts(distDir);
-  if (files.length === 0) {
-    console.warn(
-      `[package] electron-builder failed and no publishable artifacts found in ${distDir}`,
-    );
-    return false;
-  }
-  console.warn(
-    `[package] electron-builder publish failed; uploading ${files.length} artifact(s) to ${tag} via gh release upload`,
-  );
-  const args = ghReleaseUploadArgs(tag, files);
-  for (let attempt = 1; attempt <= attempts; attempt += 1) {
-    const result = spawn("gh", args, {
-      stdio: "inherit",
-      cwd,
-      shell: true,
-    });
-    if (!result.error && result.status === 0) return true;
-    const reason = result.error
-      ? result.error.message
-      : `exit=${result.status ?? 1}`;
-    console.warn(
-      `[package] gh release upload failed (attempt ${attempt}/${attempts}): ${reason}`,
-    );
-    if (attempt < attempts) sleep(delayMs);
-  }
-  return false;
-}
-
 function main() {
   const passthrough = stripLeadingSeparator(process.argv.slice(2));
   const parsed = parsePackageArgs(passthrough);
@@ -533,11 +406,9 @@ function main() {
   }
 
   // Step 2: derive the version that should be written into the app.
-  const fromEnv = releaseTagFromEnv();
   const version = deriveVersion();
   if (version) {
-    const source = fromEnv ? "RELEASE_TAG/GITHUB_REF_NAME" : "git describe";
-    console.log(`[package] Desktop version → ${version} (from ${source})`);
+    console.log(`[package] Desktop version → ${version} (from git describe)`);
   } else {
     console.warn(
       "[package] could not derive version from git; falling back to package.json",
@@ -597,18 +468,6 @@ function main() {
       process.exit(1);
     }
     if (result.status !== 0) {
-      // GitHub 500 "Error saving asset" / upload timeouts on large NSIS
-      // and AppImage files. Recover by uploading leftover dist/ artifacts.
-      if (
-        version &&
-        publishRequested(parsed.sharedArgs) &&
-        tryGhReleaseUploadFallback(`v${version}`, distDir)
-      ) {
-        console.log(
-          "[package] GitHub release asset upload recovered via gh release upload",
-        );
-        continue;
-      }
       process.exit(result.status ?? 1);
     }
   }
@@ -617,7 +476,7 @@ function main() {
 // Only run when invoked as a CLI, not when imported by a test file.
 if (
   process.argv[1] &&
-  import.meta.url === pathToFileURL(process.argv[1]).href
+  realpathSync(process.argv[1]) === realpathSync(fileURLToPath(import.meta.url))
 ) {
   main();
 }
