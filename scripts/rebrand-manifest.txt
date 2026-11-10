@@ -94,6 +94,13 @@ apps/web/app/not-found.tsx
 apps/web/next-env.d.ts
 apps/web/features/landing/i18n/en.ts
 apps/web/features/landing/i18n/zh.ts
+# Landing redesign (upstream): site/home/demo/meta copy lives in sibling
+# modules the dictionaries spread in. Snapshotted so the CyberAgent brand
+# copy survives upstream merges, same policy as en.ts / zh.ts.
+apps/web/features/landing/i18n/site-en.ts
+apps/web/features/landing/i18n/site-zh.ts
+apps/web/features/landing/i18n/demo-en.ts
+apps/web/features/landing/i18n/demo-zh.ts
 
 # Docs — fully rebranded
 apps/docs/lib/site.ts

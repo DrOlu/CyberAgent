@@ -134,6 +134,16 @@ const RUNTIME_PROVIDED = new Set([
   "--font-mono",
   "--font-heading",
   "--font-inter",
+  // Appearance settings (packages/core/appearance) set these at runtime;
+  // unset, the static stacks in globals.css apply.
+  "--font-ui",
+  "--font-cjk",
+  // next/font-provided families referenced by the shared font stacks
+  // (upstream renamed these when the landing redesign landed — the
+  // variables remain part of the intended font architecture).
+  "--font-geist-mono",
+  "--font-source-serif",
+  "--font-jetbrains-mono",
   "--radius",
   "--shiki-light",
   "--shiki-dark",

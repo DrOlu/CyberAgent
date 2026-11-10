@@ -1,193 +1,10 @@
 import { githubUrl, discordUrl } from "../components/shared";
 import type { LandingDict } from "./types";
+import { enSiteCopy } from "./site-en";
 
-export function createEnDict(
-  allowSignup: boolean,
-  docsHref: string,
-): LandingDict {
+export function createEnDict(): LandingDict {
   return {
-  header: {
-    github: "GitHub",
-    cta: "Get started",
-    dashboard: "Dashboard",
-    docs: "Docs",
-    changelog: "Changelog",
-    useCases: "Use cases",
-    navigation: "Primary navigation",
-    openMenu: "Open navigation menu",
-    closeMenu: "Close navigation menu",
-  },
-
-  hero: {
-    headlineLine1: "Your next 10 hires",
-    headlineLine2: "won\u2019t be human.",
-    subheading:
-      "CyberAgent is an open-source platform that turns coding agents into real teammates. Assign tasks, track progress, compound skills \u2014 manage your human + agent workforce in one place.",
-    cta: "Start free trial",
-    downloadDesktop: "Download Desktop",
-    talkToSales: "Talk to sales",
-    worksWith: "Works with",
-    imageAlt: "CyberAgent board view \u2014 issues managed by humans and agents",
-  },
-
-  features: {
-    teammates: {
-      label: "TEAMMATES",
-      title: "Assign to an agent like you\u2019d assign to a colleague",
-      description:
-        "Agents aren\u2019t passive tools \u2014 they\u2019re active participants. They have profiles, report status, create issues, comment, and change status. Your activity feed shows humans and agents working side by side.",
-      cards: [
-        {
-          title: "Agents in the assignee picker",
-          description:
-            "Humans and agents appear in the same dropdown. Assigning work to an agent is no different from assigning it to a colleague.",
-        },
-        {
-          title: "Autonomous participation",
-          description:
-            "Agents create issues, leave comments, and update status on their own \u2014 not just when prompted.",
-        },
-        {
-          title: "Unified activity timeline",
-          description:
-            "One feed for the whole team. Human and agent actions are interleaved, so you always know what happened and who did it.",
-        },
-      ],
-    },
-    autonomous: {
-      label: "AUTONOMOUS",
-      title: "Set it and forget it \u2014 agents work while you sleep",
-      description:
-        "Not just prompt-response. Full task lifecycle management: enqueue, claim, start, complete or fail. Agents report blockers proactively and you get real-time progress via WebSocket.",
-      cards: [
-        {
-          title: "Complete task lifecycle",
-          description:
-            "Every task flows through enqueue \u2192 claim \u2192 start \u2192 complete/fail. No silent failures \u2014 every transition is tracked and broadcast.",
-        },
-        {
-          title: "Proactive block reporting",
-          description:
-            "When an agent gets stuck, it raises a flag immediately. No more checking back hours later to find nothing happened.",
-        },
-        {
-          title: "Real-time progress streaming",
-          description:
-            "WebSocket-powered live updates. Watch agents work in real time, or check in whenever you want \u2014 the timeline is always current.",
-        },
-      ],
-    },
-    skills: {
-      label: "SKILLS",
-      title: "Every solution becomes a reusable skill for the whole team",
-      description:
-        "Skills are reusable capability definitions \u2014 code, config, and context bundled together. Write a skill once, and every agent on your team can use it. Your skill library compounds over time.",
-      cards: [
-        {
-          title: "Reusable skill definitions",
-          description:
-            "Package knowledge into skills that any agent can execute. Deploy to staging, write migrations, review PRs \u2014 all codified.",
-        },
-        {
-          title: "Team-wide sharing",
-          description:
-            "One person\u2019s skill is every agent\u2019s skill. Build once, benefit everywhere across your team.",
-        },
-        {
-          title: "Compound growth",
-          description:
-            "Day 1: you teach an agent to deploy. Day 30: every agent deploys, writes tests, and does code review. Your team\u2019s capabilities grow exponentially.",
-        },
-      ],
-    },
-    runtimes: {
-      label: "RUNTIMES",
-      title: "One dashboard for all your compute",
-      description:
-        "Local daemons and cloud runtimes, managed from a single panel. Real-time monitoring of online/offline status, usage charts, and activity heatmaps. Auto-detects 11 supported coding tools on your machine.",
-      cards: [
-        {
-          title: "Unified runtime panel",
-          description:
-            "Local daemons and cloud runtimes in one view. No context switching between different management interfaces.",
-        },
-        {
-          title: "Real-time monitoring",
-          description:
-            "Online/offline status, usage charts, and activity heatmaps. Know exactly what your compute is doing at any moment.",
-        },
-        {
-          title: "Auto-detection on first run",
-          description:
-            "CyberAgent scans for 11 supported coding tools \u2014 Claude Code, Codex, Cursor, Copilot, Gemini, Hermes, Kimi, Kiro CLI, OpenCode, OpenClaw, and Pi \u2014 and registers a runtime for each one it finds.",
-        },
-      ],
-    },
-  },
-
-  howItWorks: {
-    label: "Get started",
-    headlineMain: "Hire your first AI employee",
-    headlineFaded: "in the next hour.",
-    steps: [
-      {
-        title: allowSignup ? "Sign up & create your workspace" : "Login to your workspace",
-        description: allowSignup
-          ? "Enter your email, verify with a code, and you\u2019re in. Your workspace is created automatically \u2014 no setup wizard, no configuration forms."
-          : "Enter your email, verify with a code, and you\u2019re logged into your workspace \u2014 no setup wizard, no configuration forms.",
-      },
-      {
-        title: "Install the CLI & connect your machine",
-        description:
-          "Run multica setup \u2014 it walks you through OAuth, starts the daemon, and scans for the 11 supported coding tools (Claude Code, Codex, Cursor, Copilot, Gemini, Hermes, Kimi, Kiro CLI, OpenCode, OpenClaw, Pi). Whichever ones you already have installed get registered as runtimes automatically.",
-      },
-      {
-        title: "Create your first agent",
-        description:
-          "Give it a name, write instructions, and attach skills. Agents automatically activate on assignment, on comment, or on mention.",
-      },
-      {
-        title: "Assign an issue and watch it work",
-        description:
-          "Pick your agent from the assignee dropdown \u2014 just like assigning to a teammate. The task is queued, claimed, and executed automatically. Watch progress in real time.",
-      },
-    ],
-    cta: "Get started",
-    ctaGithub: "View on GitHub",
-    ctaDocs: "Read the docs",
-  },
-
-  openSource: {
-    label: "Open source",
-    headlineLine1: "Open source",
-    headlineLine2: "for all.",
-    description:
-      "CyberAgent is fully open source. Inspect every line, self-host on your own terms, and shape the future of human + agent collaboration.",
-    cta: "Star on GitHub",
-    licensingCta: "How licensing works \u2192",
-    highlights: [
-      {
-        title: "Self-host anywhere",
-        description:
-          "Run CyberAgent on your own infrastructure. Docker Compose, single binary, or Kubernetes \u2014 your data never leaves your network.",
-      },
-      {
-        title: "No vendor lock-in",
-        description:
-          "Bring your own LLM provider, swap agent backends, extend the API. You own the stack, top to bottom.",
-      },
-      {
-        title: "Transparent by default",
-        description:
-          "Every line of code is auditable. See exactly how your agents make decisions, how tasks are routed, and where your data flows.",
-      },
-      {
-        title: "Community-driven",
-        description:
-          "Built with the community, not just for it. Contribute skills, integrations, and agent backends that benefit everyone.",
-      },
-    ],
-  },
+  ...enSiteCopy,
 
   faq: {
     label: "FAQ",
@@ -230,42 +47,6 @@ export function createEnDict(
           "As many as your hardware supports. Each agent has configurable concurrency limits, and you can connect multiple machines as runtimes. There are no artificial caps in the open source version.",
       },
     ],
-  },
-
-  footer: {
-    tagline:
-      "Project management for human + agent teams. Open source, self-hostable, built for the future of work.",
-    cta: "Get started",
-    groups: {
-      product: {
-        label: "Product",
-        links: [
-          { label: "Features", href: "#features" },
-          { label: "How it Works", href: "#how-it-works" },
-          { label: "Changelog", href: "/changelog" },
-          { label: "Download", href: "/download" },
-        ],
-      },
-      resources: {
-        label: "Resources",
-        links: [
-          { label: "Documentation", href: docsHref },
-          { label: "API", href: githubUrl },
-          { label: "X (Twitter)", href: "https://x.com/MulticaAI" },
-        ],
-      },
-      company: {
-        label: "Company",
-        links: [
-          { label: "About", href: "/about" },
-          { label: "Licensing", href: "/licensing" },
-          { label: "Privacy", href: "/privacy" },
-          { label: "Open Source", href: "#open-source" },
-          { label: "GitHub", href: githubUrl },
-        ],
-      },
-    },
-    copyright: "\u00a9 {year} CyberAgent. All rights reserved.",
   },
 
   about: {
@@ -1444,51 +1225,46 @@ export function createEnDict(
       },
     ],
   },
+
   download: {
+    platforms: {
+      macArm64: "macOS · Apple Silicon",
+      macX64: "macOS · Intel",
+      winX64: "Windows · x64",
+      winArm64: "Windows · ARM64",
+      linuxX64: "Linux · x64",
+      linuxArm64: "Linux · ARM64",
+    },
     hero: {
-      macArm64: {
-        title: "CyberAgent for macOS",
-        sub: "Apple Silicon · bundled daemon, zero setup",
-        primary: "Download (.dmg)",
-        altZip: "or download .zip",
+      eyebrow: "Desktop app",
+      title: {
+        mac: "Download CyberAgent for macOS",
+        windows: "Download CyberAgent for Windows",
+        linux: "Download CyberAgent for Linux",
+        other: "Download CyberAgent",
       },
-      macIntel: {
-        title: "CyberAgent for macOS",
-        sub: "Intel · bundled daemon, zero setup",
-        primary: "Download (.dmg)",
-        altZip: "or download .zip",
+      lead: "The desktop app comes with the agent daemon, so Claude Code, Codex and the other coding agents on this computer connect on their own.",
+      leadOther: "Desktop apps for macOS, Windows and Linux, each with the agent daemon built in.",
+      mobileNote: "CyberAgent’s desktop app runs on macOS, Windows and Linux. Open this page on your computer to download it.",
+      primary: {
+        macArm64Dmg: "Download for Apple Silicon",
+        macX64Dmg: "Download for Intel",
+        winX64Exe: "Download for Windows",
+        winArm64Exe: "Download for Windows ARM",
+        linuxAmd64AppImage: "Download AppImage",
+        linuxArm64AppImage: "Download AppImage",
       },
-      winX64: {
-        title: "CyberAgent for Windows",
-        sub: "Bundled daemon, zero setup",
-        primary: "Download (.exe)",
+      alternate: {
+        macArm64Dmg: "Apple Silicon Mac",
+        macX64Dmg: "Intel Mac",
       },
-      winArm64: {
-        title: "CyberAgent for Windows",
-        sub: "ARM · bundled daemon, zero setup",
-        primary: "Download (.exe)",
-      },
-      linux: {
-        title: "CyberAgent for Linux",
-        sub: "Bundled daemon, zero setup",
-        primary: "Download AppImage",
-        altFormats: "or .deb / .rpm",
-      },
-      unknown: {
-        title: "Choose your platform",
-        sub: "All installers are listed below.",
-      },
-      safariMacHint: "On an Intel Mac? Use the CLI below.",
-      archFallbackHint: "Wrong architecture? See all formats below.",
+      released: "Released {date}",
+      whatsNew: "What’s new",
+      versionUnavailable: "Version unavailable. See all releases on GitHub.",
     },
     allPlatforms: {
-      title: "All platforms",
-      macArm64Label: "macOS · Apple Silicon",
-      macX64Label: "macOS · Intel",
-      winX64Label: "Windows · x64",
-      winArm64Label: "Windows · ARM64",
-      linuxX64Label: "Linux · x64",
-      linuxArm64Label: "Linux · ARM64",
+      title: "All downloads",
+      thisDevice: "This computer",
       formatDmg: ".dmg",
       formatZip: ".zip",
       formatExe: ".exe",
@@ -1496,30 +1272,58 @@ export function createEnDict(
       formatDeb: ".deb",
       formatRpm: ".rpm",
       unavailable: "Not available",
+      allReleases: "All releases",
     },
     cli: {
-      title: "Prefer the CLI?",
-      sub: "For servers, remote dev boxes, and headless setups. Same daemon as Desktop, installed via terminal.",
+      title: "On a server or a remote dev box?",
+      sub: "Install the CLI and run the same daemon there. The commands work over SSH too.",
       installLabel: "Install",
       platformGroup: "Choose your platform",
       platformMacosLinux: "macOS / Linux",
       platformWindows: "Windows",
       startLabel: "Start daemon",
-      sshNote: "Already on a server? Same commands work over SSH.",
       copyLabel: "Copy",
       copiedLabel: "Copied",
     },
-    cloud: {
-      title: "Cloud runtime (waitlist)",
-      sub: "We’ll host the runtime for you. Not live yet — leave your email to be notified.",
-    },
-    footer: {
-      releaseNotes: "What’s new in {version}",
-      allReleases: "View all releases",
-      currentVersion: "Current version: {version}",
-      versionUnavailable: "Version unavailable — check GitHub",
+    started: {
+      title: "Your download has started",
+      retry: "Didn’t start? Try again",
+      allDownloads: "All downloads",
+      install: {
+        title: "Install",
+        dmg: "Open the .dmg and drag CyberAgent into Applications.",
+        zip: "Unzip it and move CyberAgent into Applications.",
+        exe: "Run the installer. CyberAgent opens when it finishes.",
+        appImage: "Make the AppImage executable, then run it.",
+        deb: "Install the .deb with apt or your package manager.",
+        rpm: "Install the .rpm with dnf or your package manager.",
+      },
+      signIn: {
+        title: "Sign in",
+        body: "Open CyberAgent and sign in with your account.",
+        installed: "Already installed?",
+        open: "Open CyberAgent",
+      },
+      agents: {
+        title: "Bring your agents",
+        body: "CyberAgent finds Claude Code, Codex and the other coding agents on this computer.",
+      },
+      community: {
+        label: "While it downloads",
+        githubTitle: "Follow CyberAgent on GitHub",
+        githubBody: "Star the repo to hear about new releases, or read the code behind the app you just downloaded.",
+        star: "Star on GitHub",
+        stars: "{count} stars",
+        discordTitle: "Join the Discord",
+        discordBody: "Ask questions, share workflows and talk to the team.",
+        join: "Join",
+        xTitle: "Follow @MulticaAI",
+        xBody: "Release notes and what’s coming next.",
+        follow: "Follow",
+      },
     },
   },
+
   contactSales: {
     pageTitle: "Contact Sales",
     pageDescription:

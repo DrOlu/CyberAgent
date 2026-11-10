@@ -14,7 +14,7 @@ import { DiscordMark, GitHubMark, XMark, discordUrl, githubUrl, twitterUrl } fro
 const AGENTS = ["Claude Code", "Codex", "OpenCode"] as const;
 
 /** Opens the installed desktop app, or does nothing when it is not installed yet. */
-const OPEN_APP_URL = "multica://open";
+const OPEN_APP_URL = "cyberagent://open";
 
 type InstallStep = "dmg" | "zip" | "exe" | "appImage" | "deb" | "rpm";
 

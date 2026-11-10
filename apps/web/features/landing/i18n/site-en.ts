@@ -5,50 +5,50 @@ export const enSiteCopy: Pick<LandingDict, "site" | "home" | "demo" | "meta"> = 
   demo: enDemoCopy,
   meta: {
     home: {
-      title: "Multica — Project Management for Human + Agent Teams",
+      title: "CyberAgent — Project Management for Human + Agent Teams",
       description:
         "Source-available platform that turns coding agents into real teammates. Assign tasks, track progress, compound skills.",
-      ogTitle: "Multica — Project Management for Human + Agent Teams",
+      ogTitle: "CyberAgent — Project Management for Human + Agent Teams",
       ogDescription: "Manage your human + agent workforce in one place.",
     },
     about: {
       title: "About",
       description:
-        "Learn about Multica — multiplexed information and computing agent. A source-available project management platform for human + agent teams.",
-      ogTitle: "About Multica",
-      ogDescription: "The story behind Multica and why we're building project management for human + agent teams.",
+        "Learn about CyberAgent — multiplexed information and computing agent. A source-available project management platform for human + agent teams.",
+      ogTitle: "About CyberAgent",
+      ogDescription: "The story behind CyberAgent and why we're building project management for human + agent teams.",
     },
     changelog: {
       title: "Changelog",
-      description: "See what's new in Multica — latest features, improvements, and fixes.",
-      ogTitle: "Changelog | Multica",
-      ogDescription: "Latest updates and releases from Multica.",
+      description: "See what's new in CyberAgent — latest features, improvements, and fixes.",
+      ogTitle: "Changelog | CyberAgent",
+      ogDescription: "Latest updates and releases from CyberAgent.",
     },
     contactSales: {
       title: "Contact Sales",
-      description: "Talk to the Multica team about rolling out human + agent workflows at your company.",
-      ogTitle: "Contact Sales — Multica",
+      description: "Talk to the CyberAgent team about rolling out human + agent workflows at your company.",
+      ogTitle: "Contact Sales — CyberAgent",
       ogDescription: "Tell us about your team. We’ll respond within three business days.",
     },
     download: {
-      title: "Download Multica",
-      description: "Download Multica for macOS, Windows, or Linux — or install the CLI for servers and remote dev boxes.",
-      ogTitle: "Download Multica",
-      ogDescription: "Get the Multica desktop app with a bundled daemon, or install the CLI for servers and remote dev boxes.",
+      title: "Download CyberAgent",
+      description: "Download CyberAgent for macOS, Windows, or Linux — or install the CLI for servers and remote dev boxes.",
+      ogTitle: "Download CyberAgent",
+      ogDescription: "Get the CyberAgent desktop app with a bundled daemon, or install the CLI for servers and remote dev boxes.",
     },
     licensing: {
       title: "Licensing",
       description:
-        "When you can use Multica for free and when you need a commercial license, explained with common scenarios.",
-      ogTitle: "Licensing — Multica",
+        "When you can use CyberAgent for free and when you need a commercial license, explained with common scenarios.",
+      ogTitle: "Licensing — CyberAgent",
       ogDescription:
-        "Free to self-host inside your organization. Offering Multica to others as a hosted service needs a commercial license.",
+        "Free to self-host inside your organization. Offering CyberAgent to others as a hosted service needs a commercial license.",
     },
     privacy: {
       title: "Privacy Policy",
-      description: "How Multica collects, uses, and protects personal information on multica.ai and Multica Cloud.",
-      ogTitle: "Privacy Policy — Multica",
-      ogDescription: "How Multica collects, uses, and protects personal information.",
+      description: "How CyberAgent collects, uses, and protects personal information on multica.ai and CyberAgent Cloud.",
+      ogTitle: "Privacy Policy — CyberAgent",
+      ogDescription: "How CyberAgent collects, uses, and protects personal information.",
     },
   },
   site: {
@@ -74,7 +74,7 @@ export const enSiteCopy: Pick<LandingDict, "site" | "home" | "demo" | "meta"> = 
       privacy: "Privacy",
     },
     header: {
-      home: "Multica home",
+      home: "CyberAgent home",
       githubStars: "GitHub, {count} stars",
       logIn: "Log in",
       getStarted: "Get started",
@@ -84,11 +84,11 @@ export const enSiteCopy: Pick<LandingDict, "site" | "home" | "demo" | "meta"> = 
       tagline: "The workspace for human and agent teams.",
       navigation: "Footer",
       language: "Language",
-      copyright: "© {year} Multica. All rights reserved.",
+      copyright: "© {year} CyberAgent. All rights reserved.",
       starTurns: "Everyone has blown the star round {count} times",
     },
     localeSuggestion: {
-      message: "Multica is available in English.",
+      message: "CyberAgent is available in English.",
       action: "View in English",
       dismiss: "Dismiss",
     },
@@ -114,19 +114,19 @@ export const enSiteCopy: Pick<LandingDict, "site" | "home" | "demo" | "meta"> = 
           label: "Ship a feature",
           short: "Ship",
           description:
-            "A Multica project board run by a workflow: an issue moves from Spec to Build, Code review, Approve and Shipped, handed to a planning agent, a coding agent, a review agent and a teammate in turn",
+            "A CyberAgent project board run by a workflow: an issue moves from Spec to Build, Code review, Approve and Shipped, handed to a planning agent, a coding agent, a review agent and a teammate in turn",
         },
         launch: {
           label: "Launch content",
           short: "Launch",
           description:
-            "A Multica project board for marketing run by a workflow: a launch post moves from Brief to Research, Draft, Edit and Published, handed to a research agent, a writing agent and an editor in turn",
+            "A CyberAgent project board for marketing run by a workflow: a launch post moves from Brief to Research, Draft, Edit and Published, handed to a research agent, a writing agent and an editor in turn",
         },
         triage: {
           label: "Triage feedback",
           short: "Triage",
           description:
-            "A Multica project board for support run by a workflow: an autopilot files user reports into Inbox, and the issue moves to Reproduce, Fix, Reply and Resolved, handed to a triage agent, a QA agent and a coding agent in turn",
+            "A CyberAgent project board for support run by a workflow: an autopilot files user reports into Inbox, and the issue moves to Reproduce, Fix, Reply and Resolved, handed to a triage agent, a QA agent and a coding agent in turn",
         },
       },
     },
@@ -136,8 +136,8 @@ export const enSiteCopy: Pick<LandingDict, "site" | "home" | "demo" | "meta"> = 
       items: {
         runtimes: {
           title: "Runs on your machines, or in our cloud",
-          body: "Connect a laptop or a server with one command and Multica finds the coding agents installed on it. Or run them in managed cloud sandboxes.",
-          alt: "The Runtimes page listing two machines and Multica Cloud, with the coding tools found on each",
+          body: "Connect a laptop or a server with one command and CyberAgent finds the coding agents installed on it. Or run them in managed cloud sandboxes.",
+          alt: "The Runtimes page listing two machines and CyberAgent Cloud, with the coding tools found on each",
         },
         workflows: {
           title: "Workflows hand off every step",
@@ -147,7 +147,7 @@ export const enSiteCopy: Pick<LandingDict, "site" | "home" | "demo" | "meta"> = 
         chat: {
           title: "Mention an agent in chat",
           body: "From Slack, Lark, DingTalk, WeCom, or Telegram. The agent reads the thread, files the issue, and gets to work.",
-          alt: "A team chat channel where Mia mentions Backend Agent about failing exports, and the agent replies in the channel with a link to the Multica issue it filed and is working on",
+          alt: "A team chat channel where Mia mentions Backend Agent about failing exports, and the agent replies in the channel with a link to the CyberAgent issue it filed and is working on",
         },
         autopilots: {
           title: "Autopilots run on a schedule",

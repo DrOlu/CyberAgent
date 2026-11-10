@@ -11,6 +11,13 @@
 // the type advances while the dictionaries stay frozen, and the next
 // `next build` fails with a confusing TypeScript error at release time.
 //
+// Since the upstream landing redesign, the dictionaries open with a
+// one-level object spread (`...enSiteCopy`) that pulls the site / home /
+// demo / meta copy from sibling modules (site-en.ts, which itself pulls
+// demo-en.ts). This guard resolves those spreads (one level, by the
+// <locale>SiteCopy → site-<locale>.ts convention) so top-level coverage is
+// still validated against the real composition.
+//
 // This guard reads types.ts and the two dictionaries with cheap text
 // parsing and fails the build (exit 1) if any TOP-LEVEL required key is
 // missing from a dictionary. Top-level coverage is what bit us before
@@ -32,60 +39,32 @@ function read(rel) {
   return readFileSync(resolve(i18nDir, rel), "utf-8");
 }
 
-function topLevelKeysFromLandingDict(typesSrc) {
-  // Locate the LandingDict type body. We intentionally avoid a full
-  // TypeScript parse: this script must run with zero installed deps so it
-  // can be invoked by the sync workflow before pnpm install completes.
-  const start = typesSrc.indexOf("export type LandingDict = {");
+// Locate `anchor` in src, then walk braces to find the matching closing
+// brace and return the object body. We intentionally avoid a full
+// TypeScript parse: this script must run with zero installed deps so it
+// can be invoked by the sync workflow before pnpm install completes.
+function objectBodyAfter(src, anchor) {
+  const start = src.indexOf(anchor);
   if (start === -1) {
-    throw new Error("LandingDict type not found in types.ts");
+    throw new Error(`anchor not found: ${JSON.stringify(anchor)}`);
   }
-  // Walk braces to find the matching closing brace.
-  let i = typesSrc.indexOf("{", start);
+  let i = src.indexOf("{", start);
   let depth = 0;
   const bodyStart = i;
-  for (; i < typesSrc.length; i += 1) {
-    const c = typesSrc[i];
+  for (; i < src.length; i += 1) {
+    const c = src[i];
     if (c === "{") depth += 1;
     else if (c === "}") {
       depth -= 1;
       if (depth === 0) break;
     }
   }
-  const body = typesSrc.slice(bodyStart + 1, i);
-  // Top-level keys are at depth 1, indent of two spaces, followed by `:`.
-  // Strip nested objects so we only see the outer keys.
-  let stripped = "";
-  let d = 0;
-  for (const ch of body) {
-    if (ch === "{") d += 1;
-    if (d === 0) stripped += ch;
-    if (ch === "}") d = Math.max(0, d - 1);
-  }
-  return [...stripped.matchAll(/^  ([a-zA-Z_][a-zA-Z0-9_]*)\??:/gm)].map(
-    (m) => m[1],
-  );
+  return src.slice(bodyStart + 1, i);
 }
 
-function topLevelKeysInDict(dictSrc) {
-  // Dictionaries are exported as `return { header: {...}, hero: {...}, ... }`.
-  // Locate the `return {` and walk to the matching brace.
-  const start = dictSrc.indexOf("return {");
-  if (start === -1) {
-    throw new Error("`return {` not found — unexpected dict shape");
-  }
-  let i = dictSrc.indexOf("{", start);
-  let depth = 0;
-  const bodyStart = i;
-  for (; i < dictSrc.length; i += 1) {
-    const c = dictSrc[i];
-    if (c === "{") depth += 1;
-    else if (c === "}") {
-      depth -= 1;
-      if (depth === 0) break;
-    }
-  }
-  const body = dictSrc.slice(bodyStart + 1, i);
+// Top-level keys sit at an indent of two spaces followed by `:` (or `?:`
+// in type position). Strip nested objects so we only see the outer keys.
+function topLevelKeysOfObjectBody(body) {
   let stripped = "";
   let d = 0;
   for (const ch of body) {
@@ -93,9 +72,60 @@ function topLevelKeysInDict(dictSrc) {
     if (d === 0) stripped += ch;
     if (ch === "}") d = Math.max(0, d - 1);
   }
-  return [...stripped.matchAll(/^  ([a-zA-Z_][a-zA-Z0-9_]*):/gm)].map(
-    (m) => m[1],
-  );
+  return [
+    ...stripped.matchAll(/^  ([a-zA-Z_][a-zA-Z0-9_]*)\??:/gm),
+  ].map((m) => m[1]);
+}
+
+function topLevelKeysFromLandingDict(typesSrc) {
+  const body = objectBodyAfter(typesSrc, "export type LandingDict = {");
+  return topLevelKeysOfObjectBody(body);
+}
+
+// Resolve one-level object spreads in a dictionary's return body, e.g.
+// `  ...enSiteCopy,`. The site/home/demo/meta copy lives in sibling
+// modules since the upstream landing redesign; spread keys count as
+// present so the guardrail validates the real composition.
+function spreadKeysInDict(dictSrc, dictName) {
+  const spreads = [
+    ...dictSrc.matchAll(/^  \.\.\.([a-zA-Z_][a-zA-Z0-9_]*)\s*,?[ \t]*$/gm),
+  ].map((m) => m[1]);
+  const keys = [];
+  for (const id of spreads) {
+    // Convention: <locale>SiteCopy is exported from site-<locale>.ts.
+    const m = id.match(/^([a-z]{2})SiteCopy$/);
+    if (!m) {
+      console.error(
+        `! ${dictName}: spread ${id} does not match the <locale>SiteCopy convention — keys not counted`,
+      );
+      continue;
+    }
+    let siteSrc;
+    try {
+      siteSrc = read(`site-${m[1]}.ts`);
+    } catch {
+      console.error(
+        `! ${dictName}: cannot read site-${m[1]}.ts for spread ${id}`,
+      );
+      continue;
+    }
+    try {
+      const body = objectBodyAfter(siteSrc, `export const ${id}`);
+      keys.push(...topLevelKeysOfObjectBody(body));
+    } catch (e) {
+      console.error(`! ${dictName}: failed to parse spread ${id}: ${e.message}`);
+    }
+  }
+  return keys;
+}
+
+function topLevelKeysInDict(dictSrc, dictName) {
+  // Dictionaries are exported as `return { ...xxSiteCopy, faq: {...}, ... }`.
+  const body = objectBodyAfter(dictSrc, "return {");
+  return [
+    ...topLevelKeysOfObjectBody(body),
+    ...spreadKeysInDict(dictSrc, dictName),
+  ];
 }
 
 const typesSrc = read("types.ts");
@@ -108,7 +138,7 @@ const dicts = [
 
 let ok = true;
 for (const dict of dicts) {
-  const present = new Set(topLevelKeysInDict(dict.src));
+  const present = new Set(topLevelKeysInDict(dict.src, dict.name));
   const missing = required.filter((k) => !present.has(k));
   const extra = [...present].filter((k) => !required.includes(k));
   if (missing.length === 0 && extra.length === 0) {
@@ -135,5 +165,8 @@ if (!ok) {
   console.error("");
   console.error("Fix: port the new field(s) from upstream, applying the standard");
   console.error("Multica → CyberAgent rebrand (preserve x.com/MulticaAI URLs).");
+  console.error("Since the landing redesign, site/home/demo/meta copy lives in the");
+  console.error("snapshotted site-<locale>.ts / demo-<locale>.ts modules that the");
+  console.error("dictionaries spread in — update those too when upstream moves keys.");
   process.exit(1);
 }
