@@ -236,6 +236,7 @@ open('.goreleaser.yml', 'w').write(text)
       -e 's|Go to Multica|Go to CyberAgent|g' \
       -e 's|by Multica|by CyberAgent|g' \
       -e 's|by multica|by cyberagent|g' \
+      -e 's|Multica Desktop|CyberAgent Desktop|g' \
       {} + 2>/dev/null || true
 
   # Help launcher docs href: the component is snapshotted to cyberagent.ng/docs.html
