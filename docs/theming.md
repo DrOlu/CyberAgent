@@ -239,7 +239,7 @@ and dark differ, both defaults are given.
 | `--sidebar-accent-foreground` | `oklch(0.21 0.006 285.885)` / `oklch(0.985 0 0)` | Text on sidebar accent. |
 | `--sidebar-border` | `oklch(0.92 0.004 286.32)` / `oklch(1 0 0 / 10%)` | Sidebar borders. |
 | `--sidebar-ring` | `oklch(0.705 0.015 286.067)` / `oklch(0.552 0.016 285.938)` | Sidebar focus ring. |
-| `--brand` | `oklch(0.56079497 0.19449888 256.41258418)` / `oklch(0.65 0.16 255)` | Product colour: links, checkboxes, selection highlights. |
+| `--brand` | `oklch(0.55 0.16 255)` / `oklch(0.65 0.16 255)` | Product colour: links, checkboxes, selection highlights. |
 | `--brand-foreground` | `oklch(0.985 0 0)` | Text on brand. |
 | `--button-primary` | `--primary` | Primary button fill when it should differ from `primary`. |
 | `--button-primary-foreground` | `--primary-foreground` | Primary button text. |
@@ -281,7 +281,7 @@ and dark differ, both defaults are given.
 
 | Variable | Default (light / dark) | Use |
 | --- | --- | --- |
-| `--radius` | `0.5rem` | Base corner radius. Every `rounded-*` step and component radius below derives from it. |
+| `--radius` | `0.625rem` | Base corner radius. Every `rounded-*` step and component radius below derives from it. |
 | `--surface-shadow` | `0 1px 2px rgb(15 23 42 / 0.04), 0 1px 1px rgb(15 23 42 / 0.03)` / `0 1px 2px rgb(0 0 0 / 0.2), 0 1px 1px rgb(0 0 0 / 0.16)` | Resting shadow of cards and the page. |
 | `--floating-shadow` | `0 16px 40px rgb(15 23 42 / 0.14), 0 3px 10px rgb(15 23 42 / 0.08)` / `0 20px 48px rgb(0 0 0 / 0.46), 0 4px 12px rgb(0 0 0 / 0.28)` | Dialogs and sheets. |
 | `--menu-shadow` | `0 8px 24px rgb(15 23 42 / 0.08), 0 2px 6px rgb(15 23 42 / 0.05)` / `0 10px 28px rgb(0 0 0 / 0.3), 0 2px 8px rgb(0 0 0 / 0.18)` | Menus, selects and popovers. |
@@ -300,26 +300,26 @@ and dark differ, both defaults are given.
 | `--font-mono` | Geist Mono | Code font. |
 | `--content-leading` | `1.625` | Line height of content paragraphs. |
 | `--content-leading-cjk` | `1.75` | Line height of CJK content paragraphs. |
-| `--text-micro` | `calc(11px * var(--font-scale, 1))` | Counters, badges, timestamps. |
-| `--text-micro--line-height` | `calc(15px * var(--font-scale, 1))` | Line height of `text-micro`. |
-| `--text-caption` | `calc(12px * var(--font-scale, 1))` | Chips, hints, tooltips, issue identifiers. |
-| `--text-caption--line-height` | `calc(16px * var(--font-scale, 1))` | Line height of `text-caption`. |
-| `--text-label` | `calc(13px * var(--font-scale, 1))` | Metadata rows, table headers, activity. |
-| `--text-label--line-height` | `calc(18px * var(--font-scale, 1))` | Line height of `text-label`. |
-| `--text-body` | `calc(14px * var(--font-scale, 1))` | Interface body text. |
-| `--text-body--line-height` | `calc(20px * var(--font-scale, 1))` | Line height of `text-body`. |
-| `--text-body-lg` | `calc(15px * var(--font-scale, 1))` | Dialog copy, onboarding prose. |
-| `--text-body-lg--line-height` | `calc(22px * var(--font-scale, 1))` | Line height of `text-body-lg`. |
-| `--text-title-sm` | `calc(16px * var(--font-scale, 1))` | Small headings. |
-| `--text-title-sm--line-height` | `calc(24px * var(--font-scale, 1))` | Line height of `text-title-sm`. |
-| `--text-title` | `calc(18px * var(--font-scale, 1))` | Section headings. |
-| `--text-title--line-height` | `calc(28px * var(--font-scale, 1))` | Line height of `text-title`. |
-| `--text-title-lg` | `calc(20px * var(--font-scale, 1))` | Card and dialog titles. |
-| `--text-title-lg--line-height` | `calc(28px * var(--font-scale, 1))` | Line height of `text-title-lg`. |
-| `--text-display-sm` | `calc(24px * var(--font-scale, 1))` | Page titles. |
-| `--text-display-sm--line-height` | `calc(32px * var(--font-scale, 1))` | Line height of `text-display-sm`. |
-| `--text-display` | `calc(36px * var(--font-scale, 1))` | Hero numbers and empty-state headlines. |
-| `--text-display--line-height` | `calc(40px * var(--font-scale, 1))` | Line height of `text-display`. |
+| `--text-micro` | `11px` | Counters, badges, timestamps. |
+| `--text-micro--line-height` | `15px` | Line height of `text-micro`. |
+| `--text-caption` | `12px` | Chips, hints, tooltips, issue identifiers. |
+| `--text-caption--line-height` | `16px` | Line height of `text-caption`. |
+| `--text-label` | `13px` | Metadata rows, table headers, activity. |
+| `--text-label--line-height` | `18px` | Line height of `text-label`. |
+| `--text-body` | `14px` | Interface body text. |
+| `--text-body--line-height` | `20px` | Line height of `text-body`. |
+| `--text-body-lg` | `15px` | Dialog copy, onboarding prose. |
+| `--text-body-lg--line-height` | `22px` | Line height of `text-body-lg`. |
+| `--text-title-sm` | `16px` | Small headings. |
+| `--text-title-sm--line-height` | `24px` | Line height of `text-title-sm`. |
+| `--text-title` | `18px` | Section headings. |
+| `--text-title--line-height` | `28px` | Line height of `text-title`. |
+| `--text-title-lg` | `20px` | Card and dialog titles. |
+| `--text-title-lg--line-height` | `28px` | Line height of `text-title-lg`. |
+| `--text-display-sm` | `24px` | Page titles. |
+| `--text-display-sm--line-height` | `32px` | Line height of `text-display-sm`. |
+| `--text-display` | `36px` | Hero numbers and empty-state headlines. |
+| `--text-display--line-height` | `40px` | Line height of `text-display`. |
 
 ### Controls and overlays
 
