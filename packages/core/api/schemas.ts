@@ -957,8 +957,6 @@ export interface AppConfigResponse {
   daemon_app_url?: string;
   daemon_setup_target?: "cloud" | "self_host" | "unknown";
   workspace_creation_disabled?: boolean;
-  /** DISABLE_STAR_PROMPT on the server. Absent means the prompt is allowed. */
-  star_prompt_disabled?: boolean;
   /** Whether this deployment offers the self-hosted Git provider integration
    * (self-host only; off on the managed cloud). Absent/false hides the whole
    * Settings → Integrations "Git providers" section. */
@@ -1246,7 +1244,6 @@ export const AppConfigSchema = z.object({
   daemon_app_url: OptionalStringSchema,
   daemon_setup_target: z.enum(["cloud", "self_host", "unknown"]).optional().catch("unknown"),
   workspace_creation_disabled: BooleanWithDefaultSchema(false).optional(),
-  star_prompt_disabled: BooleanWithDefaultSchema(false).optional(),
   vcs_integration_available: BooleanWithDefaultSchema(false).optional(),
   feature_flags: FeatureFlagsSchema,
   local_worktree_supported: BooleanWithDefaultSchema(false),
@@ -1266,7 +1263,6 @@ export const EMPTY_APP_CONFIG: AppConfigResponse = {
   daemon_app_url: "",
   daemon_setup_target: "unknown",
   workspace_creation_disabled: false,
-  star_prompt_disabled: false,
   vcs_integration_available: false,
   // Fail closed: an unreadable config must not look like a server that
   // validates execution_mode.
@@ -2907,6 +2903,17 @@ export const IssueInboxReadSchema = z
 export const SubscribedIssueIdsSchema = z
   .object({
     issue_ids: z
+      .array(z.unknown())
+      .transform((ids) => ids.filter((id): id is string => typeof id === "string" && id.length > 0)),
+  })
+  .loose();
+
+// The squads behind the viewer's "my agents" relation (`/api/squads/involved`
+// GET). Same rules as `SubscribedIssueIdsSchema`: an empty set would hide
+// every squad row under the filter, so a body without the list fails.
+export const InvolvedSquadIdsSchema = z
+  .object({
+    squad_ids: z
       .array(z.unknown())
       .transform((ids) => ids.filter((id): id is string => typeof id === "string" && id.length > 0)),
   })
