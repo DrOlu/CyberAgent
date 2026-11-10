@@ -174,7 +174,7 @@ function Install() {
           </h2>
           <p className="mt-3 max-w-[30rem] text-site-body text-site-muted text-pretty">
             With Xcode and a free Apple ID, one command builds the app and installs it on an iPhone plugged into your
-            Mac. It connects to Multica Cloud, or to your own server.
+            Mac. It connects to CyberAgent Cloud, or to your own server.
           </p>
           <CheckList
             className="mt-6"

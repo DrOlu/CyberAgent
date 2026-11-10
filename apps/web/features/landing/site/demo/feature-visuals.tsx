@@ -107,7 +107,7 @@ export function RuntimesVisual() {
     { name: "build-02", icon: Server, detail: copy.server, tools: ["Claude Code", "Codex", "OpenCode"], fresh: true },
     { name: copy.laptop, icon: Laptop, detail: copy.thisDevice, tools: ["Claude Code", "Cursor"] },
   ];
-  const cloud: Runtime[] = [{ name: "Multica Cloud", icon: Cloud, detail: copy.sandboxes, tools: ["Claude Code", "Codex"] }];
+  const cloud: Runtime[] = [{ name: "CyberAgent Cloud", icon: Cloud, detail: copy.sandboxes, tools: ["Claude Code", "Codex"] }];
   return (
     <Screen active="team">
       <PageHeader icon={Server} title={copy.title} filter={false}>

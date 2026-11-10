@@ -43,7 +43,7 @@ export const koSiteCopy: Pick<LandingDict, "site" | "home" | "demo" | "meta"> = 
     },
     privacy: {
       title: "개인정보 처리방침",
-      description: "Multica가 multica.ai와 Multica Cloud에서 개인정보를 수집, 이용, 보호하는 방법.",
+      description: "Multica가 multica.ai와 CyberAgent Cloud에서 개인정보를 수집, 이용, 보호하는 방법.",
       ogTitle: "개인정보 처리방침 — Multica",
       ogDescription: "Multica가 개인정보를 수집, 이용, 보호하는 방법.",
     },
@@ -134,7 +134,7 @@ export const koSiteCopy: Pick<LandingDict, "site" | "home" | "demo" | "meta"> = 
         runtimes: {
           title: "내 컴퓨터에서도, 클라우드에서도",
           body: "명령어 하나로 노트북이나 서버를 연결하면, Multica가 설치된 코딩 에이전트를 찾아냅니다. 관리형 클라우드 샌드박스에서 실행할 수도 있습니다.",
-          alt: "런타임 페이지. 컴퓨터 두 대와 Multica Cloud, 그리고 각각에서 찾은 코딩 도구가 표시되어 있다",
+          alt: "런타임 페이지. 컴퓨터 두 대와 CyberAgent Cloud, 그리고 각각에서 찾은 코딩 도구가 표시되어 있다",
         },
         workflows: {
           title: "워크플로가 단계마다 일을 넘겨줍니다",

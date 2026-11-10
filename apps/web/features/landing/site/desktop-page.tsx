@@ -19,7 +19,7 @@ export function DesktopPage() {
         <Compare />
         <Downloads />
         <SelfHosted />
-        <CtaBand title="Put your computer to work" lead="Download Multica Desktop, sign in, and assign an issue to an agent on your machine." />
+        <CtaBand title="Put your computer to work" lead="Download CyberAgent Desktop, sign in, and assign an issue to an agent on your machine." />
       </div>
     </SitePage>
   );
@@ -34,10 +34,10 @@ function Hero() {
   const docsHref = useDesktopDocsHref();
   return (
     <SurfaceHero
-      eyebrow="Multica Desktop"
+      eyebrow="CyberAgent Desktop"
       title="Multica, as a native app."
       subtitle="Your computer becomes a runtime."
-      lead="Multica Desktop for macOS, Windows, and Linux starts the daemon for you after sign-in, so the coding tools on your computer can take issues. Each workspace opens in a window of its own."
+      lead="CyberAgent Desktop for macOS, Windows, and Linux starts the daemon for you after sign-in, so the coding tools on your computer can take issues. Each workspace opens in a window of its own."
       actions={
         <>
           <ActionLink href="/download" size="lg">
@@ -50,7 +50,7 @@ function Hero() {
         </>
       }
       frost="desktop"
-      label="Multica Desktop with three tabs open in the title bar. The active tab shows issue ACM-152, which Backend Agent is working on Mia’s MacBook Pro. Beside it, that computer appears as a runtime managed by Desktop, with Claude Code, Codex, and Cursor detected."
+      label="CyberAgent Desktop with three tabs open in the title bar. The active tab shows issue ACM-152, which Backend Agent is working on Mia’s MacBook Pro. Beside it, that computer appears as a runtime managed by Desktop, with Claude Code, Codex, and Cursor detected."
     >
       <DesktopScene />
     </SurfaceHero>
@@ -202,7 +202,7 @@ function SelfHosted() {
             <span className="block text-site-muted">Point Desktop at it.</span>
           </h2>
           <p className="mt-3 max-w-[30rem] text-site-body text-site-muted text-pretty">
-            Desktop connects to Multica Cloud by default. Add a small file with your server’s address and restart the app.
+            Desktop connects to CyberAgent Cloud by default. Add a small file with your server’s address and restart the app.
           </p>
           <ActionLink href={`${docsHref}#connecting-to-a-self-hosted-instance`} tone="ghost" className="mt-6 -ml-3">
             Self-hosted setup

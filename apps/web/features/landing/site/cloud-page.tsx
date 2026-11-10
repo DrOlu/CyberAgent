@@ -49,7 +49,7 @@ function Hero() {
   const guideHref = useSetupGuideHref();
   return (
     <SurfaceHero
-      eyebrow="Multica Cloud"
+      eyebrow="CyberAgent Cloud"
       title="Agents that run in the cloud."
       subtitle="Assigned like any teammate."
       lead="Connect a cloud agent service as a runtime, and your agents take issues without a computer of yours staying on. Qoder Cloud Agents works today, with Cursor and Claude next."

@@ -28,7 +28,7 @@ import {
 } from "./mock-kit";
 
 /*
- * Mockups for the Multica Cloud page: agents that run on cloud agent services
+ * Mockups for the CyberAgent Cloud page: agents that run on cloud agent services
  * connected as runtimes. The hero is the Runtimes page open at multica.ai,
  * with an issue a cloud agent is working floating over it. Strings follow the
  * product's own copy; data is fictional.

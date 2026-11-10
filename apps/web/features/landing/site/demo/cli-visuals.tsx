@@ -18,7 +18,7 @@ import {
 } from "./mock-kit";
 
 /*
- * Mockups for the Multica CLI page: a terminal connecting a computer with
+ * Mockups for the CyberAgent CLI page: a terminal connecting a computer with
  * `multica setup`, the Runtimes list it lands in, and a coding agent driving
  * the CLI on someone's behalf. Command output follows the CLI's own strings;
  * data is fictional.
@@ -66,7 +66,7 @@ function SetupSession({ compact }: { compact?: boolean }) {
   return (
     <>
       <Cmd>multica setup</Cmd>
-      <p>Configured for Multica Cloud (https://multica.ai).</p>
+      <p>Configured for CyberAgent Cloud (https://multica.ai).</p>
       <p>{"  server_url: https://api.multica.ai"}</p>
       <p>{"  app_url:    https://multica.ai"}</p>
       <Gap />
@@ -166,7 +166,7 @@ function ToolCall({ name, children }: { name: string; children: ReactNode }) {
   );
 }
 
-/** A coding agent working an issue through the CLI, the way the Multica CLI skill teaches it to. */
+/** A coding agent working an issue through the CLI, the way the CyberAgent CLI skill teaches it to. */
 export function AgentSessionVisual() {
   return (
     <TerminalWindow title="Claude Code — acme/web" className="h-[340px] w-[420px]">

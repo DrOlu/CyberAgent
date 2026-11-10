@@ -299,7 +299,7 @@ function assigneeAt(workflow: Workflow, index: number): Actor | undefined {
 const PANEL_ROW = "flex min-h-8 items-center gap-2.5 rounded-lg px-3 py-1.5 text-body";
 const PANEL_ROW_ACTIVE = "bg-surface-selected text-surface-selected-foreground";
 /** A working agent's issue title in the panel: dimmer at rest, with a wider highlight. */
-const PANEL_SHIMMER = "[--shimmer-text-base:var(--faint-foreground)] [--shimmer-text-spread:22%]";
+const PANEL_SHIMMER = "[--shimmer-text-title-sm:var(--faint-foreground)] [--shimmer-text-spread:22%]";
 const TREE_SIZE = 3;
 
 function PanelSection({ label, children }: { label: string; children: ReactNode }) {

@@ -44,7 +44,7 @@ export const jaSiteCopy: Pick<LandingDict, "site" | "home" | "demo" | "meta"> = 
     },
     privacy: {
       title: "プライバシーポリシー",
-      description: "Multica が multica.ai と Multica Cloud で個人情報をどのように収集、利用、保護するか。",
+      description: "Multica が multica.ai と CyberAgent Cloud で個人情報をどのように収集、利用、保護するか。",
       ogTitle: "プライバシーポリシー — Multica",
       ogDescription: "Multica が個人情報をどのように収集、利用、保護するか。",
     },
@@ -135,7 +135,7 @@ export const jaSiteCopy: Pick<LandingDict, "site" | "home" | "demo" | "meta"> = 
         runtimes: {
           title: "自分のマシンでも、クラウドでも",
           body: "コマンドひとつでノート PC やサーバーをつなぐと、Multica がインストール済みのコーディングエージェントを見つけます。マネージドなクラウドサンドボックスで動かすこともできます。",
-          alt: "ランタイムのページ。2 台のマシンと Multica Cloud、それぞれで見つかったコーディングツールが並んでいる",
+          alt: "ランタイムのページ。2 台のマシンと CyberAgent Cloud、それぞれで見つかったコーディングツールが並んでいる",
         },
         workflows: {
           title: "ワークフローが、すべてのステップを引き継ぐ",

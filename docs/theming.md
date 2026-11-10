@@ -1,6 +1,6 @@
 # Theming Multica
 
-A Multica theme is a folder with a `manifest.json` and a `theme.css`, plus any
+A CyberAgent theme is a folder with a `manifest.json` and a `theme.css`, plus any
 fonts and images the CSS uses. The CSS overrides public variables for light
 and dark mode and can restyle the stable anchors listed below; the manifest
 names the theme and can declare options that appear under **Settings →
