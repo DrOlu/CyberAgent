@@ -36,17 +36,15 @@ func writeFakeZcodeScript(t *testing.T, script string) string {
 	t.Helper()
 	dir := t.TempDir()
 	bin := filepath.Join(dir, "zcode")
-	// Write to a temp file and rename into place. On overlayfs (CI Docker
-	// runners) exec'ing a file written in place can fail spuriously with
-	// ETXTBSY ("text file busy"); a same-directory rename is atomic and
-	// avoids the race.
-	tmp := filepath.Join(dir, "zcode.tmp")
-	if err := os.WriteFile(tmp, []byte(script), 0o755); err != nil {
-		t.Fatalf("write fake zcode: %v", err)
-	}
-	if err := os.Rename(tmp, bin); err != nil {
-		t.Fatalf("rename fake zcode: %v", err)
-	}
+	// Delegate to the shared fixture writer. Rename-into-place alone is not
+	// enough: a concurrent t.Parallel() sibling can still fork between our
+	// OpenFile and Close, and its child inherits the still-open write fd on
+	// the script inode — the later exec then fails with ETXTBSY ("text file
+	// busy"), seen on CI as TestZcodeResumeInternalErrorNotRejection:
+	// fork/exec .../zcode: text file busy. writeTestExecutable holds
+	// ForkLock.RLock across the write and renames for overlayfs runners,
+	// same hardening the muse and dim fake helpers already use.
+	writeTestExecutable(t, bin, []byte(script))
 	return bin
 }
 
