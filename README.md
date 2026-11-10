@@ -128,6 +128,20 @@ Create an issue from the board (or via `cyberagent issue create`), then assign i
 
 ---
 
+## Documentation
+
+Full reference documentation lives in [`docs/reference/`](docs/reference/README.md):
+
+- **[Product guide](docs/reference/product-guide.md)** — workspaces, projects, issues, chat, agents, skills, squads, autopilots, analytics, integrations
+- **[CLI reference](docs/reference/cli.md)** — every `multica` command with examples, environment variables
+- **[Runtime guide](docs/reference/runtime-guide.md)** — daemon, runtimes, providers, agent env, tuning
+- **[Ops guide](docs/reference/ops-guide.md)** — self-hosting, security model, troubleshooting
+
+> **Note on naming:** the CLI binary remains `multica` (and all `MULTICA_*` environment
+> variables keep their names) for compatibility with existing Multica scripts and installs.
+
+---
+
 ## CyberAgent vs Paperclip
 
 | | CyberAgent | Paperclip |
