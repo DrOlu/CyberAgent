@@ -14,8 +14,8 @@ export default defineConfig({
     // Tests that assert a findBy* lookup REJECTS — e.g. thinking-prop-row's
     // MUL-7412 "row must never appear" — only pass if that rejection lands
     // inside vitest's test window, so testTimeout must stay strictly above
-    // asyncUtilTimeout. 10s also leaves headroom for slow lookups under turbo
+    // asyncUtilTimeout. 20s also leaves headroom for slow lookups under turbo
     // parallel load, which were getting killed at exactly 5s in CI.
-    testTimeout: 10_000,
+    testTimeout: 20_000,
   },
 });
