@@ -2016,8 +2016,8 @@
       "exit_divider_code": "Exited at {{time}} · exit code {{code}}",
       "stopped_divider": "Stopped at {{time}}"
     },
-    "app_desktop_hint": "A desktop app. Switch to its window from Multica Desktop on the machine running it.",
-    "app_remote_hint": "Runs on {{machine}}. Switch to its window from Multica Desktop on that machine.",
+    "app_desktop_hint": "A desktop app. Switch to its window from CyberAgent Desktop on the machine running it.",
+    "app_remote_hint": "Runs on {{machine}}. Switch to its window from CyberAgent Desktop on that machine.",
     "focus": "Switch to window",
     "focus_gone": "{{name}} is no longer running",
     "focus_unsupported": "This machine's daemon can't switch to app windows yet. Update Multica and try again.",

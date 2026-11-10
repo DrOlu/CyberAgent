@@ -2016,8 +2016,8 @@
       "exit_divider_code": "Terminé à {{time}} · code de sortie {{code}}",
       "stopped_divider": "Arrêté à {{time}}"
     },
-    "app_desktop_hint": "Une app de bureau. Basculez vers sa fenêtre depuis Multica Desktop sur la machine qui l'exécute.",
-    "app_remote_hint": "S'exécute sur {{machine}}. Basculez vers sa fenêtre depuis Multica Desktop sur cette machine.",
+    "app_desktop_hint": "Une app de bureau. Basculez vers sa fenêtre depuis CyberAgent Desktop sur la machine qui l'exécute.",
+    "app_remote_hint": "S'exécute sur {{machine}}. Basculez vers sa fenêtre depuis CyberAgent Desktop sur cette machine.",
     "focus": "Afficher la fenêtre",
     "focus_gone": "{{name}} ne s'exécute plus",
     "focus_unsupported": "Le daemon de cette machine ne peut pas encore basculer vers les fenêtres d'apps. Mettez à jour Multica et réessayez.",

@@ -1938,8 +1938,8 @@
       "exit_divider_code": "{{time}} 退出 · 退出碼 {{code}}",
       "stopped_divider": "{{time}} 停止"
     },
-    "app_desktop_hint": "桌面 App。在執行它的那台機器上，用 Multica Desktop 切到它的視窗。",
-    "app_remote_hint": "在 {{machine}} 上執行。在那台機器上用 Multica Desktop 切到它的視窗。",
+    "app_desktop_hint": "桌面 App。在執行它的那台機器上，用 CyberAgent Desktop 切到它的視窗。",
+    "app_remote_hint": "在 {{machine}} 上執行。在那台機器上用 CyberAgent Desktop 切到它的視窗。",
     "focus": "切到視窗",
     "focus_gone": "{{name}} 已不在執行",
     "focus_unsupported": "這台機器的 daemon 暫時無法切換 App 視窗。更新 Multica 後再試。",

@@ -1938,8 +1938,8 @@
       "exit_divider_code": "{{time}} に終了 · 終了コード {{code}}",
       "stopped_divider": "{{time}} に停止"
     },
-    "app_desktop_hint": "デスクトップアプリです。実行中のマシンの Multica Desktop からウィンドウに切り替えられます。",
-    "app_remote_hint": "{{machine}} で実行中です。そのマシンの Multica Desktop からウィンドウに切り替えられます。",
+    "app_desktop_hint": "デスクトップアプリです。実行中のマシンの CyberAgent Desktop からウィンドウに切り替えられます。",
+    "app_remote_hint": "{{machine}} で実行中です。そのマシンの CyberAgent Desktop からウィンドウに切り替えられます。",
     "focus": "ウィンドウに切り替え",
     "focus_gone": "{{name}} はもう実行されていません",
     "focus_unsupported": "このマシンのデーモンはまだアプリのウィンドウに切り替えられません。Multica を更新してもう一度お試しください。",

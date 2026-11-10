@@ -2016,8 +2016,8 @@
       "exit_divider_code": "Terminó a las {{time}} · código de salida {{code}}",
       "stopped_divider": "Detenido a las {{time}}"
     },
-    "app_desktop_hint": "Una app de escritorio. Cambia a su ventana desde Multica Desktop en la máquina que la ejecuta.",
-    "app_remote_hint": "Se ejecuta en {{machine}}. Cambia a su ventana desde Multica Desktop en esa máquina.",
+    "app_desktop_hint": "Una app de escritorio. Cambia a su ventana desde CyberAgent Desktop en la máquina que la ejecuta.",
+    "app_remote_hint": "Se ejecuta en {{machine}}. Cambia a su ventana desde CyberAgent Desktop en esa máquina.",
     "focus": "Ir a la ventana",
     "focus_gone": "{{name}} ya no se está ejecutando",
     "focus_unsupported": "El daemon de esta máquina aún no puede cambiar a ventanas de apps. Actualiza Multica e inténtalo de nuevo.",
