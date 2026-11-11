@@ -327,7 +327,7 @@ export function NativeContextMenu() {
         className="w-auto min-w-44 max-w-80"
       >
         {page?.linkUrl && (
-          <div className="truncate px-2 py-1.5 text-xs text-muted-foreground" title={page.linkUrl}>
+          <div className="truncate px-2 py-1.5 text-caption text-muted-foreground" title={page.linkUrl}>
             {page.linkUrl}
           </div>
         )}

@@ -2,7 +2,7 @@
 
 **CyberAgent** (formerly **Multica**) is an autonomous coding agent platform: you compose AI agents from a model provider, one or more coding CLIs (Claude Code, Codex, OpenCode, …), skills and MCP servers — then assign them work as **issues**, let them work in **runtimes** on your machine or a server, review their changes through pull requests, and automate them with **schedules and webhooks** (autopilots).
 
-> This documentation is branded **CyberAgent**. The product was rebranded from Multica; the CLI binary (`multica`) and all `MULTICA_*` environment variables keep their historical names for compatibility.
+> This documentation is branded **CyberAgent**. The product was rebranded from CyberAgent; the CLI binary (`multica`) and all `MULTICA_*` environment variables keep their historical names for compatibility.
 
 ## Documentation map
 

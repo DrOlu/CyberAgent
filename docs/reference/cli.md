@@ -201,7 +201,7 @@ multica version
 
 ## Environment variables
 
-All prefixed `MULTICA_` (retained from Multica for compatibility):
+All prefixed `MULTICA_` (retained from CyberAgent for compatibility):
 
 **Server & auth** — `MULTICA_SERVER_URL`, `MULTICA_APP_URL`, `MULTICA_TOKEN`, `MULTICA_HTTP_TIMEOUT`.
 

@@ -414,7 +414,7 @@
         "description": "打开或关闭悬浮聊天窗，打开时自动聚焦输入框。"
       },
       "newChat": {
-        "label": "问 Multica",
+        "label": "问 CyberAgent",
         "description": "在悬浮聊天窗里开始新对话。"
       },
       "findInIssue": {
@@ -502,7 +502,7 @@
   "chat": {
     "floating_label": "悬浮聊天窗",
     "floating_hint": "在每个页面显示悬浮聊天按钮。",
-    "ask_agent_label": "「问 Multica」的智能体",
+    "ask_agent_label": "「问 CyberAgent」的智能体",
     "ask_agent_hint": "在此工作区从底栏发起新对话时使用的智能体。",
     "ask_agent_last_used": "上次使用的"
   },

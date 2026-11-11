@@ -15,7 +15,6 @@ import { DesktopLoginPage } from "./pages/login";
 import { DesktopAuthRecoveryPage } from "./pages/auth-recovery";
 import { DesktopShell } from "./components/desktop-layout";
 import { UpdateNotification } from "./components/update-notification";
-import { NativeContextMenu } from "./components/native-context-menu";
 import { IssueWindow } from "./components/issue-window";
 import { useTabStore } from "./stores/tab-store";
 import { useWindowOverlayStore } from "./stores/window-overlay-store";
@@ -145,12 +144,12 @@ function AppContent() {
 
   // Listen for invite IDs delivered via deep link (cyberagent://invite/<id>).
   // We open the overlay regardless of login state — if the user isn't logged
-  // in, InvitationsPage's queries will fail and render the "not found" state,
+  // in, InvitePage's queries will fail and render the "not found" state,
   // which is acceptable; the expected pre-flight happens in the web app
   // (login + next=/invite/... dance) before the deep link is ever dispatched.
   useEffect(() => {
     return window.desktopAPI.onInviteOpen((invitationId) => {
-      useWindowOverlayStore.getState().open({ type: "invitations", invitationId });
+      useWindowOverlayStore.getState().open({ type: "invite", invitationId });
     });
   }, []);
 
@@ -478,7 +477,6 @@ export default function App() {
           localeAdapter={localeAdapter}
         >
           <DesktopAuthSessionBridge />
-          <NativeContextMenu />
           {windowContext.kind === "main" && <DiagnosticRouteReporter />}
           {windowContext.kind === "main" && (
             <DesktopClientUsageReporter

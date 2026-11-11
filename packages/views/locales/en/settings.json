@@ -420,7 +420,7 @@
         "description": "Open or close the floating chat window. Opening it focuses the message input."
       },
       "newChat": {
-        "label": "Ask Multica",
+        "label": "Ask CyberAgent",
         "description": "Start a new chat in the floating chat window."
       },
       "findInIssue": {
