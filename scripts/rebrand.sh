@@ -163,6 +163,7 @@ open('.goreleaser.yml', 'w').write(text)
       -e 's/access Multica/access CyberAgent/g' \
       -e 's/Opening Multica/Opening CyberAgent/g' \
       -e 's/"Multica is working/"CyberAgent is working/g' \
+      -e 's/"Ask Multica agent"/"Ask CyberAgent agent"/g' \
       -e 's/"Ask Multica"/"Ask CyberAgent"/g' \
       -e 's/Let Multica know/Let CyberAgent know/g' \
       -e 's/Multica knows/CyberAgent knows/g' \
@@ -229,6 +230,8 @@ open('.goreleaser.yml', 'w').write(text)
   find packages/views -type f '(' -name '*.test.ts' -o -name '*.test.tsx' ')' \
     ! -path '*/node_modules/*' \
     -exec sed -i \
+      -e 's|Ask Multica agent|Ask CyberAgent agent|g' \
+      -e 's|Ask Multica|Ask CyberAgent|g' \
       -e 's|Welcome to Multica|Welcome to CyberAgent|g' \
       -e 's|welcome to Multica|welcome to CyberAgent|g' \
       -e 's|use Multica|use CyberAgent|g' \

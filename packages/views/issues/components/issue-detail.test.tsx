@@ -2800,12 +2800,14 @@ describe("IssueDetail (shared)", () => {
 
     it("restarts a comment landing that a timeline update cancels while it is still aligning", async () => {
       mockApiObj.listTasksByIssue.mockResolvedValue([]);
-      // The anchor keeps moving for 300ms, like reply heights settling, so the
-      // alignment loop is still running when the update arrives.
+      // The anchor keeps moving for 1000ms, like reply heights settling, so the
+      // alignment loop is still running when the update arrives. The window is
+      // generous on purpose: CI runners dispatch the timeline update later than
+      // local machines, and a 300ms window flaked at ~416ms.
       let driftStart = 0;
       const drift = () => {
         driftStart ||= performance.now();
-        return Math.min(performance.now() - driftStart, 300);
+        return Math.min(performance.now() - driftStart, 1000);
       };
       const rect = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
         const container = this.closest<HTMLElement>("[data-tab-scroll-root]");
@@ -2826,9 +2828,9 @@ describe("IssueDetail (shared)", () => {
           ]);
         });
         expect(driftStart).toBeGreaterThan(0);
-        expect(performance.now() - driftStart).toBeLessThan(300);
-        // 250 + 300 drift - 16 top gap: where the comment sits once settled.
-        await waitFor(() => expect(container.scrollTop).toBe(534), { timeout: 2000 });
+        expect(performance.now() - driftStart).toBeLessThan(1000);
+        // 250 + 1000 drift - 16 top gap: where the comment sits once settled.
+        await waitFor(() => expect(container.scrollTop).toBe(1234), { timeout: 2000 });
       } finally {
         rect.mockRestore();
       }
