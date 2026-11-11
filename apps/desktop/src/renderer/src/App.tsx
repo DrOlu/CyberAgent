@@ -149,7 +149,7 @@ function AppContent() {
   // (login + next=/invite/... dance) before the deep link is ever dispatched.
   useEffect(() => {
     return window.desktopAPI.onInviteOpen((invitationId) => {
-      useWindowOverlayStore.getState().open({ type: "invite", invitationId });
+      useWindowOverlayStore.getState().open({ type: "invitations", invitationId });
     });
   }, []);
 
