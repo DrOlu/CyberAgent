@@ -4,8 +4,10 @@ import { cronFields, parseCron, toCron } from "./cron-mapping";
 
 // The suite sweeps a corpus of tens of thousands of expressions per test, some
 // round-tripping every one; that is well within a second locally but crosses
-// the default 5s cap on a loaded CI runner. Give the whole-corpus sweeps room.
-vi.setConfig({ testTimeout: 30_000 });
+// the default 5s cap on a loaded CI runner — and a heavily contended turbo
+// run (19-minute frontend job) has crossed 30s too. Give the whole-corpus
+// sweeps real headroom.
+vi.setConfig({ testTimeout: 90_000 });
 
 // Hand-written example lists are how corners get missed: they only ever cover
 // the shapes someone thought of. This suite covers the grammar by construction
