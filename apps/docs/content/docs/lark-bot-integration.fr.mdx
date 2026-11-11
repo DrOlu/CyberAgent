@@ -45,8 +45,6 @@ Ce n'est qu'après l'association que CyberAgent peut confirmer de quel membre de
 
 Ajoutez d'abord le bot au groupe, puis mentionnez-le avec `@Bot` et décrivez votre besoin. Le bot ne répond qu'aux messages qui le @mentionnent explicitement ; lorsqu'il s'exécute, il s'appuie sur le contexte récent qu'il peut lire dans la session en cours.
 
-En message direct comme en groupe, le prompt de chaque exécution indique aussi les identifiants Feishu du message auquel il répond : `chat_id`, `chat_type`, `message_id`, le `thread_id` du sujet lorsque le message se trouve dans un sujet, et l'`open_id` de l'expéditeur. Ce sont des identifiants Feishu, pas Multica : un agent disposant de son propre accès à Feishu peut s'en servir pour retrouver le message ou la conversation d'origine. L'`open_id` n'est valable que dans l'application du bot connecté. Les identifiants que Multica n'a pas enregistrés sont omis.
-
 ### Créer une tâche
 
 Envoyez :
