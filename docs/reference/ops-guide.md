@@ -4,9 +4,9 @@
 
 CyberAgent can run entirely on your infrastructure: a **server** (API + web + database) plus **daemons** on machines you control. `multica setup self-host` points a CLI at it.
 
-- Quick start: [`SELF_HOSTING.md`](../../SELF_HOSTING.md)
-- Advanced (TLS, DNS, upgrades, backups): [`SELF_HOSTING_ADVANCED.md`](../../SELF_HOSTING_ADVANCED.md)
-- AI/provider configuration: [`SELF_HOSTING_AI.md`](../../SELF_HOSTING_AI.md)
+- Quick start: [`SELF_HOSTING.md`](https://github.com/DrOlu/CyberAgent/blob/main/SELF_HOSTING.md)
+- Advanced (TLS, DNS, upgrades, backups): [`SELF_HOSTING_ADVANCED.md`](https://github.com/DrOlu/CyberAgent/blob/main/SELF_HOSTING_ADVANCED.md)
+- AI/provider configuration: [`SELF_HOSTING_AI.md`](https://github.com/DrOlu/CyberAgent/blob/main/SELF_HOSTING_AI.md)
 
 Shape of a deployment:
 

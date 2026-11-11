@@ -1,0 +1,73 @@
+docs_dir: docs
+site_name: CyberAgent
+site_description: >-
+  A workspace where humans and AI agents work side by side — projects,
+  issues and chat, with agent runtimes, skills, squads and autopilots.
+  The product behind multica.ai.
+site_url: https://drolu.github.io/CyberAgent/
+repo_url: https://github.com/DrOlu/CyberAgent
+repo_name: DrOlu/CyberAgent
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: custom
+      accent: custom
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - search.suggest
+    - search.highlight
+    - navigation.tabs
+    - navigation.sections
+    - content.code.copy
+    - content.code.annotate
+
+nav:
+  - Home: index.md
+  - Product Guide: reference/README.md
+  - CLI Reference: reference/cli.md
+  - Runtime Guide: reference/runtime-guide.md
+  - Ops Guide: reference/ops-guide.md
+
+# Internal engineering notes live in docs/ but are not part of the
+# published documentation site (the site mirrors multica.ai/docs scope).
+exclude_docs: |
+  agent-quick-create-plan.md
+  codex-sandbox-troubleshooting.md
+  docs-outline.md
+  docs-rewrite-plan.md
+  engineering/
+  issue-status-lifecycle-rollout.md
+  lark-inbound-media.md
+  lark-outbound-media.md
+  lark-typing-cleanup.md
+  maintenance-jobs.md
+  product-overview.md
+  theming.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.tabbed
+  - pymdownx.details
+  - tables
+  - toc:
+      permalink: true
+
+extra_css:
+  - stylesheets/brand.css
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/DrOlu/CyberAgent

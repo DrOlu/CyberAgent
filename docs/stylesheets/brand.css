@@ -1,0 +1,18 @@
+/* CyberAgent docs theme — the multica brand is monochrome (near-black on
+   light, white on dark), so the site keeps Material's neutral slate body
+   and carries a deep-indigo identity: indigo header bar, violet accents.
+   Distinct from the neon-lime neuralOS/neuralosd family on purpose. */
+
+:root > * {
+  --md-primary-fg-color: #1a1a2e;          /* ink header bar */
+  --md-primary-bg-color: #ffffff;
+  --md-accent-fg-color: #6c5ce7;           /* violet accent */
+  --md-typeset-a-color: #5b4bd6;
+}
+
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #14142b;
+  --md-primary-bg-color: #14142b;
+  --md-accent-fg-color: #a29bfe;
+  --md-typeset-a-color: #a29bfe;
+}
