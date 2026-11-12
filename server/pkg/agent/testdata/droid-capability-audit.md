@@ -15,7 +15,7 @@ The following flag inventory was checked against the installed 1.8.0 help, rathe
 | Prompt / `-f`, `--file`, positional arguments | Task prompt uses stdin; file overrides are filtered, extra positional prompts and unknown options fail before startup | Native option arity is validated. Large Unicode/quoted prompts and wrapper-descendant stdin delivery are tested. |
 | `-o`, `--output-format`, `--input-format` | Own one-shot `stream-json` output; alternate transports are filtered | Assistant, tool, init, completion, usage and error mapping use the synthetic protocol fixture. Output `stream-json` remains supported; deprecated input `stream-json` is not used. |
 | `--auto`, `--skip-permissions-unsafe` | Own `--auto high`; custom overrides filtered | This supports unattended coding. Droid's command policy still applies; a failed task may have edited files. |
-| `-m`, `--model` | Own model from Multica, otherwise Droid default | Opaque public/custom IDs are forwarded; no static model catalog or automatic Thinking picker is advertised. |
+| `-m`, `--model` | Own model from CyberAgent, otherwise Droid default | Opaque public/custom IDs are forwarded; no static model catalog or automatic Thinking picker is advertised. |
 | `-r`, `--reasoning-effort` | Custom arguments pass through | Native model validates compatibility; BYOK reasoning is provider-controlled. |
 | `--use-spec`, `--spec-model`, `--spec-reasoning-effort` | Custom arguments pass through | Native planning behavior is delegated, not a separate Multica planning UI. |
 | `--only-tools`, `--add-tools`, `--remove-tools` | Custom arguments pass through | Includes native MCP selectors; does not provision an MCP server. |
