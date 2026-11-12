@@ -16,6 +16,7 @@ import { DesktopAuthRecoveryPage } from "./pages/auth-recovery";
 import { DesktopShell } from "./components/desktop-layout";
 import { UpdateNotification } from "./components/update-notification";
 import { IssueWindow } from "./components/issue-window";
+import { DesktopDevToolbar } from "./components/desktop-dev-toolbar";
 import { useTabStore } from "./stores/tab-store";
 import { useWindowOverlayStore } from "./stores/window-overlay-store";
 import { useDaemonIPCBridge } from "./platform/daemon-ipc-bridge";
@@ -488,6 +489,12 @@ export default function App() {
           ) : (
             <AppContent />
           )}
+          {/* Opt-in dev status bar; see "Dev Toolbar" in CONTRIBUTING.md. */}
+          {import.meta.env.DEV &&
+            import.meta.env.VITE_DEV_TOOLBAR &&
+            windowContext.kind === "main" && (
+              <DesktopDevToolbar apiUrl={runtimeConfigResult.config.apiUrl} />
+            )}
         </CoreProvider>
       ) : (
         <BlockingRuntimeConfigError message={runtimeConfigResult.error.message} />
