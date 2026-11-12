@@ -13,6 +13,7 @@ import {
 import { setupLocalDirectory } from "./local-directory";
 import { openExternalSafely, downloadURLSafely } from "./external-url";
 import { installContextMenu } from "./context-menu";
+import { devToolbarPreferencesPath, installDevToolbarToggle } from "./dev-toolbar-toggle";
 import { handleAppShortcut } from "./keyboard-shortcuts";
 import { installNavigationGestures } from "./navigation-gestures";
 import { installNavigationGuard } from "./navigation-guard";
@@ -643,6 +644,7 @@ if (!gotTheLock) {
       readonly VITE_API_URL?: string;
       readonly VITE_WS_URL?: string;
       readonly VITE_APP_URL?: string;
+      readonly VITE_DEV_TOOLBAR?: string;
     };
 
     runtimeConfigResult = await loadRuntimeConfig({
@@ -740,6 +742,11 @@ if (!gotTheLock) {
     // blocking error and must not silently fall back to the cloud defaults.
     ipcMain.on("runtime-config:get", (event) => {
       event.returnValue = runtimeConfigResult;
+    });
+
+    installDevToolbarToggle({
+      enabled: is.dev && Boolean(viteEnv.VITE_DEV_TOOLBAR),
+      preferencesPath: devToolbarPreferencesPath(app.getPath("userData")),
     });
 
     ipcMain.on(RENDERER_ROUTE_CONTEXT_CHANNEL, (event, context: unknown) => {
