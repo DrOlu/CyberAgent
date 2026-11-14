@@ -277,7 +277,7 @@
     },
     "own": {
       "title": "Créer le vôtre",
-      "description": "Importez un thème au format .zip ou depuis un dossier, ou partez d’une copie du thème actuel."
+      "description": "Demandez à n’importe quel agent d’en créer un dans un chat ou une tâche, importez un thème au format .zip ou depuis un dossier, ou partez d’une copie du thème actuel."
     },
     "tools": {
       "duplicate": "Dupliquer « {{name}} » en nouveau thème",
@@ -393,6 +393,7 @@
     "reserved_error": "Réservé par le navigateur ou la fenêtre de bureau.",
     "send_error": "Envoyer ne peut utiliser que Entrée ou Mod+Entrée.",
     "unsafe_error": "Cette touche gênerait la saisie ou la navigation clavier de base.",
+    "unrecognized_error": "Impossible d'enregistrer cette combinaison. Essayez-en une autre.",
     "send_enter_hint": "Maj+Entrée insère un paragraphe, poursuit une liste, ou ajoute un saut de ligne dans un bloc de code.",
     "categories": {
       "general": "Général",
@@ -430,6 +431,10 @@
       "archiveInboxItem": {
         "label": "Archiver la notification",
         "description": "Archiver la notification ouverte, ou la restaurer lors de la consultation des archives."
+      },
+      "snoozeInboxItem": {
+        "label": "Reporter la notification",
+        "description": "Choisissez quand la notification ouverte revient dans la boîte de réception."
       },
       "send": {
         "label": "Envoyer",
@@ -490,6 +495,10 @@
       "goSettings": {
         "label": "Aller aux paramètres",
         "description": "Ouvrir les paramètres de l'espace de travail."
+      },
+      "voiceInput": {
+        "label": "Saisie vocale",
+        "description": "Dictez dans le dernier éditeur utilisé. Maintenez pour parler."
       }
     },
     "fixed": {
@@ -586,7 +595,8 @@
       "code": "Code",
       "channels": "Messagerie",
       "apps": "Applications connectées",
-      "workflows": "Workflows"
+      "workflows": "Workflows",
+      "voice_input": "Saisie vocale"
     },
     "groups": {
       "personal": "Personnel",
@@ -825,25 +835,48 @@
     "toast_profile_failed": "Échec de la mise à jour du profil"
   },
   "notifications": {
-    "title": "Notifications de la boîte de réception",
-    "description": "Les événements désactivés restent visibles dans la tâche.",
     "toast_failed": "Échec de la mise à jour des réglages de notification",
-    "groups": {
+    "needs_you": {
+      "title": "À traiter",
+      "description": "Ce qui vous est adressé reste dans « À traiter » de la boîte de réception jusqu'à ce que vous le traitiez ou l'archiviez. Impossible à désactiver.",
+      "always_on": "Toujours activé",
+      "mentions": {
+        "label": "Mentions",
+        "description": "Quand quelqu'un vous @mentionne"
+      },
       "assignments": {
         "label": "Assignations",
-        "description": "Quand une tâche vous est assignée ou retirée"
+        "description": "Quand une tâche vous est assignée"
       },
-      "status_changes": {
-        "label": "Changements de statut",
-        "description": "Quand une tâche que vous suivez change de statut (à faire, en cours, terminé…)"
+      "runs": {
+        "label": "Exécutions que vous avez lancées",
+        "description": "Quand l'agent termine, échoue, vous pose une question, ou que l'exécution est annulée"
+      },
+      "your_issues": {
+        "label": "Tâches que vous avez créées ou qui vous sont assignées",
+        "description": "Nouveaux commentaires, ou statut en attente de votre action"
+      }
+    },
+    "updates": {
+      "title": "Mises à jour",
+      "description": "L'activité des tâches que vous suivez. Non comptée dans le badge, et retirée de la boîte de réception une fois lue. Ce que vous désactivez reste visible sur la tâche."
+    },
+    "groups": {
+      "mentions": {
+        "label": "@all et @squad",
+        "description": "Les mentions de groupe vont aussi dans « À traiter ». Désactivé, elles vont dans « Mises à jour »."
       },
       "comments": {
         "label": "Commentaires",
         "description": "Nouveaux commentaires sur les tâches que vous suivez"
       },
-      "mentions": {
-        "label": "Mentions",
-        "description": "Quand quelqu'un vous @mentionne, y compris via @all et @squad"
+      "status_changes": {
+        "label": "Changements de statut",
+        "description": "Quand une tâche que vous suivez change de statut (à faire, en cours, terminé…)"
+      },
+      "assignments": {
+        "label": "Changements d'assignation",
+        "description": "Quand une tâche ne vous est plus assignée, ou qu'une tâche que vous suivez change de responsable"
       },
       "updates": {
         "label": "Priorité et date d'échéance",
@@ -854,8 +887,8 @@
         "description": "Quand une tâche est créée dans un projet auquel vous êtes abonné"
       },
       "agent_activity": {
-        "label": "Activité des agents",
-        "description": "Lorsqu'une exécution d'agent échoue"
+        "label": "Exécutions d'agent",
+        "description": "Quand l'exécution d'un agent échoue ou se bloque sur une tâche que vous suivez"
       },
       "chat_replies": {
         "label": "Inclure les réponses du chat"
@@ -863,7 +896,8 @@
     },
     "system": {
       "title": "Notifications système",
-      "label": "Afficher les notifications système lorsque Multica est en arrière-plan"
+      "label": "Afficher les notifications système lorsque Multica est en arrière-plan",
+      "description": "Dans la boîte de réception, seul « À traiter » affiche une bannière. Les mises à jour, jamais."
     },
     "browser": {
       "label": "Notifications du navigateur",
@@ -1852,6 +1886,101 @@
       "cancel": "Annuler",
       "admin_required": "Un administrateur peut rétablir l’accès.",
       "account_link": "Ce compte conserve des restrictions. Rétablissez l’accès dans les apps connectées."
+    }
+  },
+  "voice_input": {
+    "description": "Dictez dans le chat, les commentaires et les réponses. La voix est transcrite sur cet ordinateur et ne le quitte jamais.",
+    "model_title": "Modèle vocal",
+    "model_hint": "Les modèles s’exécutent sur cet ordinateur. Téléchargez-en un, ou passez de l’un à l’autre.",
+    "engine_unavailable": "La transcription sur l’appareil n’est pas disponible sur cet ordinateur.",
+    "input_title": "Saisie",
+    "shortcut": {
+      "title": "Raccourci",
+      "hint": "Fonctionne dès qu’un éditeur est à l’écran, même sans le focus.",
+      "change": "Modifier",
+      "unassigned": "Non défini"
+    },
+    "activation": {
+      "title": "Activation",
+      "auto": "Appui ou maintien",
+      "toggle": "Appui",
+      "hold": "Maintien",
+      "hints": {
+        "auto": "Appuyez pour commencer, appuyez à nouveau pour insérer. Maintenez pour parler, relâchez pour insérer.",
+        "toggle": "Appuyez pour commencer, appuyez à nouveau pour insérer.",
+        "hold": "Maintenez pour parler, relâchez pour insérer."
+      }
+    },
+    "recognition_title": "Reconnaissance",
+    "language": {
+      "title": "Langue parlée",
+      "hint": "La détection automatique convient dans la plupart des cas. Choisissez une langue si de courtes phrases sortent dans une autre.",
+      "auto": "Détection automatique"
+    },
+    "fillers": {
+      "title": "Supprimer les hésitations",
+      "hint": "Retire « euh », « hum » et les hésitations similaires."
+    },
+    "vocabulary": {
+      "title": "Vocabulaire",
+      "hint": "Noms et termes à écrire à votre façon, comme des produits ou des collègues. Jusqu’à {{max}}.",
+      "placeholder": "Ajouter un mot",
+      "remove": "Retirer {{word}}"
+    },
+    "microphone_title": "Micro",
+    "device": {
+      "title": "Périphérique d’entrée",
+      "default": "Par défaut du système",
+      "unnamed": "Micro {{index}}",
+      "permission_hint": "Testez le micro une fois pour voir le nom des périphériques."
+    },
+    "test": {
+      "title": "Tester le micro",
+      "hint": "Parlez pour vérifier le niveau. Rien n’est enregistré.",
+      "blocked": "L’accès au micro est bloqué. Autorisez-le dans le navigateur ou les réglages système.",
+      "start": "Tester",
+      "stop": "Arrêter"
+    },
+    "history": {
+      "title": "Historique",
+      "description": "Les enregistrements et leur texte restent sur cet ordinateur et ne sont jamais envoyés. Un enregistrement qui a échoué ou a été interrompu peut être retranscrit à partir de son audio.",
+      "keep": {
+        "title": "Conserver l'historique",
+        "hint": "Durée de conservation des enregistrements sur cet ordinateur.",
+        "options": {
+          "off": "Ne pas conserver",
+          "1d": "1 jour",
+          "7d": "7 jours",
+          "30d": "30 jours",
+          "forever": "Toujours"
+        }
+      },
+      "clear": "Tout effacer",
+      "clear_dialog": {
+        "title": "Effacer l'historique vocal ?",
+        "description": "Tous les enregistrements et transcriptions conservés sur cet ordinateur seront supprimés.",
+        "cancel": "Annuler"
+      },
+      "empty": "Vos dictées apparaîtront ici.",
+      "off": "L'historique est désactivé. Les nouveaux enregistrements ne sont pas conservés.",
+      "today": "Aujourd'hui",
+      "yesterday": "Hier",
+      "status": {
+        "transcribing": "Transcription…",
+        "failed": "Échec de la transcription",
+        "interrupted": "Interrompu avant la transcription"
+      },
+      "actions": {
+        "play": "Lire l'enregistrement",
+        "pause": "Pause",
+        "retranscribe": "Retranscrire",
+        "copy": "Copier le texte",
+        "delete": "Supprimer"
+      },
+      "copied": "Copié",
+      "copy_failed": "Impossible de copier",
+      "retry_failed": "Impossible de transcrire cet enregistrement",
+      "show_more": "Afficher plus"
     }
   }
 }

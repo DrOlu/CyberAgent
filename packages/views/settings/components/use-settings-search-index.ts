@@ -6,11 +6,12 @@ import type { SettingsSearchEntry } from "./settings-search";
 import { CHANNEL_INTEGRATIONS } from "./settings-navigation";
 import { browserNotificationSettingAvailable } from "./browser-notification-setting";
 
+// The notification kinds that have a switch, in the order the page lists them.
 const NOTIFICATION_GROUPS = [
-  "assignments",
-  "status_changes",
-  "comments",
   "mentions",
+  "comments",
+  "status_changes",
+  "assignments",
   "updates",
   "new_issues",
   "agent_activity",
@@ -190,6 +191,7 @@ export function useSettingsSearchIndex(
         tab: "notifications",
         anchor: "system",
         title: t(($) => $.notifications.system.label),
+        description: t(($) => $.notifications.system.description),
       },
       // Web-only row: absent on desktop and without the Notification API.
       ...(browserNotificationSettingAvailable()
@@ -210,6 +212,61 @@ export function useSettingsSearchIndex(
         tab: "shortcuts",
         title: t(($) => $.page.tabs.shortcuts),
         description: t(($) => $.shortcuts.description),
+      },
+      {
+        tab: "voice-input",
+        title: t(($) => $.page.tabs.voice_input),
+        description: t(($) => $.voice_input.description),
+      },
+      {
+        tab: "voice-input",
+        anchor: "voice-model",
+        title: t(($) => $.voice_input.model_title),
+        description: t(($) => $.voice_input.model_hint),
+      },
+      {
+        tab: "voice-input",
+        anchor: "voice-shortcut",
+        title: t(($) => $.voice_input.shortcut.title),
+        description: t(($) => $.voice_input.shortcut.hint),
+      },
+      {
+        tab: "voice-input",
+        anchor: "voice-activation",
+        title: t(($) => $.voice_input.activation.title),
+      },
+      {
+        tab: "voice-input",
+        anchor: "voice-language",
+        title: t(($) => $.voice_input.language.title),
+        description: t(($) => $.voice_input.language.hint),
+      },
+      {
+        tab: "voice-input",
+        anchor: "voice-fillers",
+        title: t(($) => $.voice_input.fillers.title),
+        description: t(($) => $.voice_input.fillers.hint),
+      },
+      {
+        tab: "voice-input",
+        anchor: "voice-vocabulary",
+        title: t(($) => $.voice_input.vocabulary.title),
+      },
+      {
+        tab: "voice-input",
+        anchor: "voice-device",
+        title: t(($) => $.voice_input.device.title),
+      },
+      {
+        tab: "voice-input",
+        anchor: "voice-test",
+        title: t(($) => $.voice_input.test.title),
+      },
+      {
+        tab: "voice-input",
+        anchor: "voice-history",
+        title: t(($) => $.voice_input.history.title),
+        description: t(($) => $.voice_input.history.description),
       },
       {
         tab: "apps",

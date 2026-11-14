@@ -277,7 +277,7 @@
     },
     "own": {
       "title": "Crea el tuyo",
-      "description": "Importa un tema como .zip o carpeta, o empieza con una copia del actual."
+      "description": "Pide a cualquier agente que cree uno en un chat o una tarea, importa un tema como .zip o carpeta, o empieza con una copia del actual."
     },
     "tools": {
       "duplicate": "Duplicar «{{name}}» como tema nuevo",
@@ -393,6 +393,7 @@
     "reserved_error": "Reservado por el navegador o la ventana de escritorio.",
     "send_error": "Enviar solo puede usar Enter o Mod+Enter.",
     "unsafe_error": "Esta tecla interferiría con la escritura o la navegación básica del teclado.",
+    "unrecognized_error": "No se puede grabar esta combinación. Prueba con otra.",
     "send_enter_hint": "Shift+Enter inserta un párrafo, continúa una lista o añade un salto de línea en un bloque de código.",
     "categories": {
       "general": "General",
@@ -430,6 +431,10 @@
       "archiveInboxItem": {
         "label": "Archivar notificación",
         "description": "Archiva la notificación de la bandeja abierta, o restaúrala mientras lees el archivo."
+      },
+      "snoozeInboxItem": {
+        "label": "Posponer notificación",
+        "description": "Elige cuándo vuelve la notificación abierta de la bandeja de entrada."
       },
       "send": {
         "label": "Enviar",
@@ -490,6 +495,10 @@
       "goSettings": {
         "label": "Ir a Configuración",
         "description": "Abre la configuración del espacio de trabajo."
+      },
+      "voiceInput": {
+        "label": "Entrada de voz",
+        "description": "Dicta en el último editor que usaste. Mantén pulsado para hablar."
       }
     },
     "fixed": {
@@ -586,7 +595,8 @@
       "apps": "Apps conectadas",
       "channels": "Mensajería",
       "code": "Código",
-      "workflows": "Flujos de trabajo"
+      "workflows": "Flujos de trabajo",
+      "voice_input": "Entrada de voz"
     },
     "groups": {
       "personal": "Personal",
@@ -825,25 +835,48 @@
     "toast_profile_failed": "Error al actualizar el perfil"
   },
   "notifications": {
-    "title": "Notificaciones de la bandeja",
-    "description": "Los eventos silenciados siguen visibles en la tarea.",
     "toast_failed": "Error al actualizar la configuración de notificaciones",
-    "groups": {
+    "needs_you": {
+      "title": "Pendientes de ti",
+      "description": "Lo que va dirigido a ti permanece en «Pendientes de ti» de la bandeja de entrada hasta que lo atiendas o lo archives. No se puede desactivar.",
+      "always_on": "Siempre activado",
+      "mentions": {
+        "label": "Menciones",
+        "description": "Cuando alguien te @menciona"
+      },
       "assignments": {
         "label": "Asignaciones",
-        "description": "Cuando te asignan o te quitan de una tarea"
+        "description": "Cuando te asignan una tarea"
       },
-      "status_changes": {
-        "label": "Cambios de estado",
-        "description": "Cuando una tarea que sigues cambia de estado (p. ej. pendiente, en curso, completado)"
+      "runs": {
+        "label": "Ejecuciones que iniciaste",
+        "description": "Cuando el agente termina, falla, te pregunta algo o se cancela la ejecución"
+      },
+      "your_issues": {
+        "label": "Tareas que creaste o tienes asignadas",
+        "description": "Comentarios nuevos, o un estado que espera tu acción"
+      }
+    },
+    "updates": {
+      "title": "Novedades",
+      "description": "Actividad en las tareas que sigues. No cuenta en la insignia y desaparece de la bandeja de entrada al leerla. Lo que desactives sigue visible en la tarea."
+    },
+    "groups": {
+      "mentions": {
+        "label": "@all y @squad",
+        "description": "Las menciones de grupo también van a «Pendientes de ti». Si se desactiva, van a «Novedades»."
       },
       "comments": {
         "label": "Comentarios",
         "description": "Comentarios nuevos en tareas que sigues"
       },
-      "mentions": {
-        "label": "Menciones",
-        "description": "Cuando alguien te @menciona, incluidos @all y @squad"
+      "status_changes": {
+        "label": "Cambios de estado",
+        "description": "Cuando una tarea que sigues cambia de estado (p. ej. pendiente, en curso, completado)"
+      },
+      "assignments": {
+        "label": "Cambios de asignación",
+        "description": "Cuando te quitan de una tarea, o una tarea que sigues cambia de responsable"
       },
       "updates": {
         "label": "Prioridad y fecha de entrega",
@@ -854,8 +887,8 @@
         "description": "Cuando se crea una tarea en un proyecto al que estás suscrito"
       },
       "agent_activity": {
-        "label": "Actividad de agentes",
-        "description": "Cuando falla una ejecución de agente"
+        "label": "Ejecuciones de agentes",
+        "description": "Cuando la ejecución de un agente falla o se bloquea en una tarea que sigues"
       },
       "chat_replies": {
         "label": "Incluir respuestas del chat"
@@ -863,7 +896,8 @@
     },
     "system": {
       "title": "Notificaciones del sistema",
-      "label": "Mostrar notificaciones del sistema"
+      "label": "Mostrar notificaciones del sistema",
+      "description": "De la bandeja de entrada, solo «Pendientes de ti» muestra un aviso. Las novedades, nunca."
     },
     "browser": {
       "label": "Notificaciones del navegador",
@@ -1852,6 +1886,101 @@
       "cancel": "Cancelar",
       "admin_required": "Un administrador puede restablecer el acceso.",
       "account_link": "Esta cuenta conserva restricciones. Restablece el acceso en Apps conectadas."
+    }
+  },
+  "voice_input": {
+    "description": "Dicta en el chat, los comentarios y las respuestas. La voz se transcribe en este ordenador y nunca sale de él.",
+    "model_title": "Modelo de voz",
+    "model_hint": "Los modelos se ejecutan en este ordenador. Descarga uno o cambia entre los que tienes.",
+    "engine_unavailable": "La transcripción en el dispositivo no está disponible en este ordenador.",
+    "input_title": "Entrada",
+    "shortcut": {
+      "title": "Atajo",
+      "hint": "Funciona siempre que haya un editor en pantalla, aunque no tenga el foco.",
+      "change": "Cambiar",
+      "unassigned": "Sin asignar"
+    },
+    "activation": {
+      "title": "Activación",
+      "auto": "Tocar o mantener",
+      "toggle": "Tocar",
+      "hold": "Mantener",
+      "hints": {
+        "auto": "Toca para empezar y vuelve a tocar para insertar. Mantén pulsado para hablar y suelta para insertar.",
+        "toggle": "Toca para empezar y vuelve a tocar para insertar.",
+        "hold": "Mantén pulsado para hablar y suelta para insertar."
+      }
+    },
+    "recognition_title": "Reconocimiento",
+    "language": {
+      "title": "Idioma hablado",
+      "hint": "La detección automática sirve para casi todo. Elige un idioma si las frases cortas salen en otro.",
+      "auto": "Detección automática"
+    },
+    "fillers": {
+      "title": "Quitar muletillas",
+      "hint": "Elimina “eh”, “em” y vacilaciones similares."
+    },
+    "vocabulary": {
+      "title": "Vocabulario",
+      "hint": "Nombres y términos que quieres escritos a tu manera, como productos o compañeros. Hasta {{max}}.",
+      "placeholder": "Añadir una palabra",
+      "remove": "Quitar {{word}}"
+    },
+    "microphone_title": "Micrófono",
+    "device": {
+      "title": "Dispositivo de entrada",
+      "default": "Predeterminado del sistema",
+      "unnamed": "Micrófono {{index}}",
+      "permission_hint": "Prueba el micrófono una vez para ver los nombres de los dispositivos."
+    },
+    "test": {
+      "title": "Probar micrófono",
+      "hint": "Habla para comprobar el nivel. No se graba nada.",
+      "blocked": "El acceso al micrófono está bloqueado. Permítelo en el navegador o en la configuración del sistema.",
+      "start": "Probar",
+      "stop": "Detener"
+    },
+    "history": {
+      "title": "Historial",
+      "description": "Las grabaciones y su texto se quedan en este ordenador y nunca se suben. Una que falló o se interrumpió puede transcribirse de nuevo desde su audio.",
+      "keep": {
+        "title": "Conservar historial",
+        "hint": "Cuánto tiempo se guardan las grabaciones en este ordenador.",
+        "options": {
+          "off": "No conservar",
+          "1d": "1 día",
+          "7d": "7 días",
+          "30d": "30 días",
+          "forever": "Siempre"
+        }
+      },
+      "clear": "Borrar todo",
+      "clear_dialog": {
+        "title": "¿Borrar el historial de voz?",
+        "description": "Se eliminarán todas las grabaciones y transcripciones guardadas en este ordenador.",
+        "cancel": "Cancelar"
+      },
+      "empty": "Tus dictados aparecerán aquí.",
+      "off": "El historial está desactivado. Las nuevas grabaciones no se guardan.",
+      "today": "Hoy",
+      "yesterday": "Ayer",
+      "status": {
+        "transcribing": "Transcribiendo…",
+        "failed": "La transcripción falló",
+        "interrupted": "Interrumpida antes de transcribirse"
+      },
+      "actions": {
+        "play": "Reproducir grabación",
+        "pause": "Pausar",
+        "retranscribe": "Transcribir de nuevo",
+        "copy": "Copiar texto",
+        "delete": "Eliminar"
+      },
+      "copied": "Copiado",
+      "copy_failed": "No se pudo copiar",
+      "retry_failed": "No se pudo transcribir esta grabación",
+      "show_more": "Mostrar más"
     }
   }
 }
