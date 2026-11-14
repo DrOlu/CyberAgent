@@ -445,7 +445,7 @@ kept. If a check fails, the import dialog lists every problem.
 ### Ask an agent
 
 Any agent can build a theme: ask for one in a chat, an issue or a comment.
-The theme reference in Multica's built-in platform skill tells the agent to
+The theme reference in CyberAgent's built-in platform skill tells the agent to
 read this guide, to pass `theme:check` with 0 errors before it delivers, and
 to attach `theme:preview` screenshots when it can run them. It is a reference
 inside the existing skill rather than a skill of its own, so it adds a line

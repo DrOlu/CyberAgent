@@ -1,6 +1,6 @@
 # Themes
 
-A Multica theme restyles the Multica app, on Desktop and on the web, through
+A CyberAgent theme restyles the CyberAgent app, on Desktop and on the web, through
 public CSS variables. A user can ask for one anywhere: a chat, an issue, a
 comment. This is the contract for building one and handing it over.
 
