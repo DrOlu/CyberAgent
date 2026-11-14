@@ -421,7 +421,7 @@
         "description": "Open or close the floating chat window. Opening it focuses the message input."
       },
       "newChat": {
-        "label": "Ask CyberAgent",
+        "label": "Ask Multica",
         "description": "Start a new chat in the floating chat window."
       },
       "findInIssue": {
@@ -431,10 +431,6 @@
       "archiveInboxItem": {
         "label": "Archive notification",
         "description": "Archive the open inbox notification, or restore it while reading the archive."
-      },
-      "snoozeInboxItem": {
-        "label": "Snooze notification",
-        "description": "Choose when the open inbox notification comes back."
       },
       "send": {
         "label": "Send",
@@ -517,7 +513,7 @@
   "chat": {
     "floating_label": "Floating chat window",
     "floating_hint": "Show the floating chat button on every page.",
-    "ask_agent_label": "Ask CyberAgent agent",
+    "ask_agent_label": "Ask Multica agent",
     "ask_agent_hint": "The agent a new chat from the bottom bar starts with, in this workspace.",
     "ask_agent_last_used": "Last used"
   },
@@ -835,48 +831,25 @@
     "toast_profile_failed": "Failed to update profile"
   },
   "notifications": {
+    "title": "Inbox Notifications",
+    "description": "Muted events remain visible on the issue.",
     "toast_failed": "Failed to update notification settings",
-    "needs_you": {
-      "title": "Needs you",
-      "description": "Anything addressed to you stays under Needs you in the Inbox until you handle or archive it. These can't be turned off.",
-      "always_on": "Always on",
-      "mentions": {
-        "label": "Mentions",
-        "description": "When someone @mentions you"
-      },
+    "groups": {
       "assignments": {
         "label": "Assignments",
-        "description": "When an issue is assigned to you"
-      },
-      "runs": {
-        "label": "Runs you started",
-        "description": "When the agent finishes, fails, asks you something, or the run is cancelled"
-      },
-      "your_issues": {
-        "label": "Issues you created or are assigned",
-        "description": "New comments, or a status that waits on you"
-      }
-    },
-    "updates": {
-      "title": "Updates",
-      "description": "Activity on issues you follow. Not counted in the badge, and gone from the Inbox once read. What you turn off stays visible on the issue."
-    },
-    "groups": {
-      "mentions": {
-        "label": "@all and @squad",
-        "description": "Group mentions also go to Needs you. When off, they go to Updates."
-      },
-      "comments": {
-        "label": "Comments",
-        "description": "New comments on issues you follow"
+        "description": "When you are assigned or unassigned from an issue"
       },
       "status_changes": {
         "label": "Status changes",
         "description": "When an issue you follow changes status (e.g. todo, in progress, done)"
       },
-      "assignments": {
-        "label": "Assignment changes",
-        "description": "When you are unassigned, or an issue you follow is reassigned"
+      "comments": {
+        "label": "Comments",
+        "description": "New comments on issues you follow"
+      },
+      "mentions": {
+        "label": "Mentions",
+        "description": "When someone @mentions you, including @all and @squad"
       },
       "updates": {
         "label": "Priority & Due date",
@@ -887,8 +860,8 @@
         "description": "When an issue is created in a project you subscribe to"
       },
       "agent_activity": {
-        "label": "Agent runs",
-        "description": "When an agent run fails or gets blocked on an issue you follow"
+        "label": "Agent activity",
+        "description": "When an agent run fails"
       },
       "chat_replies": {
         "label": "Include chat replies"
@@ -896,8 +869,7 @@
     },
     "system": {
       "title": "System Notifications",
-      "label": "Show system notifications when CyberAgent is in the background",
-      "description": "From the Inbox, only Needs you shows a banner. Updates never do."
+      "label": "Show system notifications when Multica is in the background"
     },
     "browser": {
       "label": "Browser notifications",
@@ -1201,7 +1173,7 @@
     "agent_bot_manage_tooltip": "Open this bot's Slack workspace.",
     "byo_dialog_title": "Connect a Slack bot",
     "byo_video_cta": "Watch the setup walkthrough",
-    "byo_docs_link": "Step-by-step: connect your CyberAgent agent to Slack",
+    "byo_docs_link": "Step-by-step: connect your Multica agent to Slack",
     "byo_bot_token_label": "Bot token (xoxb-)",
     "byo_app_token_label": "App-level token (xapp-)",
     "byo_submit": "Connect",
@@ -1231,7 +1203,7 @@
     "group_mentions_other": "{{count}} mentions",
     "group_forget": "Forget",
     "group_forget_title": "Forget this group?",
-    "group_forget_description": "This removes the group from CyberAgent's inventory without deleting conversations or messages. It will reappear after someone @mentions the bot again.",
+    "group_forget_description": "This removes the group from Multica's inventory without deleting conversations or messages. It will reappear after someone @mentions the bot again.",
     "group_forget_cancel": "Cancel",
     "group_forget_confirm": "Forget group",
     "group_forget_success": "Group removed from the inventory",
@@ -1265,7 +1237,7 @@
     "agent_bot_connected_label": "Connected bot:",
     "agent_bot_disconnect_tooltip": "Unbind this DingTalk bot from the Agent. The bot will stop receiving DingTalk messages.",
     "byo_dialog_title": "Connect a DingTalk bot",
-    "byo_docs_link": "Step-by-step: connect your CyberAgent agent to DingTalk",
+    "byo_docs_link": "Step-by-step: connect your Multica agent to DingTalk",
     "byo_appkey_label": "AppKey (client id)",
     "byo_appsecret_label": "AppSecret (client secret)",
     "byo_submit": "Connect",
@@ -1366,7 +1338,7 @@
     "disconnect": "Disconnect",
     "disconnecting": "Disconnecting…",
     "disconnect_confirm_title": "Disconnect this Telegram bot?",
-    "disconnect_confirm_description": "The bot will stop receiving Telegram messages for this workspace. Chat history in CyberAgent is kept; you can re-connect later from the same Agent.",
+    "disconnect_confirm_description": "The bot will stop receiving Telegram messages for this workspace. Chat history in Multica is kept; you can re-connect later from the same Agent.",
     "disconnect_confirm_cancel": "Cancel",
     "toast_disconnected": "Disconnected Telegram bot",
     "toast_disconnect_failed": "Disconnect failed",
@@ -1378,7 +1350,7 @@
     "agent_bot_manage_tooltip": "Open a chat with this bot in Telegram.",
     "connect_dialog_title": "Connect a Telegram bot",
     "connect_dialog_description": "Create a bot with @BotFather in Telegram, then paste its token below. The token is verified live and stored encrypted.",
-    "connect_docs_link": "Step-by-step: connect your CyberAgent agent to Telegram",
+    "connect_docs_link": "Step-by-step: connect your Multica agent to Telegram",
     "bot_token_label": "Bot token",
     "connect_submit": "Connect",
     "connect_submitting": "Connecting…",
@@ -1893,6 +1865,10 @@
     "model_title": "Speech model",
     "model_hint": "Models run on this computer. Download one, or switch between the ones you have.",
     "engine_unavailable": "On-device transcription isn't available for this computer.",
+    "enabled": {
+      "title": "Voice input",
+      "hint": "Show the mic in chat, comments and replies, and turn on the voice shortcut."
+    },
     "input_title": "Input",
     "shortcut": {
       "title": "Shortcut",
