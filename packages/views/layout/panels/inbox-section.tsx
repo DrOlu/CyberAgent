@@ -7,6 +7,7 @@ import { Archive, BookCheck, CheckCheck, History, ListChecks, MoreHorizontal } f
 import { cn } from "@multica/ui/lib/utils";
 import { useIsCompact } from "@multica/ui/hooks/use-mobile";
 import { TooltipHint } from "@multica/ui/components/common/tooltip-hint";
+import { ShimmerText } from "@multica/ui/components/common/shimmer-text";
 import { Button, buttonVariants } from "@multica/ui/components/ui/button";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@multica/ui/components/ui/hover-card";
 import {
@@ -58,7 +59,13 @@ import {
   panelRowStateClass,
 } from "../panel-nav";
 import { InboxSectionSettings, SECTION_SETTINGS_REVEAL_CLASS } from "./sidebar-settings";
-import { ISSUE_ROW_LINK_CLASS, TREE_ROW_BUTTON_CLASS } from "./sidebar-tree";
+import {
+  ISSUE_ROW_LINK_CLASS,
+  IssueAgentBadge,
+  SIDEBAR_SHIMMER_CLASS,
+  TREE_ROW_BUTTON_CLASS,
+  useIssueAgentState,
+} from "./sidebar-tree";
 
 /**
  * The unread count sits in the panel's number column (the rows' trailing
@@ -88,7 +95,13 @@ export function useInboxSectionRows(wsId: string | undefined, openKey: string | 
   const collapsed = useSidebarTreeStore((s) => s.inboxCollapsed);
   const [expandedWsId, setExpandedWsId] = useState<string | null>(null);
   const expanded = expandedWsId === (wsId ?? null);
-  const displayed = useMemo(() => (expanded ? rows : rows.slice(0, limit)), [expanded, rows, limit]);
+  // Newer notifications must not push the open row past the limit: the row
+  // would leave, and the open issue's highlight with it.
+  const displayed = useMemo(() => {
+    if (expanded) return rows;
+    const open = openKey ? rows.findIndex((item) => (item.issue_id ?? item.id) === openKey) : -1;
+    return open >= limit ? [...rows.slice(0, limit - 1), rows[open]!] : rows.slice(0, limit);
+  }, [expanded, rows, limit, openKey]);
   // A collapsed section shows no rows, so it lights none.
   const shownIssueIds = useMemo(
     () => new Set(collapsed ? [] : displayed.flatMap((item) => (item.issue_id ? [item.issue_id] : []))),
@@ -162,7 +175,7 @@ export function InboxSection({
       }
     >
       {displayed.length > 0 ? (
-        <PanelList data-sidebar-list={INBOX_LIST}>
+        <PanelList data-sidebar-list={INBOX_LIST} className={compact ? undefined : "space-y-0.5"}>
           {displayed.map((item) => (
             <InboxRow
               key={item.id}
@@ -309,7 +322,7 @@ function InboxRow({
   item: InboxItem;
   href: string;
   active: boolean;
-  /** One line (type icon, title, dot or time) instead of the actor line under the title. */
+  /** One line (status, title, agents, dot or time) instead of the actor line under the title. */
   compact: boolean;
   onArchive: () => void;
 }) {
@@ -317,6 +330,9 @@ function InboxRow({
   const typeLabels = useTypeLabels();
   const timeAgo = useTimeAgo();
   const Icon = INBOX_TYPE_ICONS[inboxTypeGroup(item.type)];
+  const { categoryOf, colorOf, iconOf } = useIssueStatuses(item.workspace_id);
+  const statusLabelOf = useStatusLabel(item.workspace_id);
+  const status = item.issue_status;
   const title = inboxRowTitle(item, typeLabels);
   const writeViewState = useViewStateWriter();
   const requestLanding = useInboxSelectionStore((s) => s.requestLanding);
@@ -327,39 +343,92 @@ function InboxRow({
     writeViewState(issueHighlightMementoKey(item.issue_id), undefined);
     requestLanding(item.issue_id);
   };
+  // The card previews a notification you have not opened. A press opens it,
+  // so the card goes at once, with no exit animation to compete with the
+  // issue's first render, and a hover delay already running must not bring it
+  // back over the opened issue. It may return once the pointer leaves the row.
+  const [cardOpen, setCardOpen] = useState(false);
+  const [cardDismissed, setCardDismissed] = useState(false);
+  const dismissCard = () => {
+    setCardDismissed(true);
+    setCardOpen(false);
+  };
+  const agents = useIssueAgentState(item.workspace_id, item.issue_id ?? "");
+  const running = !!agents?.running;
   const unread = item.read !== true;
   const archiveLabel = t(($) => $.list.archive_tooltip);
   // Hidden while the archive button stands in its place.
   const yields = "group-hover/inbox:invisible group-focus-within/inbox:invisible";
-  const time = (
-    <span className={cn("shrink-0 text-caption tabular-nums text-faint-foreground", yields)}>
-      {timeAgo(item.created_at)}
+  const timeClass = "shrink-0 text-caption tabular-nums text-faint-foreground";
+  const time = <span className={cn(timeClass, yields)}>{timeAgo(item.created_at)}</span>;
+  // Takes the time's place while an agent runs or waits on the issue.
+  const agentBadge = agents && (
+    <span className={cn("flex shrink-0 items-center", yields)}>
+      <IssueAgentBadge agents={agents} />
     </span>
   );
   const dot = <span data-mc="unread-dot" aria-hidden className="size-1.5 shrink-0 rounded-full bg-brand" />;
+  // Leads the row like a Pinned or tree issue row. Display only: the link
+  // covers the row, and the hover card already names the status.
+  const statusIcon = status && (
+    <span data-inbox-status={status} aria-hidden className={cn("flex shrink-0", !compact && "mt-[3px]")}>
+      <StatusIcon
+        status={status}
+        category={categoryOf(status)}
+        color={colorOf(status)}
+        icon={iconOf(status)}
+        className="size-3.5"
+      />
+    </span>
+  );
+  const statusText = status && <span className="sr-only">, {statusLabelOf(status)}</span>;
   const titleText = (
-    <span className={cn("min-w-0 flex-1 truncate", unread && "font-medium text-foreground")}>{title}</span>
+    <ShimmerText
+      active={running}
+      className={cn(
+        "min-w-0 flex-1 truncate",
+        SIDEBAR_SHIMMER_CLASS,
+        unread && "font-medium",
+        unread && !running && "text-foreground",
+      )}
+    >
+      {title}
+    </ShimmerText>
   );
 
   return (
     <li data-inbox-row data-read={unread ? "false" : "true"} className="group/inbox relative">
-      <HoverCard>
+      <HoverCard
+        open={cardOpen}
+        onOpenChange={(open) => {
+          if (open && cardDismissed) return;
+          setCardOpen(open);
+        }}
+      >
         <HoverCardTrigger
           delay={500}
           closeDelay={100}
           render={<div />}
+          onPointerDown={dismissCard}
+          onPointerLeave={() => setCardDismissed(false)}
+          // Enter on the focused link opens the issue too. Focus does not
+          // move, so the card stays shut without the dismissed flag.
+          onKeyDown={(event) => {
+            if (event.key === "Enter") setCardOpen(false);
+          }}
           {...panelRowAnchor(active)}
-          className={cn(PANEL_ROW_CLASS, panelRowStateClass(active), "relative", !compact && "items-start py-[5px]")}
+          className={cn(PANEL_ROW_CLASS, panelRowStateClass(active), "relative", !compact && "items-start py-1.5")}
         >
-          {compact ? (
-            <span title={typeLabels[item.type]} className="flex shrink-0 items-center">
-              <Icon aria-hidden className="size-4" />
-            </span>
-          ) : (
-            <span className="mt-0.5 flex shrink-0">
-              <InboxActorAvatar item={item} size="xs" />
-            </span>
-          )}
+          {statusIcon ||
+            (compact ? (
+              <span title={typeLabels[item.type]} className="flex shrink-0 items-center">
+                <Icon aria-hidden className="size-4" />
+              </span>
+            ) : (
+              <span className="mt-0.5 flex shrink-0">
+                <InboxActorAvatar item={item} size="xs" />
+              </span>
+            ))}
           <AppLink
             href={href}
             newTabTitle={title}
@@ -371,26 +440,50 @@ function InboxRow({
             {compact ? (
               <>
                 {titleText}
-                {unread ? <span className={cn("flex shrink-0 items-center", yields)}>{dot}</span> : time}
+                {statusText}
+                {agentBadge}
+                {unread ? <span className={cn("flex shrink-0 items-center", yields)}>{dot}</span> : !agents && time}
               </>
             ) : (
               <>
                 <span className="flex min-w-0 items-center gap-2 leading-5">
                   {titleText}
-                  {time}
+                  {statusText}
+                  {agentBadge || time}
                 </span>
-                <span className="flex min-w-0 items-center gap-2 text-caption leading-4 text-muted-foreground">
-                  <span className="min-w-0 flex-1 truncate">
-                    <InboxActorLine item={item} />
+                <span className="mt-0.5 flex min-w-0 items-center gap-2 text-caption leading-4 text-muted-foreground">
+                  <span className="flex min-w-0 flex-1 items-center gap-1.5">
+                    {/* The status took the avatar's column; it stays with the name. */}
+                    {statusIcon && <InboxActorAvatar item={item} size="xs" />}
+                    <span className="min-w-0 flex-1 truncate">
+                      <InboxActorLine item={item} />
+                    </span>
                   </span>
+                  {/* The agents hold the title line's time slot, so the time moves down. */}
+                  {agents && <span className={timeClass}>{timeAgo(item.created_at)}</span>}
                   {unread && dot}
                 </span>
               </>
             )}
           </AppLink>
         </HoverCardTrigger>
-        <HoverCardContent side="right" align="start" sideOffset={12} alignOffset={-8} className="w-72 p-3">
-          <InboxRowCard item={item} href={href} title={title} onOpen={land} onArchive={onArchive} />
+        <HoverCardContent
+          side="right"
+          align="start"
+          sideOffset={12}
+          alignOffset={-8}
+          className={cn("w-72 p-3", cardDismissed && "data-closed:duration-0")}
+        >
+          <InboxRowCard
+            item={item}
+            href={href}
+            title={title}
+            onOpen={() => {
+              dismissCard();
+              land();
+            }}
+            onArchive={onArchive}
+          />
         </HoverCardContent>
       </HoverCard>
       <TooltipHint label={archiveLabel}>
@@ -400,7 +493,7 @@ function InboxRow({
           className={cn(
             "absolute right-1.5 z-10 hidden size-5 items-center justify-center rounded-md text-muted-foreground group-hover/inbox:flex group-focus-within/inbox:flex hover:bg-surface-selected hover:text-foreground",
             // On the title's line, where the time was.
-            compact ? "top-1/2 -translate-y-1/2" : "top-[5px]",
+            compact ? "top-1/2 -translate-y-1/2" : "top-1.5",
           )}
           onClick={(event) => {
             event.preventDefault();

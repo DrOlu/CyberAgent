@@ -3,8 +3,10 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/multica-ai/multica/server/internal/events"
 	"github.com/multica-ai/multica/server/internal/handler"
@@ -45,12 +47,20 @@ var parentBubbleNotifTypes = map[string]bool{
 
 // delegatedAlwaysNotifTypes are the events a DELEGATED subscriber (reason=
 // 'delegated' — an agent created this issue on their behalf, MUL-5483) receives
-// unconditionally: they are either addressed at the human directly, or they are
-// exceptions that stall the work until a human looks.
+// unconditionally: they are addressed at the human directly, carry the agent's
+// result, or are exceptions that stall the work until a human looks.
+//
+// new_comment is here because an agent posts its result as a comment: muting
+// status changes must not leave the human with no signal that the work they
+// started was answered (MUL-9314). The inbox keeps one row per issue, so a
+// comment lands on the row a handoff would light anyway.
+//
+// An agent that cannot proceed reaches the human as a blocked status change,
+// which the handoff rule in deliverToSubscriber already delivers.
 var delegatedAlwaysNotifTypes = map[string]bool{
-	"mentioned":     true,
-	"task_failed":   true,
-	"agent_blocked": true,
+	"mentioned":   true,
+	"new_comment": true,
+	"task_failed": true,
 }
 
 // issueStatusIsHandoff reports whether ARRIVING on this status hands the issue
@@ -136,8 +146,10 @@ func deliverToSubscriber(reason, notifType string, statusIsHandoff bool) bool {
 	return statusIsHandoff
 }
 
-// notifTypeToGroup maps each InboxItemType to a user-configurable preference
-// group. Types not in this map are always delivered (not configurable).
+// notifTypeToGroup maps each inbox type the issue listeners write to a
+// user-configurable preference group. Types not in this map are always
+// delivered (not configurable). app_action_result also belongs to
+// agent_activity; connectedapps checks that group itself.
 var notifTypeToGroup = map[string]string{
 	"issue_assigned":     "assignments",
 	"unassigned":         "assignments",
@@ -145,13 +157,11 @@ var notifTypeToGroup = map[string]string{
 	"status_changed":     "status_changes",
 	"new_comment":        "comments",
 	"mentioned":          "mentions",
+	"reaction_added":     "reactions",
 	"priority_changed":   "updates",
 	"start_date_changed": "updates",
 	"due_date_changed":   "updates",
-	"task_completed":     "agent_activity",
 	"task_failed":        "agent_activity",
-	"agent_blocked":      "agent_activity",
-	"agent_completed":    "agent_activity",
 	"issue_created":      "new_issues",
 }
 
@@ -236,37 +246,78 @@ func archiveStaleTaskFailedInbox(
 		"row_count", len(rows), "recipient_count", count)
 }
 
-// archiveDoneIssueInbox archives every recipient's notifications for an issue
-// that reached a done status: finished work leaves the inbox whether or not
-// it was read. Cancelled issues keep theirs.
-func archiveDoneIssueInbox(
+// autoArchiveCompletedPref is the preference key for archiving your own
+// notifications when you move an issue to a done or closed status. It is on
+// unless set to "muted".
+const autoArchiveCompletedPref = "auto_archive_completed"
+
+// archiveTerminalIssueInbox archives the actor's own notifications for an
+// issue they moved to a done or closed status, read or not, the same set
+// "Archive completed" clears by hand. Other recipients keep theirs: someone
+// else finishing an issue is news they have not seen yet.
+func archiveTerminalIssueInbox(
 	ctx context.Context,
 	queries *db.Queries,
 	bus *events.Bus,
 	workspaceID string,
 	issueID string,
+	actorType string,
+	actorID string,
 ) {
-	rows, err := queries.ArchiveInboxByIssueForAllRecipients(ctx, db.ArchiveInboxByIssueForAllRecipientsParams{
+	if actorType != "member" || actorID == "" {
+		return
+	}
+
+	// FAIL CLOSED: archiving on a guess hides notifications the user wanted.
+	pref, err := queries.GetNotificationPreference(ctx, db.GetNotificationPreferenceParams{
 		WorkspaceID: parseUUID(workspaceID),
-		IssueID:     parseUUID(issueID),
+		UserID:      parseUUID(actorID),
+	})
+	switch {
+	case errors.Is(err, pgx.ErrNoRows):
+	case err != nil:
+		slog.Warn("auto-archive terminal issue inbox: load preference failed; keeping rows",
+			"workspace_id", workspaceID, "issue_id", issueID, "error", err)
+		return
+	default:
+		var prefs map[string]string
+		if err := json.Unmarshal(pref.Preferences, &prefs); err != nil {
+			slog.Warn("auto-archive terminal issue inbox: bad preference JSON; keeping rows",
+				"workspace_id", workspaceID, "issue_id", issueID, "error", err)
+			return
+		}
+		if prefs[autoArchiveCompletedPref] == "muted" {
+			return
+		}
+	}
+
+	count, err := queries.ArchiveInboxByIssue(ctx, db.ArchiveInboxByIssueParams{
+		WorkspaceID:   parseUUID(workspaceID),
+		RecipientType: "member",
+		RecipientID:   parseUUID(actorID),
+		IssueID:       parseUUID(issueID),
 	})
 	if err != nil {
-		slog.Error("auto-archive done issue inbox: query failed",
+		slog.Error("auto-archive terminal issue inbox: query failed",
 			"workspace_id", workspaceID, "issue_id", issueID, "error", err)
 		return
 	}
-	if len(rows) == 0 {
+	if count == 0 {
 		return
 	}
-	recipients := make([]inboxArchivedRecipient, len(rows))
-	for i, row := range rows {
-		recipients[i] = inboxArchivedRecipient{Type: row.RecipientType, ID: row.RecipientID}
-	}
-	count := publishInboxBatchArchived(bus, workspaceID, issueID, recipients)
+	bus.Publish(events.Event{
+		Type:        protocol.EventInboxBatchArchived,
+		WorkspaceID: workspaceID,
+		Payload: map[string]any{
+			"recipient_id": actorID,
+			"count":        count,
+			"issue_id":     issueID,
+			"reason":       "issue_status_terminal",
+		},
+	})
 
-	slog.Info("auto-archive done issue inbox: archived rows",
-		"workspace_id", workspaceID, "issue_id", issueID,
-		"row_count", len(rows), "recipient_count", count)
+	slog.Info("auto-archive terminal issue inbox: archived rows",
+		"workspace_id", workspaceID, "issue_id", issueID, "row_count", count)
 }
 
 type inboxArchivedRecipient struct {
@@ -677,9 +728,62 @@ func notifyDirect(
 	})
 }
 
+// notifyDelegatedIssueCreated tells the human behind an agent-created issue
+// that it exists. The delegated tier otherwise stays silent until a handoff
+// status, which left a new top-level issue findable only from the comment of
+// the run that filed it (MUL-9314). It reads the delegated subscription the
+// subscriber listener wrote for this same event, and adds each recipient to
+// skip so the project fanout that follows does not notify them twice.
+//
+// A sub-issue under a parent the human already watches stays quiet: the parent
+// leads there, and an agent splitting work into many children is the noise
+// the delegated tier exists to suppress (MUL-5483).
+func notifyDelegatedIssueCreated(
+	ctx context.Context,
+	queries *db.Queries,
+	bus *events.Bus,
+	issue handler.IssueResponse,
+	e events.Event,
+	skip map[string]bool,
+) {
+	if issue.CreatorType != "agent" {
+		return
+	}
+	subs, err := queries.ListIssueSubscribers(ctx, parseUUID(issue.ID))
+	if err != nil {
+		slog.Error("delegated issue_created: list subscribers failed", "issue_id", issue.ID, "error", err)
+		return
+	}
+	for _, sub := range subs {
+		subID := util.UUIDToString(sub.UserID)
+		if sub.UserType != "member" || sub.Reason != "delegated" || skip[subID] {
+			continue
+		}
+		if issue.ParentIssueID != nil {
+			watchingParent, err := queries.IsIssueSubscriber(ctx, db.IsIssueSubscriberParams{
+				IssueID:  parseUUID(*issue.ParentIssueID),
+				UserType: "member",
+				UserID:   sub.UserID,
+			})
+			if err != nil {
+				slog.Error("delegated issue_created: parent subscription check failed",
+					"issue_id", issue.ID, "error", err)
+				continue
+			}
+			if watchingParent {
+				continue
+			}
+		}
+		skip[subID] = true
+		notifyDirect(ctx, queries, bus, "member", subID, issue.WorkspaceID, e, issue.ID, issue.Status,
+			"issue_created", "info", issue.Title, "", emptyDetails)
+	}
+}
+
 // notifyMentionedMembers creates inbox items for each @mentioned member,
 // excluding the actor and any IDs in the skip set. When an @all mention is
-// present, all workspace members are notified (excluding agents).
+// present, all workspace members are notified (excluding agents). Returns the
+// members that received a row.
 func notifyMentionedMembers(
 	bus *events.Bus,
 	queries *db.Queries,
@@ -689,9 +793,11 @@ func notifyMentionedMembers(
 	issueTitle string,
 	issueStatus string,
 	title string,
+	body string,
 	skip map[string]bool,
 	details []byte,
-) {
+) map[string]bool {
+	notified := map[string]bool{}
 	// Collect the set of member IDs to notify.
 	recipientIDs := map[string]bool{}
 
@@ -773,6 +879,7 @@ func notifyMentionedMembers(
 			Severity:      "info",
 			IssueID:       parseUUID(issueID),
 			Title:         title,
+			Body:          util.StrToText(body),
 			ActorType:     util.StrToText(e.ActorType),
 			ActorID:       optionalUUID(e.ActorID),
 			Details:       details,
@@ -784,6 +891,7 @@ func notifyMentionedMembers(
 		if !inserted {
 			continue
 		}
+		notified[id] = true
 		resp := inboxItemToResponse(item)
 		resp["issue_status"] = issueStatus
 		bus.Publish(events.Event{
@@ -794,11 +902,11 @@ func notifyMentionedMembers(
 			Payload:     map[string]any{"item": resp},
 		})
 	}
+	return notified
 }
 
 // registerNotificationListeners wires up event bus listeners that create inbox
-// notifications using the subscriber table. This replaces the old hardcoded
-// notification logic from inbox_listeners.go.
+// notifications using the subscriber table.
 //
 // NOTE: uses context.Background() because the event bus dispatches synchronously
 // within the HTTP request goroutine. Adding per-handler timeouts is a bus-level
@@ -837,8 +945,10 @@ func registerNotificationListeners(bus *events.Bus, queries *db.Queries) {
 		if issue.Description != nil && *issue.Description != "" {
 			mentions := parseMentions(*issue.Description)
 			notifyMentionedMembers(bus, queries, e, mentions, issue.ID, issue.Title, issue.Status,
-				issue.Title, skip, emptyDetails)
+				issue.Title, "", skip, emptyDetails)
 		}
+
+		notifyDelegatedIssueCreated(ctx, queries, bus, issue, e, skip)
 
 		// Members watching the project hear about every new issue in it.
 		if issue.ProjectID != nil {
@@ -966,14 +1076,15 @@ func registerNotificationListeners(bus *events.Bus, queries *db.Queries) {
 			}
 
 			// After the status_changed rows above, so "moved to Done" leaves
-			// the inbox together with the rest of the issue's notifications.
+			// the actor's inbox together with the rest of the issue's
+			// notifications.
 			category, categoryErr := issuestatus.CategoryWithError(ctx, queries, parseUUID(e.WorkspaceID), issue.Status)
 			switch {
 			case categoryErr != nil:
-				slog.Warn("resolve issue status category for done-issue inbox archive; keeping rows",
+				slog.Warn("resolve issue status category for terminal-issue inbox archive; keeping rows",
 					"issue_id", issue.ID, "status", issue.Status, "error", categoryErr)
-			case category == issuestatus.CategoryDone:
-				archiveDoneIssueInbox(ctx, queries, bus, e.WorkspaceID, issue.ID)
+			case category == issuestatus.CategoryDone, category == issuestatus.CategoryClosed:
+				archiveTerminalIssueInbox(ctx, queries, bus, e.WorkspaceID, issue.ID, e.ActorType, e.ActorID)
 			}
 		}
 
@@ -1045,7 +1156,7 @@ func registerNotificationListeners(bus *events.Bus, queries *db.Queries) {
 				}
 				skip := map[string]bool{e.ActorID: true}
 				notifyMentionedMembers(bus, queries, e, added, issue.ID, issue.Title, issue.Status,
-					issue.Title, skip, emptyDetails)
+					issue.Title, "", skip, emptyDetails)
 			}
 		}
 	})
@@ -1098,18 +1209,20 @@ func registerNotificationListeners(bus *events.Bus, queries *db.Queries) {
 			})
 		}
 
+		// Mentions first: a member who gets a `mentioned` row for this comment
+		// does not also get its `new_comment`, so one comment is one
+		// notification. A member who muted mentions still gets the comment.
+		mentioned := map[string]bool{}
+		if mentions := parseMentions(commentContent); len(mentions) > 0 {
+			skip := map[string]bool{e.ActorID: true}
+			mentioned = notifyMentionedMembers(bus, queries, e, mentions, issueID, issueTitle, issueStatus,
+				issueTitle, commentContent, skip, commentDetails)
+		}
+
 		notifySubscribers(ctx, queries, bus, issueID, issueStatus, e.WorkspaceID, e,
-			nil, "new_comment", "info",
+			mentioned, "new_comment", "info",
 			issueTitle, commentContent,
 			commentDetails)
-
-		// Notify @mentions in comment content.
-		mentions := parseMentions(commentContent)
-		if len(mentions) > 0 {
-			skip := map[string]bool{e.ActorID: true}
-			notifyMentionedMembers(bus, queries, e, mentions, issueID, issueTitle, issueStatus,
-				issueTitle, skip, commentDetails)
-		}
 	})
 
 	// issue_reaction:added — notify the issue creator

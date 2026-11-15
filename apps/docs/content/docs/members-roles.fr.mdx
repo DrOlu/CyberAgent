@@ -24,6 +24,10 @@ Un espace de travail doit toujours conserver au moins un `owner` : le dernier `o
 Les rôles ne déterminent pas qui peut exécuter un agent. Chaque agent a son propre périmètre d'accès (**Accès**), et `owner` comme `admin` ne peuvent pas le contourner pour exécuter des agents auxquels l'accès ne leur a pas été accordé. Consultez [Agents](/agents#permissions-et-accès).
 </Callout>
 
+<Callout type="info">
+Les rôles n'ouvrent pas non plus les projets privés. Un `owner` ou un `admin` ne voit un projet privé que s'il est sur sa liste de membres. Consultez [Projets privés](/projects#private-projects).
+</Callout>
+
 ## Inviter des membres
 
 `owner` et `admin` envoient les invitations depuis Paramètres → Membres, en saisissant une adresse e-mail et en choisissant un rôle. Les invitations ne peuvent accorder que `admin` ou `member` ; un `owner` doit d'abord rejoindre l'espace de travail, puis être promu par un `owner` existant.
