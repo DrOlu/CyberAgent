@@ -388,7 +388,7 @@ describe("SourceBackfillModal and the other prompts", () => {
     expect(pending()).toBe(true);
 
     await act(async () => answer(3));
-    await screen.findByText(/How did you hear about Multica/i);
+    await screen.findByText(/How did you hear about CyberAgent/i);
     expect(pending()).toBe(true);
 
     await userEvent.setup().click(screen.getByRole("button", { name: "Close" }));
@@ -401,13 +401,13 @@ describe("SourceBackfillModal and the other prompts", () => {
     renderModal();
     await waitFor(() => expect(mockListIssues).toHaveBeenCalled());
     await waitFor(() => expect(pending()).toBe(false));
-    expect(screen.queryByText(/How did you hear about Multica/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/How did you hear about CyberAgent/i)).not.toBeInTheDocument();
   });
 
   it("opens on demand from the dev toolbar, even for a user who already answered", async () => {
     setUser({ id: "u1", onboarded_at: "2026-01-01T00:00:00Z", onboarding_questionnaire: { source: ["search"] } });
     renderModal();
     act(() => useDevPromptStore.getState().trigger("survey"));
-    expect(await screen.findByText(/How did you hear about Multica/i)).toBeInTheDocument();
+    expect(await screen.findByText(/How did you hear about CyberAgent/i)).toBeInTheDocument();
   });
 });
