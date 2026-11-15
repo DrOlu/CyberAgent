@@ -117,9 +117,10 @@ func issueStatusIsHandoff(
 
 // deliverToSubscriber reports whether a subscriber row should receive this
 // notification type. Direct subscriptions (creator / assignee / commenter /
-// mentioned / manual / autopilot) are unchanged — they opted in to this issue,
-// explicitly or by acting on it. Only the delegated tier is narrowed, and only
-// to drop churn.
+// mentioned / manual / autopilot) pass — they opted in to this issue,
+// explicitly or by acting on it; the passive ones are narrowed separately on
+// someone else's issue (deliverToBystander). Only the delegated tier is
+// narrowed here, and only to drop churn.
 //
 // A child finishing is NOT churn: "sub-issue X is ready for review" is exactly
 // the signal a delegated watcher needs, and there is one per piece of real work.
@@ -146,70 +147,206 @@ func deliverToSubscriber(reason, notifType string, statusIsHandoff bool) bool {
 	return statusIsHandoff
 }
 
-// notifTypeToGroup maps each inbox type the issue listeners write to a
-// user-configurable preference group. Types not in this map are always
-// delivered (not configurable). app_action_result also belongs to
-// agent_activity; connectedapps checks that group itself.
-var notifTypeToGroup = map[string]string{
-	"issue_assigned":     "assignments",
-	"unassigned":         "assignments",
-	"assignee_changed":   "assignments",
-	"status_changed":     "status_changes",
-	"new_comment":        "comments",
-	"mentioned":          "mentions",
-	"reaction_added":     "reactions",
-	"priority_changed":   "updates",
-	"start_date_changed": "updates",
-	"due_date_changed":   "updates",
-	"task_failed":        "agent_activity",
-	"issue_created":      "new_issues",
+// othersIssuesPref is the preference key for how much of SOMEONE ELSE'S issue
+// reaches a member who is only passively subscribed to it. Absent or
+// "key_updates" applies the bystander tier; "all" turns it off (MUL-9343).
+const othersIssuesPref = "others_issues"
+
+// bystanderReasons are the subscription reasons a member picks up as a side
+// effect of acting on an issue — filing it, once being its assignee,
+// commenting, being mentioned. On an issue assigned to someone else these
+// narrow to the bystander tier. manual and autopilot are explicit requests to
+// follow the issue and keep every event; delegated has its own tier.
+var bystanderReasons = map[string]bool{
+	"creator":   true,
+	"assignee":  true,
+	"commenter": true,
+	"mentioned": true,
 }
 
-// isNotifMuted returns true if the given notification type is muted for a user
-// based on their parsed preferences map.
-func isNotifMuted(prefs map[string]string, notifType string) bool {
-	group, ok := notifTypeToGroup[notifType]
-	if !ok {
-		return false // unconfigurable types are always delivered
+// deliverToBystander reports whether a bystander — a passive subscriber of an
+// issue assigned to someone else — receives this notification type. They hear
+// what is addressed at them or needs them: a mention, a reply in a comment
+// thread they took part in, and a status that hands the issue back to a human
+// (statusIsHandoff, as in deliverToSubscriber). The rest of the issue's
+// back-and-forth stays on the issue page.
+func deliverToBystander(notifType string, statusIsHandoff, threadParticipant bool) bool {
+	switch notifType {
+	case "mentioned":
+		return true
+	case "status_changed":
+		return statusIsHandoff
+	case "new_comment":
+		return threadParticipant
+	default:
+		return false
 	}
-	return prefs[group] == "muted"
 }
 
-// loadUserPrefs loads notification preferences for a set of user IDs in a
-// workspace. Returns a map from user_id string to parsed preferences.
+// issueOwner is who an issue is assigned to, resolved to the human behind it:
+// the assigned member, or the owner of the assigned agent. A squad assignee
+// has no single owner, so a squad's issue is nobody's own.
+type issueOwner struct {
+	assigned bool
+	ownerID  string
+}
+
+// isSomeoneElses reports whether the issue is assigned, and not to userID or
+// an agent userID owns. An unassigned issue is nobody else's: its creator is
+// the closest thing it has to an owner, and nothing about it is routine yet.
+func (o issueOwner) isSomeoneElses(userID string) bool {
+	return o.assigned && o.ownerID != userID
+}
+
+func loadIssueOwner(ctx context.Context, queries *db.Queries, issueID string) (issueOwner, error) {
+	issue, err := queries.GetIssue(ctx, parseUUID(issueID))
+	if err != nil {
+		return issueOwner{}, err
+	}
+	if !issue.AssigneeID.Valid {
+		return issueOwner{}, nil
+	}
+	switch issue.AssigneeType.String {
+	case "member":
+		return issueOwner{assigned: true, ownerID: util.UUIDToString(issue.AssigneeID)}, nil
+	case "agent":
+		agent, err := queries.GetAgent(ctx, issue.AssigneeID)
+		if err != nil {
+			return issueOwner{}, err
+		}
+		owner := ""
+		if agent.OwnerID.Valid {
+			owner = util.UUIDToString(agent.OwnerID)
+		}
+		return issueOwner{assigned: true, ownerID: owner}, nil
+	default:
+		return issueOwner{assigned: true}, nil
+	}
+}
+
+// loadThreadParticipants returns the members who wrote another comment in the
+// thread the notified comment belongs to, read from the new_comment details.
+func loadThreadParticipants(ctx context.Context, queries *db.Queries, workspaceID string, details []byte) (map[string]bool, error) {
+	var d struct {
+		CommentID string `json:"comment_id"`
+	}
+	if err := json.Unmarshal(details, &d); err != nil || d.CommentID == "" {
+		return map[string]bool{}, nil
+	}
+	authors, err := queries.ListThreadMemberAuthors(ctx, db.ListThreadMemberAuthorsParams{
+		CommentID:   parseUUID(d.CommentID),
+		WorkspaceID: parseUUID(workspaceID),
+	})
+	if err != nil {
+		return nil, err
+	}
+	participants := make(map[string]bool, len(authors))
+	for _, id := range authors {
+		participants[util.UUIDToString(id)] = true
+	}
+	return participants, nil
+}
+
+// bystanderTier applies deliverToBystander across one subscriber list. It
+// reads the issue's owner, and for a comment its thread, at most once and only
+// when a passive subscriber reaches it.
+//
+// FAIL OPEN, for the reason notifyIssueSubscribers resolves handoffs that way:
+// a spare inbox row costs a dismissal, a dropped one can strand a reply.
+type bystanderTier struct {
+	ctx         context.Context
+	queries     *db.Queries
+	workspaceID string
+	issueID     string
+	details     []byte
+
+	ownerLoaded  bool
+	owner        issueOwner
+	ownerErr     error
+	threadLoaded bool
+	thread       map[string]bool
+	threadErr    error
+}
+
+func (b *bystanderTier) deliver(userID, notifType string, statusIsHandoff bool) bool {
+	if !b.ownerLoaded {
+		b.ownerLoaded = true
+		b.owner, b.ownerErr = loadIssueOwner(b.ctx, b.queries, b.issueID)
+		if b.ownerErr != nil {
+			slog.Warn("resolve issue owner for bystander delivery; delivering",
+				"issue_id", b.issueID, "error", b.ownerErr)
+		}
+	}
+	if b.ownerErr != nil || !b.owner.isSomeoneElses(userID) {
+		return true
+	}
+
+	participant := false
+	if notifType == "new_comment" {
+		if !b.threadLoaded {
+			b.threadLoaded = true
+			b.thread, b.threadErr = loadThreadParticipants(b.ctx, b.queries, b.workspaceID, b.details)
+			if b.threadErr != nil {
+				slog.Warn("resolve comment thread for bystander delivery; delivering",
+					"issue_id", b.issueID, "error", b.threadErr)
+			}
+		}
+		participant = b.threadErr != nil || b.thread[userID]
+	}
+	return deliverToBystander(notifType, statusIsHandoff, participant)
+}
+
+// loadUserPrefs loads the notification preferences of a fanout's recipients
+// in one query.
 func loadUserPrefs(
 	ctx context.Context,
 	queries *db.Queries,
 	workspaceID string,
 	userIDs []string,
-) map[string]map[string]string {
+) inbox.Preferences {
 	if len(userIDs) == 0 {
-		return nil
+		return inbox.Preferences{}
 	}
-
 	uuids := make([]pgtype.UUID, len(userIDs))
 	for i, id := range userIDs {
 		uuids[i] = parseUUID(id)
 	}
+	return inbox.LoadPreferences(ctx, queries, parseUUID(workspaceID), uuids)
+}
 
-	rows, err := queries.ListNotificationPreferencesByUsers(ctx, db.ListNotificationPreferencesByUsersParams{
-		WorkspaceID: parseUUID(workspaceID),
-		UserIds:     uuids,
-	})
-	if err != nil {
-		slog.Error("failed to load notification preferences", "error", err)
-		return nil
+// issueNotification is the inbox row an issue event writes for one recipient.
+func issueNotification(
+	e events.Event,
+	recipientType string,
+	recipientID string,
+	workspaceID string,
+	issueID string,
+	issueStatus string,
+	notifType string,
+	severity string,
+	title string,
+	body string,
+	details []byte,
+	prefs inbox.Preferences,
+) inbox.Notification {
+	return inbox.Notification{
+		Params: db.CreateInboxItemParams{
+			ID:            dbid.NewV7(),
+			WorkspaceID:   parseUUID(workspaceID),
+			RecipientType: recipientType,
+			RecipientID:   parseUUID(recipientID),
+			Type:          notifType,
+			Severity:      severity,
+			IssueID:       parseUUID(issueID),
+			Title:         title,
+			Body:          util.StrToText(body),
+			ActorType:     util.StrToText(e.ActorType),
+			ActorID:       optionalUUID(e.ActorID),
+			Details:       details,
+		},
+		IssueStatus: &issueStatus,
+		Preferences: prefs,
 	}
-
-	result := make(map[string]map[string]string, len(rows))
-	for _, row := range rows {
-		var prefs map[string]string
-		if err := json.Unmarshal(row.Preferences, &prefs); err != nil {
-			continue
-		}
-		result[util.UUIDToString(row.UserID)] = prefs
-	}
-	return result
 }
 
 // archiveStaleTaskFailedInbox archives all task_failed inbox rows for the
@@ -506,16 +643,13 @@ func notifyProjectSubscribers(
 	userPrefs := loadUserPrefs(ctx, queries, workspaceID, recipients)
 
 	for _, subID := range recipients {
-		if prefs, ok := userPrefs[subID]; ok && isNotifMuted(prefs, notifType) {
-			continue
-		}
 		createMemberInboxItem(ctx, queries, bus, subID, workspaceID, e, issueID, issueStatus,
-			notifType, severity, title, body, details)
+			notifType, severity, title, body, details, userPrefs)
 	}
 }
 
-// createMemberInboxItem writes one member inbox row and announces it. Reports
-// whether a row was actually inserted.
+// createMemberInboxItem delivers one member inbox row. Reports whether a row
+// was actually inserted.
 func createMemberInboxItem(
 	ctx context.Context,
 	queries *db.Queries,
@@ -530,39 +664,16 @@ func createMemberInboxItem(
 	title string,
 	body string,
 	details []byte,
+	prefs inbox.Preferences,
 ) bool {
-	item, inserted, err := inbox.CreateIfEligible(ctx, queries, db.CreateInboxItemParams{
-		ID:            dbid.NewV7(),
-		WorkspaceID:   parseUUID(workspaceID),
-		RecipientType: "member",
-		RecipientID:   parseUUID(recipientID),
-		Type:          notifType,
-		Severity:      severity,
-		IssueID:       parseUUID(issueID),
-		Title:         title,
-		Body:          util.StrToText(body),
-		ActorType:     util.StrToText(e.ActorType),
-		ActorID:       optionalUUID(e.ActorID),
-		Details:       details,
-	})
+	_, inserted, err := inbox.Deliver(ctx, queries, bus, issueNotification(e, "member", recipientID,
+		workspaceID, issueID, issueStatus, notifType, severity, title, body, details, prefs))
 	if err != nil {
 		slog.Error("member notification creation failed",
 			"recipient_id", recipientID, "type", notifType, "error", err)
 		return false
 	}
-	if !inserted {
-		return false
-	}
-	resp := inboxItemToResponse(item)
-	resp["issue_status"] = issueStatus
-	bus.Publish(events.Event{
-		Type:        protocol.EventInboxNew,
-		WorkspaceID: workspaceID,
-		ActorType:   e.ActorType,
-		ActorID:     e.ActorID,
-		Payload:     map[string]any{"item": resp},
-	})
-	return true
+	return inserted
 }
 
 // notifyIssueSubscribers sends inbox notifications to subscribers of
@@ -623,6 +734,10 @@ func notifyIssueSubscribers(
 		}
 	}
 	userPrefs := loadUserPrefs(ctx, queries, workspaceID, memberIDs)
+	bystander := &bystanderTier{
+		ctx: ctx, queries: queries, workspaceID: workspaceID,
+		issueID: subscriberIssueID, details: details,
+	}
 
 	for _, sub := range subs {
 		// Only notify member-type subscribers (not agents)
@@ -642,11 +757,6 @@ func notifyIssueSubscribers(
 			continue
 		}
 
-		// Skip if this notification type is muted by the user
-		if prefs, ok := userPrefs[subID]; ok && isNotifMuted(prefs, notifType) {
-			continue
-		}
-
 		// Delegated subscriptions deliver a narrower event set than direct
 		// ones — see deliverToSubscriber.
 		if !deliverToSubscriber(sub.Reason, notifType, statusIsHandoff) {
@@ -654,8 +764,17 @@ func notifyIssueSubscribers(
 			continue
 		}
 
+		// A passive subscription to someone else's issue delivers the
+		// bystander tier unless the member asked for everything. This is not
+		// added to tierSuppressed: the parent bubble judges the parent's own
+		// subscription, and the parent may well be this member's issue.
+		if bystanderReasons[sub.Reason] && userPrefs[subID][othersIssuesPref] != "all" &&
+			!bystander.deliver(subID, notifType, statusIsHandoff) {
+			continue
+		}
+
 		if createMemberInboxItem(ctx, queries, bus, subID, workspaceID, e, targetIssueID, issueStatus,
-			notifType, severity, title, body, details) {
+			notifType, severity, title, body, details, userPrefs) {
 			notified[subID] = true
 		}
 	}
@@ -663,8 +782,8 @@ func notifyIssueSubscribers(
 	return notified, tierSuppressed
 }
 
-// notifyDirect creates an inbox item for a specific recipient. Skips if the
-// recipient is the actor. Publishes an inbox:new event on success.
+// notifyDirect delivers an inbox item to a specific recipient. Skips if the
+// recipient is the actor.
 func notifyDirect(
 	ctx context.Context,
 	queries *db.Queries,
@@ -686,46 +805,11 @@ func notifyDirect(
 		return
 	}
 
-	// Check notification preferences for member recipients.
-	if recipientType == "member" {
-		prefs := loadUserPrefs(ctx, queries, workspaceID, []string{recipientID})
-		if p, ok := prefs[recipientID]; ok && isNotifMuted(p, notifType) {
-			return
-		}
-	}
-
-	item, inserted, err := inbox.CreateIfEligible(ctx, queries, db.CreateInboxItemParams{
-		ID:            dbid.NewV7(),
-		WorkspaceID:   parseUUID(workspaceID),
-		RecipientType: recipientType,
-		RecipientID:   parseUUID(recipientID),
-		Type:          notifType,
-		Severity:      severity,
-		IssueID:       parseUUID(issueID),
-		Title:         title,
-		Body:          util.StrToText(body),
-		ActorType:     util.StrToText(e.ActorType),
-		ActorID:       optionalUUID(e.ActorID),
-		Details:       details,
-	})
-	if err != nil {
+	if _, _, err := inbox.Deliver(ctx, queries, bus, issueNotification(e, recipientType, recipientID,
+		workspaceID, issueID, issueStatus, notifType, severity, title, body, details, nil)); err != nil {
 		slog.Error("direct notification creation failed",
 			"issue_id", issueID, "recipient_id", recipientID, "type", notifType, "error", err)
-		return
 	}
-	if !inserted {
-		return
-	}
-
-	resp := inboxItemToResponse(item)
-	resp["issue_status"] = issueStatus
-	bus.Publish(events.Event{
-		Type:        protocol.EventInboxNew,
-		WorkspaceID: workspaceID,
-		ActorType:   e.ActorType,
-		ActorID:     e.ActorID,
-		Payload:     map[string]any{"item": resp},
-	})
 }
 
 // notifyDelegatedIssueCreated tells the human behind an agent-created issue
@@ -798,8 +882,18 @@ func notifyMentionedMembers(
 	details []byte,
 ) map[string]bool {
 	notified := map[string]bool{}
-	// Collect the set of member IDs to notify.
+	// Collect the set of member IDs to notify, each with how the mention
+	// reached them. Naming someone outranks reaching them through a squad,
+	// which outranks @all.
 	recipientIDs := map[string]bool{}
+	via := map[string]string{}
+	reach := func(id, how string) {
+		recipientIDs[id] = true
+		if via[id] == inbox.MentionViaMember || (via[id] == inbox.MentionViaSquad && how == inbox.MentionViaAll) {
+			return
+		}
+		via[id] = how
+	}
 
 	hasAll := false
 	var squadIDs []string
@@ -812,7 +906,7 @@ func notifyMentionedMembers(
 			if _, err := util.ParseUUID(m.ID); err != nil {
 				continue
 			}
-			recipientIDs[m.ID] = true
+			reach(m.ID, inbox.MentionViaMember)
 		}
 		if m.Type == "squad" {
 			squadIDs = append(squadIDs, m.ID)
@@ -834,7 +928,7 @@ func notifyMentionedMembers(
 		}
 		for _, sm := range members {
 			if sm.MemberType == "member" {
-				recipientIDs[util.UUIDToString(sm.MemberID)] = true
+				reach(util.UUIDToString(sm.MemberID), inbox.MentionViaSquad)
 			}
 		}
 	}
@@ -846,7 +940,7 @@ func notifyMentionedMembers(
 			slog.Error("failed to list members for @all mention", "workspace_id", e.WorkspaceID, "error", err)
 		} else {
 			for _, m := range members {
-				recipientIDs[util.UUIDToString(m.UserID)] = true
+				reach(util.UUIDToString(m.UserID), inbox.MentionViaAll)
 			}
 		}
 	}
@@ -864,43 +958,16 @@ func notifyMentionedMembers(
 		if id == e.ActorID || skip[id] {
 			continue
 		}
-		// Skip if mentions are muted by this user. This is deliberately a
-		// different group from `comments`: muting comment volume must not
-		// silence someone asking for you by name.
-		if p, ok := mentionPrefs[id]; ok && isNotifMuted(p, "mentioned") {
-			continue
-		}
-		item, inserted, err := inbox.CreateIfEligible(context.Background(), queries, db.CreateInboxItemParams{
-			ID:            dbid.NewV7(),
-			WorkspaceID:   parseUUID(e.WorkspaceID),
-			RecipientType: "member",
-			RecipientID:   parseUUID(id),
-			Type:          "mentioned",
-			Severity:      "info",
-			IssueID:       parseUUID(issueID),
-			Title:         title,
-			Body:          util.StrToText(body),
-			ActorType:     util.StrToText(e.ActorType),
-			ActorID:       optionalUUID(e.ActorID),
-			Details:       details,
-		})
+		_, inserted, err := inbox.Deliver(context.Background(), queries, bus, issueNotification(e, "member", id,
+			e.WorkspaceID, issueID, issueStatus, "mentioned", "info", title, body,
+			withDetail(details, "mention_via", via[id]), mentionPrefs))
 		if err != nil {
 			slog.Error("mention inbox creation failed", "mentioned_id", id, "error", err)
 			continue
 		}
-		if !inserted {
-			continue
+		if inserted {
+			notified[id] = true
 		}
-		notified[id] = true
-		resp := inboxItemToResponse(item)
-		resp["issue_status"] = issueStatus
-		bus.Publish(events.Event{
-			Type:        protocol.EventInboxNew,
-			WorkspaceID: e.WorkspaceID,
-			ActorType:   e.ActorType,
-			ActorID:     e.ActorID,
-			Payload:     map[string]any{"item": resp},
-		})
 	}
 	return notified
 }
@@ -1310,6 +1377,7 @@ func registerNotificationListeners(bus *events.Bus, queries *db.Queries) {
 		}
 		agentID, _ := payload["agent_id"].(string)
 		issueID, _ := payload["issue_id"].(string)
+		taskID, _ := payload["task_id"].(string)
 		if issueID == "" {
 			return
 		}
@@ -1325,6 +1393,13 @@ func registerNotificationListeners(bus *events.Bus, queries *db.Queries) {
 			exclude[agentID] = true
 		}
 
+		// The task id lets opening the notification land on the failed run
+		// in the issue's timeline.
+		details := emptyDetails
+		if taskID != "" {
+			details, _ = json.Marshal(map[string]string{"task_id": taskID})
+		}
+
 		notifySubscribers(ctx, queries, bus, issueID, issue.Status, e.WorkspaceID,
 			events.Event{
 				Type:        e.Type,
@@ -1334,28 +1409,23 @@ func registerNotificationListeners(bus *events.Bus, queries *db.Queries) {
 			},
 			exclude, "task_failed", "action_required",
 			issue.Title, "",
-			emptyDetails)
+			details)
 	})
 }
 
-// inboxItemToResponse converts a db.InboxItem into a map suitable for
-// JSON-serializable event payloads (mirrors handler.inboxToResponse fields).
-func inboxItemToResponse(item db.InboxItem) map[string]any {
-	return map[string]any{
-		"id":             util.UUIDToString(item.ID),
-		"workspace_id":   util.UUIDToString(item.WorkspaceID),
-		"recipient_type": item.RecipientType,
-		"recipient_id":   util.UUIDToString(item.RecipientID),
-		"type":           item.Type,
-		"severity":       item.Severity,
-		"issue_id":       util.UUIDToPtr(item.IssueID),
-		"title":          item.Title,
-		"body":           util.TextToPtr(item.Body),
-		"read":           item.Read,
-		"archived":       item.Archived,
-		"created_at":     util.TimestampToString(item.CreatedAt),
-		"actor_type":     util.TextToPtr(item.ActorType),
-		"actor_id":       util.UUIDToPtr(item.ActorID),
-		"details":        json.RawMessage(item.Details),
+// withDetail returns details with one more string field. Details that are not
+// a JSON object are returned as they are.
+func withDetail(details []byte, key, value string) []byte {
+	fields := map[string]any{}
+	if len(details) > 0 {
+		if err := json.Unmarshal(details, &fields); err != nil || fields == nil {
+			return details
+		}
 	}
+	fields[key] = value
+	out, err := json.Marshal(fields)
+	if err != nil {
+		return details
+	}
+	return out
 }
