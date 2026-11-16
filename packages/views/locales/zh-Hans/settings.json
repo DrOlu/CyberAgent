@@ -1707,7 +1707,7 @@
     "connect": "连接微信",
     "disconnect": "断开连接",
     "disconnect_title": "断开微信连接？",
-    "disconnect_description": "新消息将不再发送给此智能体，Multica 聊天记录会保留。",
+    "disconnect_description": "新消息将不再发送给此智能体，CyberAgent 聊天记录会保留。",
     "cancel": "取消",
     "close": "关闭",
     "action_failed": "操作未完成，请重试。",
