@@ -286,43 +286,12 @@ multica autopilot trigger-add <autopilot-id> --cron "0 9 * * 1" --timezone Asia/
 - 工作區的 `--context` 會提供給工作區裡的每個 AI 代理。`--slug` 建立後不能修改；`--issue-prefix` 會轉成大寫，修改它會給所有現有任務重新編號，外部引用裡的舊編號隨之失效。
 - `--issue-title-template` 只替換 `{{date}}`（UTC，`YYYY-MM-DD`），其他 `{{...}}` 會被拒絕。定時觸發器的 `--timezone` 預設 UTC。
 
-### Webhook 事件過濾 [#webhook-event-filters]
-
-`autopilot trigger-add` 和 `trigger-update` 可以透過 `--event-filters-file` 配置 Webhook 觸發器的事件和 action 過濾條件。將非空 JSON 陣列儲存為 `filters.json`：
-
-```json
-[
-  {"event": "pull_request_review", "actions": ["submitted"]},
-  {"event": "push"}
-]
-```
-
-這個範例接收 PR 評審提交和所有 push 事件。省略 `actions` 或使用空的 actions 陣列，表示接收該事件的所有 action。
-
-```bash
-multica autopilot trigger-add <autopilot-id> --kind webhook --event-filters-file filters.json
-multica autopilot trigger-list <autopilot-id> --full-id
-multica autopilot trigger-update <autopilot-id> <trigger-id> --event-filters-file filters.json
-multica autopilot get <autopilot-id> --output json
-```
-
-更新時，檔案內容會替換整組過濾條件。不傳這兩個過濾引數就保留原值，修改標籤或啟停觸發器時也一樣。`autopilot get` 在頂層 `triggers` 陣列中返回過濾條件。
-
-要刪除全部過濾條件、恢復接收所有事件，使用僅限更新的引數：
-
-```bash
-multica autopilot trigger-update <autopilot-id> <trigger-id> --clear-event-filters
-```
-
-`--clear-event-filters` 與 `--event-filters-file` 不能同時使用。頂層為 `null` 或空陣列、包含未知欄位、無效 JSON 或空白事件/action 名稱的檔案會被拒絕。這些引數只適用於 Webhook 觸發器；建立時不傳過濾檔案則接收所有事件。事件匹配方式見[自動化](/autopilots#事件過濾)。
-
 ## 命令概覽
 
 | 命令 | 用途 |
 | --- | --- |
 | `issue` | 建立、更新、分配和搜尋任務；管理評論、訂閱、標籤、屬性、喚醒、時間線與執行記錄 |
 | `project` | 管理專案、專案資源和專案使用的工作流 |
-| `inbox` | 讀取自己的通知，不改變已讀狀態 |
 | `workflow` | 管理工作流：狀態以及每個狀態交給誰處理 |
 | `issue-status` | 管理工作區狀態目錄：狀態及其顏色和圖示 |
 | `label`、`property` | 管理工作區標籤和自定義屬性 |
@@ -402,8 +371,6 @@ CLI 配置檔案包含可代表你訪問 CyberAgent 的令牌。不要提交到�
 | | `search <query>` | 搜尋任務 | `--limit`、`--include-closed` |
 | | `children <id>` | 按階段分組列出子任務 | |
 | | `pull-requests <id>` | 列出關聯的 PR | |
-| | `pull-requests link <id> <pr-url>` | 關聯一個已同步、但標題和分支裡沒有任務編號的 PR | 也能恢復用 `unlink` 移除的 PR |
-| | `pull-requests unlink <id> <pr>` | 移除關聯的 PR，之後不會再自動關聯 | `<pr>` 可以是 PR 連結、編號或 id |
 | | `comment list/add/update/delete/resolve/unresolve` | 管理評論 | `add`：`--content` / `--content-stdin` / `--content-file`、`--parent`、`--attachment`；`update`：`--expected-revision`（必填）、`--content` / `--content-stdin` / `--content-file`；`list`：`--since`、`--thread`、`--tail`、`--recent`、`--roots-only`、`--summary`、`--compact`、`--full` |
 | | `timeline <id>` | 按時間列出活動記錄和評論 | `--action`（可重複）、`--activity-only`、`--since`、`--tail` |
 | | `wakeup events/list/get/create/update/disable/trigger/delete/checkin/runs` | 管理任務喚醒，詳見[任務喚醒](/issue-wakeups) | `create` / `update`：`--agent-id`、`--kind`（`event`、`at`、`every`、`cron`）、`--event`、`--at` / `--after`、`--every`、`--cron`、`--timezone`、`--until-*` 條件、`--expires-in` / `--expires-at`、`--instruction` / `--instruction-file`；`checkin`：`--note` |
@@ -450,7 +417,6 @@ CLI 配置檔案包含可代表你訪問 CyberAgent 的令牌。不要提交到�
 | | `member list/add/set-role/remove` | 管理小隊成員 | |
 | | `activity <issue-id> <outcome>` | 記錄隊長評價 | |
 | `chat` | `history`、`thread [id]` | 讀取 AI 代理當前正在處理的外部聊天會話 | `--limit`、`--before` |
-| `inbox` | `list` | [讀取目前通知](/inbox)，不標為已讀 | `--project`、`--type`、`--output`（`table` 或 `json`）；篩選在本機套用 |
 
 ### Runtime
 
