@@ -616,12 +616,13 @@ export function ChatInput({
       const sent = attachedPage
         ? `[${escapeMarkdownLabel(attachedPage.label)}](mention://${attachedPage.type}/${attachedPage.id})\n\n${content}`
         : content;
-      const accepted = await onSend(
+      const sendArgs = [
         sent,
         uniqueActiveIds.length > 0 ? uniqueActiveIds : undefined,
         commitInput,
         draftAttachments.filter((attachment) => uniqueActiveIds.includes(attachment.id)),
-      );
+      ] as const;
+      const accepted = await onSend(...sendArgs);
       // Owner rejected the send (or threw, which useComposerSubmit also treats
       // as a rejection): the draft was never committed, so it stays put for
       // retry. Only a commit — here or by the owner — clears it.
@@ -920,7 +921,7 @@ export function ChatInput({
             loading={submitting}
             busy={gate.uploading}
             // Queue-capable runs reuse this one action slot: an empty composer
-            // offers Stop, while live content swaps it to Queue Send. Older
+            // offers Stop, while live content swaps it to Send. Older
             // servers cannot accept follow-ups, so they remain stop-only. An
             // upload blocks submit, so it also falls back to Stop rather than
             // removing chat's only cancellation path; the attachment node
@@ -937,7 +938,7 @@ export function ChatInput({
                 ? placeholder
                 : undefined}
             tooltip={isRunning
-              ? t(($) => $.input.queue_send_tooltip)
+              ? t(($) => $.input.send_tooltip)
               : sendShortcut
                 ? (
                   <>
@@ -948,8 +949,6 @@ export function ChatInput({
                 : t(($) => $.input.send_tooltip)}
             ariaLabel={gate.uploading
               ? tEditor(($) => $.upload.in_progress)
-              : isRunning
-                ? t(($) => $.input.queue_send_tooltip)
               : t(($) => $.input.send_tooltip)}
             stopTooltip={t(($) => $.input.stop_tooltip)}
             stopAriaLabel={t(($) => $.input.stop_tooltip)}

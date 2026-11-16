@@ -994,7 +994,7 @@ describe("ChatInput project context", () => {
     expect(onProjectChange).toHaveBeenCalledWith(null);
   });
 
-  it("swaps Stop for Queue Send when the running composer has content", async () => {
+  it("offers a single Send action while replying and restores Stop after sending", async () => {
     const onSend = vi.fn<ChatInputOnSend>(async () => true);
     const onStop = vi.fn();
     renderInput({ isRunning: true, allowSubmitWhileRunning: true, onSend, onStop });
@@ -1007,15 +1007,25 @@ describe("ChatInput project context", () => {
     });
 
     expect(screen.queryByRole("button", { name: "Stop" })).not.toBeInTheDocument();
-    const queueButton = screen.getByRole("button", { name: "Queue message" });
-    expect(queueButton).not.toBeDisabled();
-    fireEvent.click(queueButton);
+    expect(screen.getByRole("button", { name: "Send" })).not.toBeDisabled();
+    expect(screen.queryByRole("button", { name: "Queue message" })).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
 
     await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
+    expect(onSend).toHaveBeenCalledWith("follow-up", undefined, expect.any(Function), []);
     await waitFor(() => {
       expect(screen.getByRole("button", { name: "Stop" })).toBeInTheDocument();
     });
     expect(screen.queryByRole("button", { name: "Queue message" })).not.toBeInTheDocument();
+  });
+
+  it("sends guidance by default during a reply without forcing the queue", async () => {
+    const onSend = vi.fn<ChatInputOnSend>(async () => true);
+    renderInput({ isRunning: true, allowSubmitWhileRunning: true, onSend });
+    fireEvent.change(screen.getByTestId("editor"), { target: { value: "use the new location" } });
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+    await waitFor(() => expect(onSend).toHaveBeenCalledTimes(1));
+    expect(onSend).toHaveBeenCalledWith("use the new location", undefined, expect.any(Function), []);
   });
 
   it("keeps Stop available while queued content is uploading", async () => {
@@ -1029,7 +1039,7 @@ describe("ChatInput project context", () => {
     fireEvent.change(screen.getByTestId("editor"), {
       target: { value: "follow-up with attachment" },
     });
-    expect(screen.getByRole("button", { name: "Queue message" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Send" })).not.toBeDisabled();
 
     await act(async () => {
       dropHandlers.onDrop?.([
@@ -1054,7 +1064,7 @@ describe("ChatInput project context", () => {
       await Promise.resolve();
     });
 
-    expect(await screen.findByRole("button", { name: "Queue message" })).not.toBeDisabled();
+    expect(await screen.findByRole("button", { name: "Send" })).not.toBeDisabled();
   });
 
   it("shows only Stop while an older server is running", () => {
