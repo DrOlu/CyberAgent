@@ -1,7 +1,7 @@
 ## server/ee
 
 Commercial server features. Files here are covered
-by [LICENSE](./LICENSE), not by the Multica License.
+by [LICENSE](./LICENSE), not by the CyberAgent License.
 
 - **Dependency direction.** Code here may import open-source packages. Open-source
   code never imports `server/ee`; `internal/extension` checks this in

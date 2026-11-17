@@ -1,7 +1,7 @@
 ## packages/ee
 
 Commercial client features. Files here are covered
-by [LICENSE](./LICENSE), not by the Multica License. The server half lives in
+by [LICENSE](./LICENSE), not by the CyberAgent License. The server half lives in
 `server/ee`.
 
 - **Dependency direction.** This package may import `@multica/core`, `@multica/ui`
