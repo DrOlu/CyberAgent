@@ -27,6 +27,8 @@ Workspace skills come from four sources:
 
 Both individual files and whole skill packs have size caps (single-file cap around 1 MB when importing from GitHub). The exact rules appear in the import dialog — exceeding them returns an error.
 
+When creating or editing a skill, each file, including `SKILL.md`, must be at most 1 MiB of UTF-8 text. A skill can contain up to 512 supporting files totaling at most 8 MiB; `SKILL.md` is limited separately and does not count toward that total. An over-limit save is rejected and keeps the existing version. Split large files or reduce their size before saving.
+
 ## Attaching to an agent
 
 Once imported, a skill has to be **attached to a specific agent** to take effect. One agent can have multiple skills attached, and one skill can be attached to multiple agents.
