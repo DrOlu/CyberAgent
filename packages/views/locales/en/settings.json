@@ -1055,13 +1055,13 @@
     "add_account": "Add account or organization",
     "disconnect_account": "Disconnect {{login}}",
     "errors": {
-      "missing_authorization": "GitHub did not return user authorization. Retry connecting and complete authorization. If it repeats for an existing installation, ask your Multica operator for help.",
+      "missing_authorization": "GitHub did not return user authorization. Retry connecting and complete authorization. If it repeats for an existing installation, ask your CyberAgent operator for help.",
       "installation_not_authorized": "Use the owning GitHub account for a personal installation, or an account with admin access to every authorized repository for an organization. Select at least one repository.",
       "invalid_state": "This GitHub connection request expired or is invalid. Start the connection again from Settings → Code.",
       "incomplete_callback": "GitHub returned an incomplete connection response. Start the connection again from Settings → Code.",
       "bad_workspace": "Could not find the workspace for this connection. Open the intended workspace and retry from Settings → Code.",
-      "verification_failed": "Could not verify your GitHub installation access. Retry connecting; if it repeats, ask your Multica operator to check the GitHub App configuration.",
-      "persist_failed": "Could not save the GitHub connection. Retry from Settings → Code; if it repeats, contact your Multica operator."
+      "verification_failed": "Could not verify your GitHub installation access. Retry connecting; if it repeats, ask your CyberAgent operator to check the GitHub App configuration.",
+      "persist_failed": "Could not save the GitHub connection. Retry from Settings → Code; if it repeats, contact your CyberAgent operator."
     }
   },
   "vcs": {

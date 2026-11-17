@@ -36,7 +36,6 @@
     "@types/pg": "^8.20.0",
     "pg": "^8.20.0",
     "turbo": "^2.5.4",
-    "typescript": "catalog:",
-    "yaml": "catalog:"
+    "typescript": "catalog:"
   }
 }
