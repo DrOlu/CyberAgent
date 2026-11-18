@@ -56,9 +56,11 @@ const originalScrollIntoView = Element.prototype.scrollIntoView;
 // Every row and route here waits on the real fixture server, which shares its
 // event loop with the whole shell. In CI, turbo runs other packages' suites
 // beside this one, and the first search has queued behind the shell's startup
-// requests for over five seconds.
-const NETWORK_WAIT = { timeout: 15_000 };
-const TEST_TIMEOUT = 60_000;
+// requests for over five seconds. Under the heaviest CI contention the search
+// rows have taken longer than 15s to surface, so the budgets below are sized
+// for the worst observed CI load, not the ~4s a local run needs.
+const NETWORK_WAIT = { timeout: 30_000 };
+const TEST_TIMEOUT = 150_000;
 
 function payloadFor(path: string, workspace: string): unknown {
   if (path === "/api/config") return { feature_flags: {}, allow_signup: false };
