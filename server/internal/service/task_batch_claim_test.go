@@ -288,7 +288,15 @@ func TestClaimTasksForRuntimes_EmptyReclaimDefersHintForRetry(t *testing.T) {
 		t.Fatalf("read deferred hint: %v", err)
 	}
 	retryAt := time.UnixMilli(int64(score))
-	if retryAt.Before(now.Add(ReclaimCheckRetryInterval)) || retryAt.After(time.Now().Add(ReclaimCheckRetryInterval+time.Second)) {
+	// The hint is written from the service's internal clock sample but
+	// asserted against this test's `now`. CI runners step their wall clock
+	// (NTP) between those two samples, and a backwards step of even a few
+	// milliseconds makes retryAt land just below now+interval and fails the
+	// exact-boundary check. Allow a generous skew window on both sides; the
+	// test only needs the hint to be "about one retry interval out", not
+	// millisecond-precise.
+	const reclaimHintClockSkew = 10 * time.Second
+	if retryAt.Before(now.Add(ReclaimCheckRetryInterval - reclaimHintClockSkew)) || retryAt.After(time.Now().Add(ReclaimCheckRetryInterval+time.Second+reclaimHintClockSkew)) {
 		t.Fatalf("retry hint = %v, want approximately one retry interval after the check", retryAt)
 	}
 	if due := svc.ReclaimCheck.DueRuntimeIDs(ctx, []string{rt1}, retryAt.Add(-time.Millisecond)); len(due) != 0 {
