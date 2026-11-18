@@ -1,13 +1,6 @@
 import { forwardRef, useEffect, useRef, useState, useImperativeHandle } from "react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { act, fireEvent, render, screen, waitFor, within, configure } from "@testing-library/react";
-
-// This 110-test suite runs 3+ minutes on the CI runner while other vitest
-// shards share the same cores. The library's default 1s async-util timeout
-// makes the findBy*/waitFor assertions here flake nondeterministically under
-// that load (different tests fail on every run). Give DOM polling room to
-// breathe; genuine regressions still fail on assertion, not on the clock.
-configure({ asyncUtilTimeout: 5000 });
+import { act, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { AgentTask, Attachment, Issue, IssueStatusEntry, Label, TimelineEntry } from "@multica/core/types";
 import { issueKeys } from "@multica/core/issues/queries";
@@ -508,7 +501,7 @@ const scrollIntoViewSpy = vi.hoisted(() => vi.fn());
 const scrollToIndexSpy = vi.hoisted(() => vi.fn());
 const scrollIntoViewIndexSpy = vi.hoisted(() => vi.fn());
 const mockVirtualWindow = vi.hoisted(() => ({
-  enabled: false, delayedViewport: false, lateScrollReset: false, offscreenViewport: false, pendingSizeCorrection: false, holdAtIndex: false,
+  enabled: false, delayedViewport: false, lateScrollReset: false, offscreenViewport: false, contentSettlesAbove: false, pendingSizeCorrection: false, holdAtIndex: false,
   targetId: "", targetHeight: 100, scrollParent: null as HTMLElement | null,
 }));
 
@@ -539,8 +532,14 @@ vi.mock("react-virtuoso", () => ({
       if (mockVirtualWindow.offscreenViewport && customScrollParent) {
         const list = document.querySelector('[data-testid="virtuoso-mock"]')?.parentElement;
         if (list) list.getBoundingClientRect = () => new DOMRect(0, 1000 - customScrollParent.scrollTop, 400, 100);
+        // Content above the list can still grow once after the first reveal
+        // and push the list back out of view before it measures.
+        let settled = !mockVirtualWindow.contentSettlesAbove;
         const timer = window.setInterval(() => {
-          if (customScrollParent.scrollTop > 0) { window.clearInterval(timer); measured(); }
+          if (customScrollParent.scrollTop <= 0) return;
+          if (!settled) { settled = true; customScrollParent.scrollTop = 0; return; }
+          window.clearInterval(timer);
+          measured();
         }, 10);
         return () => window.clearInterval(timer);
       }
@@ -600,6 +599,7 @@ beforeEach(() => {
   mockVirtualWindow.holdAtIndex = false;
   mockVirtualWindow.delayedViewport = false;
   mockVirtualWindow.offscreenViewport = false;
+  mockVirtualWindow.contentSettlesAbove = false;
   mockVirtualWindow.lateScrollReset = false;
   mockVirtualWindow.targetId = "";
   mockVirtualWindow.targetHeight = 100;
@@ -718,6 +718,7 @@ const mockTimeline: TimelineEntry[] = [
 // ---------------------------------------------------------------------------
 
 import { IssueDetail, groupSubIssuesByStage } from "./issue-detail";
+import { ScrollRestorationProvider, type ScrollRestorationAdapter } from "../../platform";
 import { READING_COLUMN } from "../../layout/reading-column";
 import {
   IssueSurfaceSelectionProvider,
@@ -1041,6 +1042,37 @@ describe("IssueDetail (shared)", () => {
     fireEvent.click(screen.getByRole("button", { name: "View all 1 deliverable" }));
     fireEvent.click(screen.getByRole("button", { name: "Show in comments" }));
     await waitFor(() => expect(scrollIntoViewIndexSpy.mock.calls.length).toBeGreaterThan(jumps));
+  });
+
+  it("finds text in comments the timeline has not mounted, without mounting the history (MUL-9538)", async () => {
+    mockVirtualWindow.enabled = true;
+    const history = Array.from({ length: 40 }, (_, index) => ({
+      ...mockTimeline[0]!, id: `history-${index}`, parent_id: null, source_task_id: undefined,
+      content: index === 30 ? "The **needle** is in this one" : `Historical comment ${index}`,
+      created_at: new Date(Date.UTC(2026, 0, 1, 0, index)).toISOString(),
+    }));
+    mockApiObj.listTimeline.mockResolvedValue(history);
+    mockApiObj.listTasksByIssue.mockResolvedValue([]);
+    // Find only answers in a visible page; jsdom lays nothing out.
+    const rects = vi.spyOn(HTMLElement.prototype, "getClientRects")
+      .mockReturnValue([new DOMRect(0, 0, 1, 1)] as unknown as DOMRectList);
+    try {
+      renderIssueDetail();
+      await screen.findByText("Historical comment 0");
+
+      fireEvent.keyDown(document, { key: "f", code: "KeyF", ctrlKey: true });
+      fireEvent.change(await screen.findByRole("textbox", { name: "Find in issue..." }), { target: { value: "needle" } });
+
+      // Counted from the comment's Markdown while it is not mounted.
+      await waitFor(() => expect(screen.getByRole("search")).toHaveTextContent("1/1"));
+      // Landing on it mounts that comment, not the history before it.
+      await waitFor(() => expect(scrollIntoViewIndexSpy).toHaveBeenCalledWith(expect.objectContaining({ index: 30 })));
+      await waitFor(() => expect(document.getElementById("comment-history-30")).not.toBeNull());
+      expect(document.querySelectorAll('[id^="comment-history-"]').length).toBeLessThanOrEqual(8);
+      expect(screen.getByTestId("virtuoso-mock")).toBeInTheDocument();
+    } finally {
+      rects.mockRestore();
+    }
   });
 
   it("opens source-context creation from both a root comment and a reply", async () => {
@@ -2871,14 +2903,16 @@ describe("IssueDetail (shared)", () => {
       { kind: "root", delayedViewport: true, lateScrollReset: false },
       { kind: "reply", delayedViewport: false, lateScrollReset: true },
       { kind: "reply", delayedViewport: false, lateScrollReset: false, offscreenViewport: true },
+      { kind: "reply", delayedViewport: false, lateScrollReset: false, offscreenViewport: true, contentSettlesAbove: true },
       { kind: "reply", delayedViewport: false, lateScrollReset: false, pendingSizeCorrection: true },
       { kind: "reply", delayedViewport: false, lateScrollReset: false, holdAtIndex: true },
-    ])("keeps long history virtualized for a $kind (late viewport: $delayedViewport, late scroll: $lateScrollReset, below fold: $offscreenViewport)", async ({ kind, delayedViewport, lateScrollReset, offscreenViewport, pendingSizeCorrection, holdAtIndex }) => {
+    ])("keeps long history virtualized for a $kind (late viewport: $delayedViewport, late scroll: $lateScrollReset, below fold: $offscreenViewport, settling above: $contentSettlesAbove)", async ({ kind, delayedViewport, lateScrollReset, offscreenViewport, contentSettlesAbove, pendingSizeCorrection, holdAtIndex }) => {
       mockVirtualWindow.holdAtIndex = !!holdAtIndex;
       mockVirtualWindow.pendingSizeCorrection = !!pendingSizeCorrection;
       mockVirtualWindow.enabled = true;
       mockVirtualWindow.delayedViewport = delayedViewport;
       mockVirtualWindow.offscreenViewport = !!offscreenViewport;
+      mockVirtualWindow.contentSettlesAbove = !!contentSettlesAbove;
       mockVirtualWindow.lateScrollReset = lateScrollReset;
       const history = Array.from({ length: 120 }, (_, index) => ({
         ...mockTimeline[0]!,
@@ -2925,41 +2959,88 @@ describe("IssueDetail (shared)", () => {
       expect(landedBeforeGrouping).toBe(false);
     });
 
+    describe("on a route that already recorded the landing", () => {
+      function renderOverLandedRoute(props: Partial<React.ComponentProps<typeof IssueDetail>> = {}) {
+        mockApiObj.listTasksByIssue.mockResolvedValue([]);
+        const viewState = new Map([["highlight:issue-1", "comment-2"]]);
+        const adapter: ScrollRestorationAdapter = {
+          get: () => undefined,
+          getViewState: (key) => viewState.get(key),
+          setViewState: (key, value) => {
+            if (value === undefined) viewState.delete(key);
+            else viewState.set(key, value);
+          },
+        };
+        render(
+          <I18nProvider locale="en" resources={TEST_RESOURCES}>
+            <QueryClientProvider client={createTestQueryClient()}>
+              <ScrollRestorationProvider adapter={adapter}>
+                <IssueDetail issueId="issue-1" highlightCommentId="comment-2" {...props} />
+              </ScrollRestorationProvider>
+            </QueryClientProvider>
+          </I18nProvider>,
+        );
+      }
+
+      it("does not replay it when the view merely remounts", async () => {
+        renderOverLandedRoute();
+        await waitFor(() => expect(document.getElementById("comment-comment-2")).not.toBeNull());
+        await act(async () => { await new Promise((resolve) => window.setTimeout(resolve, 100)); });
+        expect(hasHighlightedCommentBackground(document.getElementById("comment-comment-2"))).toBe(false);
+      });
+
+      // MUL-9492: a Work panel click on another page cannot clear the issue
+      // route's record before it navigates there.
+      it("lands a pending request anyway and reports it", async () => {
+        const onHighlightLanded = vi.fn();
+        renderOverLandedRoute({ highlightRequestToken: 3, highlightRequestPending: true, onHighlightLanded });
+        await waitFor(() => expect(hasHighlightedCommentBackground(document.getElementById("comment-comment-2"))).toBe(true));
+        expect(onHighlightLanded).toHaveBeenCalledTimes(1);
+      });
+    });
+
     it("restarts a comment landing that a timeline update cancels while it is still aligning", async () => {
       mockApiObj.listTasksByIssue.mockResolvedValue([]);
       // The anchor keeps moving for 300ms, like reply heights settling, so the
-      // alignment loop is still running when the update arrives. Render +
-      // highlight wait can exceed that window on a loaded CI runner, so the
-      // test restarts the drift window right before injecting the update —
-      // the update then deterministically lands mid-landing regardless of
-      // setup cost (a bare 300ms window measured 416ms on CI run 43003553645,
-      // and widening the window instead breaks the loop's convergence).
+      // alignment loop is still running when the update arrives.
       let driftStart = 0;
       const drift = () => {
         driftStart ||= performance.now();
         return Math.min(performance.now() - driftStart, 300);
       };
+      // The update lands between two frames of the alignment loop, after its
+      // second measurement of the mounted anchor. Timing it from the test
+      // instead raced the loop on slow CI runners.
+      let interrupt: (() => void) | null = null;
+      let alignedReads = 0;
+      let interrupted = false;
       const rect = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
         const container = this.closest<HTMLElement>("[data-tab-scroll-root]");
         if (this === container) return new DOMRect(0, 0, 400, 200);
         if (this.id === "comment-comment-2" && container) {
+          if (this.dataset.virtualThreadMounted !== "false" && ++alignedReads === 2 && interrupt) {
+            const update = interrupt;
+            setTimeout(() => {
+              update();
+              interrupted = true;
+            }, 0);
+          }
           return new DOMRect(0, 250 + drift() - container.scrollTop, 400, 100);
         }
         return new DOMRect(0, 0, 0, 0);
       });
       try {
         const { queryClient } = renderIssueDetailWithHighlight("comment-2");
+        interrupt = () =>
+          act(() => {
+            queryClient.setQueryData<TimelineEntry[]>(["issues", "timeline", "issue-1"], (old) => [
+              ...(old ?? []),
+              { ...mockTimeline[0]!, id: "comment-late", content: "Arrived mid-landing", created_at: "2026-01-18T00:00:00Z" },
+            ]);
+          });
         await waitFor(() => expect(hasHighlightedCommentBackground(document.getElementById("comment-comment-2"))).toBe(true));
+        await waitFor(() => expect(interrupted).toBe(true));
         const container = document.querySelector<HTMLElement>("[data-tab-scroll-root]")!;
-        act(() => {
-          queryClient.setQueryData<TimelineEntry[]>(["issues", "timeline", "issue-1"], (old) => [
-            ...(old ?? []),
-            { ...mockTimeline[0]!, id: "comment-late", content: "Arrived mid-landing", created_at: "2026-01-18T00:00:00Z" },
-          ]);
-        });
-        expect(driftStart).toBeGreaterThan(0);
-        driftStart = performance.now();
-        expect(performance.now() - driftStart).toBeLessThan(300);
         // 250 + 300 drift - 16 top gap: where the comment sits once settled.
         await waitFor(() => expect(container.scrollTop).toBe(534), { timeout: 2000 });
       } finally {
