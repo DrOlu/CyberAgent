@@ -36,14 +36,6 @@ func writeFakeZcodeScript(t *testing.T, script string) string {
 	t.Helper()
 	dir := t.TempDir()
 	bin := filepath.Join(dir, "zcode")
-	// Delegate to the shared fixture writer. Rename-into-place alone is not
-	// enough: a concurrent t.Parallel() sibling can still fork between our
-	// OpenFile and Close, and its child inherits the still-open write fd on
-	// the script inode — the later exec then fails with ETXTBSY ("text file
-	// busy"), seen on CI as TestZcodeResumeInternalErrorNotRejection:
-	// fork/exec .../zcode: text file busy. writeTestExecutable holds
-	// ForkLock.RLock across the write and renames for overlayfs runners,
-	// same hardening the muse and dim fake helpers already use.
 	writeTestExecutable(t, bin, []byte(script))
 	return bin
 }

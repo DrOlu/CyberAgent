@@ -123,9 +123,6 @@ func writeFakeDimScript(t *testing.T, requestsFile string) string {
 	t.Helper()
 	dir := t.TempDir()
 	bin := filepath.Join(dir, "dim")
-	// Use writeTestExecutable so Linux CI does not flake with ETXTBSY
-	// ("text file busy") when a parallel test forks while this file is
-	// still open for write. See exec_fixture_unix_test.go.
 	writeTestExecutable(t, bin, []byte(fakeDimACPScript()))
 	return bin
 }
