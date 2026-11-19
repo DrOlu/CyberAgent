@@ -56,8 +56,6 @@ Si vous ne choisissez pas de modèle, CyberAgent utilise le modèle par défaut 
 
 QwenPaw et MiniMax Code font exception : ils n'acceptent pas de modèle choisi depuis CyberAgent, donc le sélecteur est inactif et affiche « Géré par le runtime ». Choisissez plutôt le modèle dans la configuration propre à l'outil. Une liste de modèles vide y est normale et n'indique pas que le runtime est hors ligne.
 
-Antigravity affiche ses variantes de raisonnement comme des modèles distincts lorsqu’elles figurent dans `agy models`. Sélectionnez la variante exacte dans le sélecteur de modèle, suffixe compris. Multica ne propose pas de réglage du raisonnement séparé pour Antigravity. Si vous passez `--effort` dans les arguments personnalisés, Antigravity vérifie que cette option est compatible avec le modèle sélectionné.
-
 DeepSeek Harness publie son catalogue de modèles depuis le runtime lui-même (`dsh --profile multica --list-models`). Ses identifiants de modèle utilisent la forme `provider/model` (par exemple `deepseek-official/deepseek-chat`) ; sélectionnez donc l'identifiant complet dans la liste.
 
 <Callout type="info">
