@@ -416,6 +416,12 @@ export type {
   WorkspaceSubscriptionPrice,
   WorkspaceSubscriptionPlanPrices,
   WorkspaceSubscriptionPrices,
+  WorkspaceAutopilotAddonSummary,
+  WorkspaceAutopilotAddonPrice,
+  CreateWorkspaceAutopilotAddonCheckoutRequest,
+  CreateWorkspaceAutopilotAddonCheckoutResponse,
+  WorkspaceAutopilotAddonCheckoutStatus,
+  WorkspaceAutopilotAddonCheckout,
   WorkspacePlanChangeHold,
   WorkspaceTrial,
   WorkspaceTrialState,
@@ -435,6 +441,7 @@ export type {
   WorkspaceFeatureState,
   WorkspaceFeatures,
   MemberLimit,
+  StorageUsage,
 } from "./billing";
 export type { IssueWakeup, IssueWakeupInput, SystemWakeup, WorkspaceSystemWakeup, WakeupPreview, IssueWakeupSummaryRow, WakeupCondition, WakeupPausedReason, WakeupRun, PausedWakeup, WakeupSource } from "./issue-wakeup";
 
