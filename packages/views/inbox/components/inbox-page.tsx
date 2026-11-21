@@ -122,6 +122,7 @@ import { AutopilotQuotaNotice } from "./autopilot-quota-notice";
 import { InboxKeptActions, useKeptInboxRowText } from "./inbox-kept-actions";
 import { inboxListLoad, useFilteredInboxRows } from "./use-filtered-inbox-rows";
 import { useKeptOpenInboxRow } from "./use-kept-open-inbox-row";
+import { useMoveOnAfterAutoArchive } from "./use-move-on-after-auto-archive";
 import { useArchiveInboxBatchWithUndo, useArchiveInboxWithUndo, useRestoreInbox } from "./use-leave-inbox-row";
 import { useInboxSnooze } from "./use-inbox-snooze";
 import { InboxAppRequest } from "../../common/app-requests";
@@ -640,6 +641,14 @@ export function InboxPage() {
     });
   };
 
+  useMoveOnAfterAutoArchive({
+    settled: settledRow,
+    next: settledRow ? nextInboxRow(listedItems, settledRow.key) : null,
+    onNext: () => {
+      if (settledRow) advanceSelectionPast(settledRow.item.id, listedItems);
+    },
+  });
+
   const unsubscribable = useInboxUnsubscribable(wsId);
   const unsubscribeArchive = useUnsubscribeArchive();
   const handleUnsubscribeArchive = (id: string, scope: InboxUnsubscribeScope = "issue") => {
@@ -964,7 +973,6 @@ export function InboxPage() {
   const keptNotice =
     settledRow && detailItem && inboxRowKey(detailItem) === settledRow.key ? (
       <InboxKeptActions
-        layout="strip"
         label={keptText.notice(settledRow)}
         icon={settledRow.reason === "snoozed" ? <AlarmClock /> : undefined}
         onUndo={() =>
@@ -1023,12 +1031,14 @@ export function InboxPage() {
             // longer exists.
             setSelectedKey("");
           }}
-          onDone={() => {
+          onArchive={() => {
             handleArchive(detailItem.id);
           }}
           onUnsubscribeArchive={
             isArchivedView ? undefined : (scope) => handleUnsubscribeArchive(detailItem.id, scope)
           }
+          // The archive lists notifications already dealt with: no bar.
+          inboxItem={isArchivedView ? undefined : detailItem}
         />
       </IssuePeekHost>
     </ErrorBoundary>
