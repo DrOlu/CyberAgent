@@ -190,9 +190,9 @@ export function FeedbackModal({
             {sendShortcut ? (
               <ShortcutKeycaps
                 shortcut={sendShortcut}
-                tone="on-primary"
                 decorative
                 className="ml-1"
+                keyClassName="border-background/30 bg-background/15 text-primary-foreground shadow-none"
               />
             ) : null}
           </Button>
