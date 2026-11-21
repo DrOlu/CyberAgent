@@ -13,7 +13,6 @@ export function createKoDict(): LandingDict {
       label: "FAQ",
       headline: "자주 묻는 질문.",
       items: [
-      { question: "WeChat에서 에이전트와 채팅할 수 있나요?", answer: "네. 본인이 소유한 에이전트를 열고 '메시징'에서 '메시징 채널 추가' → WeChat을 선택한 뒤 본인 WeChat으로 QR 코드를 스캔하면 연결됩니다. 스캔한 계정의 개인 메시지는 본인의 워크스페이스 권한으로 실행되며 답변과 지원되는 첨부 파일이 같은 대화로 돌아옵니다. 그룹 채팅은 지원하지 않으며 자체 호스팅 서버에서는 WeChat 연동을 먼저 활성화해야 합니다." },
         {
           question: "Multica는 어떤 코딩 에이전트를 지원하나요?",
           answer:

@@ -13,7 +13,6 @@ export function createJaDict(): LandingDict {
       label: "FAQ",
       headline: "よくある質問。",
       items: [
-      { question: "WeChat からエージェントとチャットできますか？", answer: "はい。自分が所有するエージェントを開き、「メッセージング」の「メッセージチャネルを追加」から WeChat を選び、ご自身の WeChat で QR コードを読み取って接続できます。読み取ったアカウントからの個別メッセージはあなたのワークスペース権限で実行され、返信と対応する添付ファイルが同じ会話に届きます。グループチャットは非対応です。セルフホストでは WeChat 連携を有効にする必要があります。" },
         {
           question: "Multica はどのコーディングエージェントに対応していますか?",
           answer:

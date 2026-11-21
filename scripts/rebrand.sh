@@ -328,6 +328,17 @@ open('.goreleaser.yml', 'w').write(text)
   _sed apps/web/features/landing/components/landing-header.tsx \
     's/^\([[:space:]]*\)multica$/\1cyberagent/'
 
+  # Landing i18n FAQ: upstream ships a WeChat IM-channel FAQ entry
+  # (MUL-8549) as the first item of faq.items in every locale. en.ts and
+  # zh.ts are snapshotted (no WeChat FAQ in the fork), but ja.ts and ko.ts
+  # flow through from upstream and would keep 8 items — breaking the
+  # locale-parity test in inline-links.test.ts. Delete the one-line FAQ
+  # entry wherever upstream reintroduces it. The question: "WeChat anchor
+  # only matches the single-line FAQ object shape; feature-section
+  # WeChat copy uses different line shapes and is intentionally kept.
+  _sed apps/web/features/landing/i18n/ja.ts '/question: "WeChat /d'
+  _sed apps/web/features/landing/i18n/ko.ts '/question: "WeChat /d'
+
   # ── Server Go files — prompt strings and user-visible text only.
   # NO URL or import-path rewrites here. The release-upgrade redirect to
   # DrOlu/CyberAgent in server/internal/cli/update.go is preserved via
