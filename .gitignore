@@ -83,4 +83,6 @@ __pycache__/
 perf-report/
 # The production example is a tracked template; `.env*` above would hide it.
 !apps/mobile/.env.production.example
-site/
+# mkdocs build output — root-anchored so it can't match upstream's tracked
+# apps/web/features/landing/site/ (unanchored rule broke the sync resolver).
+/site/
