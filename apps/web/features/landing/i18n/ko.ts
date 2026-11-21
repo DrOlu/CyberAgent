@@ -13,10 +13,11 @@ export function createKoDict(): LandingDict {
       label: "FAQ",
       headline: "자주 묻는 질문.",
       items: [
+      { question: "WeChat에서 에이전트와 채팅할 수 있나요?", answer: "네. 본인이 소유한 에이전트를 열고 '메시징'에서 '메시징 채널 추가' → WeChat을 선택한 뒤 본인 WeChat으로 QR 코드를 스캔하면 연결됩니다. 스캔한 계정의 개인 메시지는 본인의 워크스페이스 권한으로 실행되며 답변과 지원되는 첨부 파일이 같은 대화로 돌아옵니다. 그룹 채팅은 지원하지 않으며 자체 호스팅 서버에서는 WeChat 연동을 먼저 활성화해야 합니다." },
         {
           question: "Multica는 어떤 코딩 에이전트를 지원하나요?",
           answer:
-            "Multica는 Antigravity, Claude Code, CodeBuddy, CodeArts, Codex, Copilot, Cursor, DeepSeek Harness, DevEco Code, Devin CLI, Dim, Grok, Hermes, Kimi, Kiro CLI, MiniMax Code, Muse Code, Oh-My-Pi, OpenClaw, OpenCode, Pi, Qoder, Qoder CN, Qwen Code, QwenPaw, Reasonix, Trae CLI, ZeroClaw, ZCode 등 29개 코딩 도구를 기본 지원합니다. 데몬이 이미 설치된 CLI를 자동으로 찾아 각각 런타임으로 등록합니다. 소스 코드가 공개되어 있으므로 직접 백엔드를 추가할 수도 있습니다. 셀프 호스팅에서는 Qoder PAT와 Qoder Cloud Agents의 기존 에이전트를 사용하여 태스크 실행용 관리형 원격 런타임으로 Qoder Cloud Agents를 설정할 수 있습니다.",
+            "Multica는 Amp, Antigravity, Claude Code, CodeBuddy, CodeArts, Codex, Copilot, Cursor, DeepSeek Harness, DevEco Code, Devin CLI, Dim, Factory Droid, Grok, Hermes, Kimi, Kiro CLI, MiniMax Code, Muse Code, Oh-My-Pi, OpenClaw, OpenCode, Pi, Qoder, Qoder CN, Qwen Code, QwenPaw, Reasonix, Trae CLI, ZeroClaw, ZCode 등 31개 코딩 도구를 기본 지원합니다. 데몬이 이미 설치된 CLI를 자동으로 찾아 각각 런타임으로 등록합니다. 소스 코드가 공개되어 있으므로 직접 백엔드를 추가할 수도 있습니다. 셀프 호스팅에서는 Qoder PAT와 Qoder Cloud Agents의 기존 에이전트를 사용하여 태스크 실행용 관리형 원격 런타임으로 Qoder Cloud Agents를 설정할 수 있습니다.",
         },
         {
           question: "셀프 호스팅만 가능한가요, 클라우드 버전도 있나요?",
@@ -3698,7 +3699,7 @@ export function createKoDict(): LandingDict {
       title: "개인정보 처리방침",
       lastUpdated: "최종 업데이트: 2026년 10월 22일",
       intro: [
-        "이 개인정보 처리방침은 Index Labs (Hong Kong) Limited(이하 “Multica” 또는 “저희”)가 여러분이 multica.ai를 방문하거나, 저희에게 문의하거나, 호스팅 서비스인 CyberAgent Cloud(웹, 데스크톱, 모바일 앱 포함)를 이용할 때 개인정보를 어떻게 수집, 이용, 공유하는지 설명합니다.",
+        "이 개인정보 처리방침은 Index Labs (Hong Kong) Limited(이하 “Multica” 또는 “저희”)가 여러분이 multica.ai를 방문하거나, 저희에게 문의하거나, 호스팅 서비스인 Multica Cloud(웹, 데스크톱, 모바일 앱 포함)를 이용할 때 개인정보를 어떻게 수집, 이용, 공유하는지 설명합니다.",
         "이 방침은 여러분이 직접 호스팅하는 Multica에는 적용되지 않습니다. 셀프 호스팅 배포의 데이터는 운영자가 관리하며, 어떤 AI 제공자, 연동 서비스, 분석 도구를 쓰는지는 운영자의 설정에 따라 달라집니다. 셀프 호스팅 서버가 저희에게 보내는 것은 하루 한 번의 사용 현황 스냅샷뿐입니다. 여기에는 같은 서버의 스냅샷을 서로 연결하기 위한 무작위 배포 ID, 서버 버전, 워크스페이스·멤버·에이전트·연결된 데몬의 대략적인 수, 그날 시작·완료·실패·취소된 실행 수, 그리고 지난 1·7·28일 동안 웹 또는 데스크톱 앱을 연 멤버 수와 직접 에이전트 실행을 시작한 멤버 수의 대략적인 값이 담깁니다. 이름, 이메일 주소, 콘텐츠는 포함되지 않습니다. DO_NOT_TRACK=1로 설정하면 이 스냅샷을 끌 수 있습니다.",
         "이 방침은 영어 원문을 기준으로 합니다. 한국어 번역본과 영어 원문의 내용이 다를 경우 영어 원문이 우선합니다.",
       ],
@@ -3707,7 +3708,7 @@ export function createKoDict(): LandingDict {
           heading: "수집하는 정보",
           bullets: [
             "계정 정보: 이름, 이메일 주소, 프로필 사진. Google로 로그인하면 Google로부터 이름, 이메일 주소, 프로필 사진을 받습니다. 언어, 시간대, 자기소개 같은 프로필 정보와 온보딩 답변(역할, 사용 목적, Multica를 알게 된 경로 등)을 입력할 수도 있습니다.",
-            "여러분이 만든 콘텐츠: 워크스페이스, 태스크, 댓글, 채팅 메시지, 첨부 파일, 에이전트 지침 등 여러분이나 여러분의 에이전트가 CyberAgent Cloud에 입력하는 모든 것.",
+            "여러분이 만든 콘텐츠: 워크스페이스, 태스크, 댓글, 채팅 메시지, 첨부 파일, 에이전트 지침 등 여러분이나 여러분의 에이전트가 Multica Cloud에 입력하는 모든 것.",
             "영업팀 문의: 이름, 업무용 이메일, 회사명과 규모, 국가 또는 지역, 사용 사례, 목표, 연락 수신 설정. 악용을 막기 위해 양식을 제출한 IP 주소와 브라우저 user agent도 기록합니다.",
             "결제 정보: 구독 결제는 Stripe가 호스팅하는 페이지에서 Stripe가 처리합니다. 저희는 전체 카드 정보를 받거나 저장하지 않습니다.",
             "사용 및 기기 정보: 앱 버전, 운영체제, 클라이언트 유형, 무작위로 생성된 설치 ID, 런타임으로 연결한 각 머신의 이름(기본값은 호스트 이름), 그리고 충돌 및 오류 보고서. 보고서를 보내기 전에 오류 메시지에서 식별 가능한 이메일 주소와 인증 정보를 걸러 내지만, 보고서에는 문제 상황에 관한 다른 정보가 남아 있을 수 있습니다.",
@@ -3717,7 +3718,7 @@ export function createKoDict(): LandingDict {
         {
           heading: "정보 이용 목적",
           bullets: [
-            "CyberAgent Cloud의 제공, 운영, 보호(로그인, 워크스페이스 동기화, 알림 및 초대 발송 등).",
+            "Multica Cloud의 제공, 운영, 보호(로그인, 워크스페이스 동기화, 알림 및 초대 발송 등).",
             "영업팀 문의와 지원 요청에 대한 응답.",
             "로그인 코드, 워크스페이스 초대 등 서비스 메시지 발송. 제품 소식이나 마케팅 정보는 동의한 경우에만 보내며, 언제든지 수신을 거부할 수 있습니다.",
             "Multica 이용 현황 파악, 버그 수정, 제품 개선.",
@@ -3727,14 +3728,14 @@ export function createKoDict(): LandingDict {
         {
           heading: "처리의 법적 근거",
           paragraphs: [
-            "처리의 법적 근거를 밝혀야 하는 지역에서는 다음을 근거로 개인정보를 처리합니다. CyberAgent Cloud를 제공하기 위한 여러분과의 계약 이행, Multica의 보안 유지·지원·개선 및 문의 응대에 관한 저희의 정당한 이익, 마케팅 정보 수신에 대한 여러분의 동의, 그리고 법적 의무의 준수입니다.",
+            "처리의 법적 근거를 밝혀야 하는 지역에서는 다음을 근거로 개인정보를 처리합니다. Multica Cloud를 제공하기 위한 여러분과의 계약 이행, Multica의 보안 유지·지원·개선 및 문의 응대에 관한 저희의 정당한 이익, 마케팅 정보 수신에 대한 여러분의 동의, 그리고 법적 의무의 준수입니다.",
           ],
         },
         {
           heading: "AI 기능",
           paragraphs: [
             "코딩 에이전트는 여러분이 설정한 코딩 도구와 계정으로, 여러분의 머신이나 연결한 런타임에서 실행됩니다. 에이전트가 로컬에서 실행된다고 해서 모델 추론까지 로컬에서 이뤄지는 것은 아닙니다. 이런 도구는 프롬프트, 코드, 파일, 도구 실행 결과를 각자의 모델 제공자에게 보내며, 그 처리는 여러분이 쓰는 도구와 계정의 약관을 따릅니다. Multica는 에이전트의 작업을 조율합니다.",
-            "채팅 제목 생성이나 후속 작업 제안 같은 CyberAgent Cloud의 일부 기능은 결과를 만들기 위해 첫 채팅 메시지나 최근 몇 개의 메시지를 저희가 선택한 외부 대규모 언어 모델 제공자에게 보냅니다. Multica는 여러분의 콘텐츠를 AI 모델 학습에 사용하지 않습니다.",
+            "채팅 제목 생성이나 후속 작업 제안 같은 Multica Cloud의 일부 기능은 결과를 만들기 위해 첫 채팅 메시지나 최근 몇 개의 메시지를 저희가 선택한 외부 대규모 언어 모델 제공자에게 보냅니다. Multica는 여러분의 콘텐츠를 AI 모델 학습에 사용하지 않습니다.",
           ],
         },
         {
@@ -3765,13 +3766,13 @@ export function createKoDict(): LandingDict {
         {
           heading: "정보 저장 위치",
           paragraphs: [
-            "CyberAgent Cloud는 Amazon Web Services와 Vercel에서 호스팅됩니다. 저희와 서비스 제공자는 미국 및 기타 국가나 지역에서 여러분의 정보를 처리할 수 있습니다. 어디에서 처리되든 이 방침에 따라 정보를 보호합니다.",
+            "Multica Cloud는 Amazon Web Services와 Vercel에서 호스팅됩니다. 저희와 서비스 제공자는 미국 및 기타 국가나 지역에서 여러분의 정보를 처리할 수 있습니다. 어디에서 처리되든 이 방침에 따라 정보를 보호합니다.",
           ],
         },
         {
           heading: "보관 기간",
           paragraphs: [
-            "계정 정보와 워크스페이스 콘텐츠는 계정이나 워크스페이스가 존재하는 동안 보관합니다. 워크스페이스 소유자가 워크스페이스를 삭제하면 태스크, 댓글 등 그 안의 콘텐츠는 CyberAgent Cloud에서 제거됩니다. 다만 복구용 백업에는 삭제 후 일정 기간 사본이 남아 있을 수 있습니다. 삭제된 워크스페이스에 업로드된 파일을 파일 저장소에서 지우고 싶다면 [support@multica.ai](mailto:support@multica.ai)로 이메일을 보내 주세요. 결제 기록은 회계 및 세무 규정이 요구하는 기간 동안 보관하고, 제품 분석 데이터, 충돌 보고서, 영업팀 문의, 피드백은 지원과 제품 개선에 필요한 기간 동안 보관합니다. 문의와 피드백은 요청하시면 삭제합니다.",
+            "계정 정보와 워크스페이스 콘텐츠는 계정이나 워크스페이스가 존재하는 동안 보관합니다. 워크스페이스 소유자가 워크스페이스를 삭제하면 태스크, 댓글 등 그 안의 콘텐츠는 Multica Cloud에서 제거됩니다. 다만 복구용 백업에는 삭제 후 일정 기간 사본이 남아 있을 수 있습니다. 삭제된 워크스페이스에 업로드된 파일을 파일 저장소에서 지우고 싶다면 [support@multica.ai](mailto:support@multica.ai)로 이메일을 보내 주세요. 결제 기록은 회계 및 세무 규정이 요구하는 기간 동안 보관하고, 제품 분석 데이터, 충돌 보고서, 영업팀 문의, 피드백은 지원과 제품 개선에 필요한 기간 동안 보관합니다. 문의와 피드백은 요청하시면 삭제합니다.",
           ],
         },
         {

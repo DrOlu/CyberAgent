@@ -11,7 +11,10 @@ import {
 } from "@multica/ui/icons";
 import { toast } from "sonner";
 import { copyText } from "@multica/ui/lib/clipboard";
+import { cn } from "@multica/ui/lib/utils";
 import { Button } from "@multica/ui/components/ui/button";
+import { TooltipHint } from "@multica/ui/components/common/tooltip-hint";
+import { Skeleton } from "@multica/ui/components/ui/skeleton";
 import {
   Tooltip,
   TooltipContent,
@@ -21,6 +24,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@multica/ui/components/ui/dropdown-menu";
 import {
@@ -28,18 +32,21 @@ import {
   docTreeOptions,
   docCommentsOptions,
   folderAncestry,
+  holdLiveDoc,
   isDocNotFound,
 } from "@multica/core/docs";
 import { useWorkspaceId } from "@multica/core/hooks";
 import { useWorkspacePaths } from "@multica/core/paths";
 import { useActorName } from "@multica/core/workspace/hooks";
 import type { Doc } from "@multica/core/types";
-import { ContentEditor, useEditorUpload } from "../../editor";
+import { ContentEditor, ReadonlyContent, useEditorUpload } from "../../editor";
 import { ActorAvatar } from "../../common/actor-avatar";
 import { BreadcrumbHeader } from "../../layout/breadcrumb-header";
 import { AppLink, useNavigation } from "../../navigation";
 import { useT, useTimeAgo } from "../../i18n";
 import { useDocDraft } from "./use-doc-draft";
+import { useDocCollab, type DocCollaborator } from "./use-doc-collab";
+import { useLiveDocTitle } from "./use-live-doc-title";
 import { DocOutline, MIN_OUTLINE_HEADINGS, useDocOutline } from "./doc-outline";
 import { DocCommentsPanel, groupDocThreads } from "./doc-comments-panel";
 import { captureDocAnchor, type DocAnchor } from "./doc-comment-anchors";
@@ -66,17 +73,79 @@ function DocPageContent({ docId }: { docId: string }) {
   if (isDocNotFound(query.error)) return <DocNotFound docId={docId} />;
   if (!query.data)
     return (
-      <div className="p-6">
+      <DocPageSkeleton docId={docId}>
         {query.isError ? (
           <Button onClick={() => void query.refetch()}>
             {t(($) => $.editor.retry)}
           </Button>
-        ) : (
-          t(($) => $.history.loading)
-        )}
-      </div>
+        ) : null}
+      </DocPageSkeleton>
     );
   return <DocEditor key={`${wsId}:${docId}`} doc={query.data} />;
+}
+
+/**
+ * The editor's frame while the doc loads: the header and reading column sit
+ * where the loaded page puts them, so nothing moves when the content lands.
+ * The tree already knows the title and folder, so those show for real.
+ */
+function DocPageSkeleton({
+  docId,
+  children,
+}: {
+  docId: string;
+  children?: React.ReactNode;
+}) {
+  const { t } = useT("docs");
+  const p = useWorkspacePaths();
+  const wsId = useWorkspaceId();
+  const { data: tree } = useQuery(docTreeOptions(wsId));
+  const summary = tree?.docs.find((d) => d.id === docId);
+  const ancestors = folderAncestry(tree?.folders ?? [], summary?.folderId ?? null);
+  return (
+    <div className="flex h-full min-h-0 flex-col">
+      <BreadcrumbHeader
+        segments={[
+          { href: p.docs(), label: t(($) => $.kb) },
+          ...ancestors.map((f) => ({ href: p.docFolder(f.id), label: f.title })),
+        ]}
+        leaf={
+          summary ? (
+            <span className="truncate">{summary.title || t(($) => $.untitled)}</span>
+          ) : (
+            <Skeleton className="h-4 w-32" />
+          )
+        }
+      />
+      <div className="@container min-h-0 flex-1 overflow-auto">
+        <div aria-busy className="mx-auto max-w-4xl px-6 py-8 @3xl:px-16">
+          {children ?? (
+            <>
+              {summary ? (
+                <div className="text-display-sm font-semibold">
+                  {summary.title || (
+                    <span className="text-muted-foreground">{t(($) => $.untitled)}</span>
+                  )}
+                </div>
+              ) : (
+                <Skeleton className="h-8 w-2/3" />
+              )}
+              <div className="mt-3 mb-8 flex items-center gap-2">
+                <Skeleton className="size-4 rounded-full" />
+                <Skeleton className="h-3.5 w-40" />
+              </div>
+              <div className="space-y-3">
+                <Skeleton className="h-4 w-full" />
+                <Skeleton className="h-4 w-11/12" />
+                <Skeleton className="h-4 w-4/5" />
+                <Skeleton className="h-4 w-2/3" />
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 function DocEditor({ doc }: { doc: Doc }) {
   const { t } = useT("docs");
@@ -85,7 +154,27 @@ function DocEditor({ doc }: { doc: Doc }) {
   const { data: tree } = useQuery(docTreeOptions(wsId));
   const { getActorName } = useActorName();
   const timeAgo = useTimeAgo();
-  const { draft, status, dirty, change, retry, reload } = useDocDraft(doc);
+  // With live editing on, the shared document holds the body and saves
+  // itself; only the title goes through the API. Until the page knows which
+  // mode it is in, nothing is saved: the body is shown read-only and a typed
+  // title is held.
+  const collab = useDocCollab(doc.id);
+  const live = collab.mode === "live" ? collab : null;
+  const solo = collab.mode === "solo";
+  const { draft, status, dirty, change, retry, reload, setAside } = useDocDraft(doc, solo);
+  const liveTitle = useLiveDocTitle(doc, !!live);
+  useEffect(() => {
+    if (solo) {
+      const title = liveTitle.take();
+      if (title !== null) change({ title });
+    } else if (live) {
+      setAside();
+    }
+    // Once per mode change: the handlers are recreated every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [solo, !!live]);
+  const liveSynced = !!live?.synced;
+  useEffect(() => (liveSynced ? holdLiveDoc(doc.id) : undefined), [liveSynced, doc.id]);
   const [moving, setMoving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const canDelete = useCanDeleteDoc()(doc);
@@ -175,6 +264,15 @@ function DocEditor({ doc }: { doc: Doc }) {
         }
         actions={
           <>
+            {live ? (
+              <LiveStatus
+                connected={live.connected}
+                synced={live.synced}
+                collaborators={live.collaborators}
+                titleFailed={liveTitle.failed}
+                onRetryTitle={liveTitle.retry}
+              />
+            ) : collab.mode === "checking" ? null : (
             <span role="status" className="px-1 text-caption text-muted-foreground">
               {status === "error" ? (
                 <Button size="xs" variant="ghost" onClick={() => void retry()}>
@@ -186,35 +284,26 @@ function DocEditor({ doc }: { doc: Doc }) {
                 t(($) => $.editor.saved)
               ) : null}
             </span>
-            <Button
-              size="icon-sm"
-              variant="ghost"
-              aria-label={t(($) => $.actions.copy_link)}
-              title={t(($) => $.actions.copy_link)}
-              onClick={copyLink}
-            >
-              <LinkIcon className="size-4" />
-            </Button>
-            <Button
-              size="sm"
-              variant="ghost"
-              aria-pressed={commentsOpen}
-              className={commentsOpen ? "bg-surface-selected" : undefined}
-              onClick={() => setCommentsOpen((open) => !open)}
-            >
-              <MessageSquare className="size-4" />
-              {t(($) => $.comments.title)}
-              {openThreads.length > 0 && (
-                <span className="text-caption text-muted-foreground">{openThreads.length}</span>
-              )}
-            </Button>
-            <AppLink
-              href={p.docHistory(doc.id)}
-              className="flex items-center gap-1 rounded-md px-2 py-1 text-caption hover:bg-surface-hover"
-            >
-              <History className="size-4" />
-              {t(($) => $.actions.history)}
-            </AppLink>
+            )}
+            <TooltipHint label={t(($) => $.comments.title)} side="bottom">
+              <Button
+                size={openThreads.length > 0 ? "sm" : "icon-sm"}
+                variant="ghost"
+                aria-pressed={commentsOpen}
+                className={cn(
+                  "text-muted-foreground",
+                  openThreads.length > 0 && "px-2",
+                  commentsOpen && "bg-surface-selected text-foreground",
+                )}
+                onClick={() => setCommentsOpen((open) => !open)}
+              >
+                <MessageSquare className="size-4" />
+                <span className="sr-only">{t(($) => $.comments.title)}</span>
+                {openThreads.length > 0 && (
+                  <span className="text-caption tabular-nums">{openThreads.length}</span>
+                )}
+              </Button>
+            </TooltipHint>
             <DropdownMenu>
               <DropdownMenuTrigger
                 render={
@@ -228,6 +317,15 @@ function DocEditor({ doc }: { doc: Doc }) {
                 <MoreHorizontal className="size-4" />
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={copyLink}>
+                  <LinkIcon />
+                  {t(($) => $.actions.copy_link)}
+                </DropdownMenuItem>
+                <DropdownMenuItem render={<AppLink href={p.docHistory(doc.id)} />}>
+                  <History />
+                  {t(($) => $.actions.history)}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => setMoving(true)}>
                   <FolderInput />
                   {t(($) => $.actions.move)}
@@ -246,7 +344,7 @@ function DocEditor({ doc }: { doc: Doc }) {
           </>
         }
       />
-      {status === "conflict" && (
+      {solo && status === "conflict" && (
         <div
           role="alert"
           className="flex flex-wrap items-center gap-2 border-b bg-warning/10 px-6 py-2 text-body"
@@ -279,12 +377,15 @@ function DocEditor({ doc }: { doc: Doc }) {
               )}
               <input
                 aria-label={t(($) => $.editor.title_label)}
-                value={draft.title}
+                value={solo ? draft.title : liveTitle.value}
                 // A doc just created from the tree is blank: start in its title.
                 autoFocus={!doc.title && !doc.content}
                 maxLength={300}
                 placeholder={t(($) => $.untitled)}
-                onChange={(e) => change({ title: e.target.value })}
+                onChange={(e) =>
+                  solo ? change({ title: e.target.value }) : liveTitle.change(e.target.value)
+                }
+                onBlur={solo ? undefined : liveTitle.blur}
                 className="w-full bg-transparent text-display-sm font-semibold outline-none"
               />
               <div className="mt-3 mb-8 flex items-center gap-2 text-caption text-muted-foreground">
@@ -297,16 +398,39 @@ function DocEditor({ doc }: { doc: Doc }) {
                 <span aria-hidden>·</span>
                 <Tooltip>
                   <TooltipTrigger
-                    render={<time dateTime={doc.updatedAt} className="shrink-0" />}
+                    render={
+                      <AppLink
+                        href={p.docHistory(doc.id)}
+                        className="shrink-0 underline-offset-3 decoration-faint-foreground hover:text-foreground hover:underline"
+                      />
+                    }
                   >
-                    {t(($) => $.edited, { time: timeAgo(doc.updatedAt) })}
+                    <time dateTime={doc.updatedAt}>
+                      {t(($) => $.edited, { time: timeAgo(doc.updatedAt) })}
+                    </time>
                   </TooltipTrigger>
-                  <TooltipContent>
+                  <TooltipContent side="bottom">
                     {new Date(doc.updatedAt).toLocaleString()}
+                    <span className="text-muted-foreground">{t(($) => $.view_history)}</span>
                   </TooltipContent>
                 </Tooltip>
               </div>
               <div ref={bodyRef} onClick={onBodyClick}>
+                {collab.mode === "checking" || (live && !live.synced) ? (
+                  <ReadonlyContent content={doc.content} className="min-h-80" />
+                ) : live ? (
+                  <ContentEditor
+                    key={live.generation}
+                    collaboration={live.collaboration}
+                    selectionAction={commentAction}
+                    placeholder={t(($) => $.editor.placeholder)}
+                    enableSlashCommands
+                    slashCommandMode="blocks"
+                    showBlockHandles
+                    onUploadFile={uploadFile}
+                    className="min-h-80"
+                  />
+                ) : (
                 <ContentEditor
                   selectionAction={commentAction}
                   value={draft.content}
@@ -320,6 +444,7 @@ function DocEditor({ doc }: { doc: Doc }) {
                   onUploadFile={uploadFile}
                   className="min-h-80"
                 />
+                )}
               </div>
             </div>
           </div>
@@ -364,5 +489,77 @@ function DocEditor({ doc }: { doc: Doc }) {
         onOpenChange={setDeleting}
       />
     </div>
+  );
+}
+
+function LiveStatus({
+  connected,
+  synced,
+  collaborators,
+  titleFailed,
+  onRetryTitle,
+}: {
+  connected: boolean;
+  synced: boolean;
+  collaborators: DocCollaborator[];
+  titleFailed: boolean;
+  onRetryTitle: () => void;
+}) {
+  const { t } = useT("docs");
+  return (
+    <span role="status" className="flex items-center gap-2 px-1 text-caption text-muted-foreground">
+      {collaborators.length > 0 && (
+        <span className="flex -space-x-1" aria-label={t(($) => $.editor.editing_now)}>
+          {collaborators.slice(0, 5).map((c) => (
+            <Tooltip key={c.key}>
+              <TooltipTrigger
+                render={
+                  <span
+                    data-collaborator={c.name}
+                    className="rounded-full ring-2"
+                    style={{ ["--tw-ring-color" as string]: c.color }}
+                  />
+                }
+              >
+                <ActorAvatar actorType={c.kind} actorId={c.id} size="xs" />
+              </TooltipTrigger>
+              <TooltipContent>{c.name}</TooltipContent>
+            </Tooltip>
+          ))}
+          {collaborators.length > 5 && (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <span
+                    data-collaborators-more
+                    className="flex h-5 min-w-5 items-center justify-center rounded-full bg-muted px-1 text-caption ring-2 ring-background"
+                  />
+                }
+              >
+                +{collaborators.length - 5}
+              </TooltipTrigger>
+              <TooltipContent>
+                {collaborators
+                  .slice(5)
+                  .map((c) => c.name)
+                  .join(", ")}
+              </TooltipContent>
+            </Tooltip>
+          )}
+        </span>
+      )}
+      {titleFailed ? (
+        <Button size="xs" variant="ghost" onClick={onRetryTitle}>
+          {t(($) => $.editor.title_save_failed)}
+        </Button>
+      ) : connected && synced ? (
+        <span className="flex items-center gap-1">
+          <span aria-hidden className="size-1.5 rounded-full bg-success" />
+          {t(($) => $.editor.live)}
+        </span>
+      ) : (
+        t(($) => (synced ? $.editor.reconnecting : $.editor.connecting))
+      )}
+    </span>
   );
 }
