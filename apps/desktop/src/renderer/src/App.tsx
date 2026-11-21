@@ -348,6 +348,11 @@ function AppContent() {
 }
 
 function BlockingRuntimeConfigError({ message }: { message: string }) {
+  // Boot-time failure screen: renders before the i18n provider initializes, so
+  // useT() is unavailable here. Hard-coded copy and config paths are
+  // intentional (exempt per the rule's own guidance for non-translatable
+  // brand/code text).
+  /* eslint-disable no-restricted-syntax -- boot-time error screen, pre-i18n-init */
   return (
     <div className="flex h-screen items-center justify-center bg-background p-8 text-foreground">
       <div className="max-w-xl rounded-lg border bg-card p-6 shadow-sm">
@@ -362,6 +367,7 @@ function BlockingRuntimeConfigError({ message }: { message: string }) {
     </div>
   );
 }
+/* eslint-enable no-restricted-syntax */
 
 // On logout, wipe desktop-only in-memory state and stop the daemon so that
 // a subsequent login as a different user never inherits the previous user's
