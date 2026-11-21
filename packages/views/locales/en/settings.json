@@ -420,7 +420,7 @@
         "description": "Open or close the floating chat window. Opening it focuses the message input."
       },
       "newChat": {
-        "label": "Ask Multica",
+        "label": "Ask CyberAgent",
         "description": "Start a new chat in the floating chat window."
       },
       "findInIssue": {
@@ -520,7 +520,7 @@
   "chat": {
     "floating_label": "Floating chat window",
     "floating_hint": "Show the floating chat button on every page.",
-    "ask_agent_label": "Ask Multica agent",
+    "ask_agent_label": "Ask CyberAgent agent",
     "ask_agent_hint": "The agent a new chat from the bottom bar starts with, in this workspace.",
     "ask_agent_last_used": "Last used"
   },
@@ -906,7 +906,7 @@
     },
     "system": {
       "title": "System notifications",
-      "label": "Show system notifications when Multica is in the background"
+      "label": "Show system notifications when CyberAgent is in the background"
     },
     "browser": {
       "label": "Browser notifications",
@@ -1055,13 +1055,13 @@
     "add_account": "Add account or organization",
     "disconnect_account": "Disconnect {{login}}",
     "errors": {
-      "missing_authorization": "GitHub did not return user authorization. Retry connecting and complete authorization. If it repeats for an existing installation, ask your Multica operator for help.",
+      "missing_authorization": "GitHub did not return user authorization. Retry connecting and complete authorization. If it repeats for an existing installation, ask your CyberAgent operator for help.",
       "installation_not_authorized": "Use the owning GitHub account for a personal installation, or an account with admin access to every authorized repository for an organization. Select at least one repository.",
       "invalid_state": "This GitHub connection request expired or is invalid. Start the connection again from Settings → Code.",
       "incomplete_callback": "GitHub returned an incomplete connection response. Start the connection again from Settings → Code.",
       "bad_workspace": "Could not find the workspace for this connection. Open the intended workspace and retry from Settings → Code.",
-      "verification_failed": "Could not verify your GitHub installation access. Retry connecting; if it repeats, ask your Multica operator to check the GitHub App configuration.",
-      "persist_failed": "Could not save the GitHub connection. Retry from Settings → Code; if it repeats, contact your Multica operator."
+      "verification_failed": "Could not verify your GitHub installation access. Retry connecting; if it repeats, ask your CyberAgent operator to check the GitHub App configuration.",
+      "persist_failed": "Could not save the GitHub connection. Retry from Settings → Code; if it repeats, contact your CyberAgent operator."
     }
   },
   "vcs": {
@@ -1221,7 +1221,7 @@
     "agent_bot_manage_tooltip": "Open this bot's Slack workspace.",
     "byo_dialog_title": "Connect a Slack bot",
     "byo_video_cta": "Watch the setup walkthrough",
-    "byo_docs_link": "Step-by-step: connect your Multica agent to Slack",
+    "byo_docs_link": "Step-by-step: connect your CyberAgent agent to Slack",
     "byo_bot_token_label": "Bot token (xoxb-)",
     "byo_app_token_label": "App-level token (xapp-)",
     "byo_submit": "Connect",
@@ -1251,7 +1251,7 @@
     "group_mentions_other": "{{count}} mentions",
     "group_forget": "Forget",
     "group_forget_title": "Forget this group?",
-    "group_forget_description": "Removes this group from Multica's list without deleting any messages in DingTalk.",
+    "group_forget_description": "Removes this group from CyberAgent's list without deleting any messages in DingTalk.",
     "group_forget_cancel": "Cancel",
     "group_forget_confirm": "Forget group",
     "group_forget_success": "Group removed from the inventory",
@@ -1285,7 +1285,7 @@
     "agent_bot_connected_label": "Connected to DingTalk",
     "agent_bot_disconnect_tooltip": "Unbind this DingTalk bot from the Agent. The bot will stop receiving DingTalk messages.",
     "byo_dialog_title": "Connect a DingTalk bot",
-    "byo_docs_link": "Step-by-step: connect your Multica agent to DingTalk",
+    "byo_docs_link": "Step-by-step: connect your CyberAgent agent to DingTalk",
     "byo_appkey_label": "AppKey (Client ID)",
     "byo_appsecret_label": "AppSecret (Client Secret)",
     "byo_submit": "Connect",
@@ -1386,7 +1386,7 @@
     "disconnect": "Disconnect",
     "disconnecting": "Disconnecting...",
     "disconnect_confirm_title": "Disconnect this Telegram bot?",
-    "disconnect_confirm_description": "The bot will stop receiving Telegram messages for this workspace. Chat history in Multica is kept; you can reconnect later from the same agent.",
+    "disconnect_confirm_description": "The bot will stop receiving Telegram messages for this workspace. Chat history in CyberAgent is kept; you can reconnect later from the same agent.",
     "disconnect_confirm_cancel": "Cancel",
     "toast_disconnected": "Disconnected Telegram bot",
     "toast_disconnect_failed": "Disconnect failed",
@@ -1398,7 +1398,7 @@
     "agent_bot_manage_tooltip": "Open a chat with this bot in Telegram.",
     "connect_dialog_title": "Connect a Telegram bot",
     "connect_dialog_description": "Create a bot with @BotFather in Telegram, then paste its token below. The token is verified live and stored encrypted.",
-    "connect_docs_link": "Step-by-step: connect your Multica agent to Telegram",
+    "connect_docs_link": "Step-by-step: connect your CyberAgent agent to Telegram",
     "bot_token_label": "Bot token",
     "connect_submit": "Connect",
     "connect_submitting": "Connecting...",

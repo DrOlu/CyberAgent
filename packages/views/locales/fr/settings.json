@@ -1505,7 +1505,7 @@
       "external_description_before": "Le démon de cet appareil s'exécute en dehors de l'application, par exemple dans WSL2. L'application ne peut donc ni le démarrer ni l'arrêter. Démarrez-le ou arrêtez-le depuis cet environnement avec",
       "external_description_after": ".",
       "auto_start_title": "Démarrage automatique à l'ouverture",
-      "auto_start_description": "Démarre automatiquement le daemon local au lancement de Multica Desktop",
+      "auto_start_description": "Démarre automatiquement le daemon local au lancement de CyberAgent Desktop",
       "auto_stop_title": "Arrêt automatique à la fermeture",
       "auto_stop_description": "Arrêter le daemon à la fermeture de Desktop.",
       "cli_status": "État du CLI",

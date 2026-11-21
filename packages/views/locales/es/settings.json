@@ -1505,7 +1505,7 @@
       "external_description_before": "El daemon de este dispositivo se ejecuta fuera de la app (por ejemplo, dentro de WSL2), así que la app no puede iniciarlo ni detenerlo. Inícialo o detenlo desde ese entorno con",
       "external_description_after": ".",
       "auto_start_title": "Inicio automático al arrancar",
-      "auto_start_description": "Inicia automáticamente el daemon local al abrir Multica Desktop",
+      "auto_start_description": "Inicia automáticamente el daemon local al abrir CyberAgent Desktop",
       "auto_stop_title": "Detención automática al salir",
       "auto_stop_description": "Detiene el daemon cuando se cierra la app de escritorio.",
       "cli_status": "Estado de la CLI",

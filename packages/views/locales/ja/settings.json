@@ -1493,7 +1493,7 @@
       "external_description_before": "このデバイスのデーモンはアプリの外部（WSL2 など）で実行されているため、アプリから起動や停止はできません。その環境で次を実行してください：",
       "external_description_after": "。",
       "auto_start_title": "起動時に自動開始",
-      "auto_start_description": "Multica Desktop の起動時にローカルデーモンを自動起動します",
+      "auto_start_description": "CyberAgent Desktop の起動時にローカルデーモンを自動起動します",
       "auto_stop_title": "終了時に自動停止",
       "auto_stop_description": "デスクトップ版を閉じるとデーモンを停止します。",
       "cli_status": "CLI の状態",
