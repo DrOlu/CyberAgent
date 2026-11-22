@@ -349,6 +349,14 @@ open('.goreleaser.yml', 'w').write(text)
   _sed apps/web/features/landing/structured-data.test.ts \
     's|https://github\.com/multica-ai/multica|https://github.com/DrOlu/CyberAgent|g'
 
+  # Landing llms-txt test: upstream's llms-txt.test.ts asserts the upstream
+  # licensing copy ("Using Multica inside your own organization is free"),
+  # but the generated llms.txt renders the fork's snapshot en.ts, which says
+  # "Using CyberAgent inside ...". Same class as the structured-data rule
+  # above: rewrite only the assertion in this test file.
+  _sed apps/web/features/landing/llms-txt.test.ts \
+    's|Using Multica inside your own organization|Using CyberAgent inside your own organization|g'
+
   # ── Server Go files — prompt strings and user-visible text only.
   # NO URL or import-path rewrites here. The release-upgrade redirect to
   # DrOlu/CyberAgent in server/internal/cli/update.go is preserved via
