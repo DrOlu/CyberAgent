@@ -8,7 +8,7 @@ describe("siteJsonLd", () => {
     const [organization, app] = siteJsonLd["@graph"];
     expect(app).toMatchObject({ operatingSystem: "Web, macOS, Windows, Linux, iOS" });
     expect(organization?.sameAs).toEqual([
-      "https://github.com/multica-ai/multica",
+      "https://github.com/DrOlu/CyberAgent",
       "https://x.com/MulticaAI",
       "https://discord.gg/W8gYBn226t",
     ]);

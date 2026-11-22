@@ -339,6 +339,16 @@ open('.goreleaser.yml', 'w').write(text)
   _sed apps/web/features/landing/i18n/ja.ts '/question: "WeChat /d'
   _sed apps/web/features/landing/i18n/ko.ts '/question: "WeChat /d'
 
+  # Landing structured-data test: upstream's structured-data.test.ts asserts
+  # the upstream repo URL in the Organization.sameAs JSON-LD, but the fork's
+  # landing components/shared.tsx points githubUrl at the fork repo
+  # (DrOlu/CyberAgent). The test flows through from upstream on every sync,
+  # so rewrite only this assertion here. Scoped to this one test file —
+  # github.com/multica-ai/multica stays functional everywhere else (see
+  # POLICY above).
+  _sed apps/web/features/landing/structured-data.test.ts \
+    's|https://github\.com/multica-ai/multica|https://github.com/DrOlu/CyberAgent|g'
+
   # ── Server Go files — prompt strings and user-visible text only.
   # NO URL or import-path rewrites here. The release-upgrade redirect to
   # DrOlu/CyberAgent in server/internal/cli/update.go is preserved via
