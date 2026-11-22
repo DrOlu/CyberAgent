@@ -60,7 +60,7 @@ export function buildLlmsTxt(
     "",
     "## Get started",
     "",
-    `- **Multica Cloud**: Hosted by Multica. Sign in at ${SITE_ORIGIN} and follow the [Quickstart](${DOCS_URL}/cloud-quickstart.md).`,
+    `- **CyberAgent Cloud**: Hosted by Multica. Sign in at ${SITE_ORIGIN} and follow the [Quickstart](${DOCS_URL}/cloud-quickstart.md).`,
     `- **Desktop app**: ${meta.download.description} [Download](${SITE_ORIGIN}/download) · [Desktop docs](${DOCS_URL}/desktop-app.md)`,
     `- **Self-host**: Run Multica on your own infrastructure with Docker Compose or Kubernetes. [Self-host quickstart](${DOCS_URL}/self-host-quickstart.md)`,
     `- **For AI agents installing Multica**: [Self-hosting setup for AI agents](${DOCS_URL}/self-hosting-ai.md) lists the exact commands to run.`,

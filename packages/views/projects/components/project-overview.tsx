@@ -125,7 +125,7 @@ export function ProjectOverviewBody({
                 render={
                   <button
                     type="button"
-                    className="flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-xl border bg-muted/50 text-2xl transition-colors hover:bg-accent"
+                    className="flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-xl border bg-muted/50 text-display-sm transition-colors hover:bg-accent"
                     aria-label={t(($) => $.detail.icon_tooltip)}
                   >
                     {project.icon || "📁"}
