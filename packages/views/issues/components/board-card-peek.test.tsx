@@ -27,6 +27,7 @@ vi.mock("@multica/core/properties", () => ({
 }));
 
 vi.mock("@multica/core/paths", () => ({
+  issueRouteRef: (issue: { id: string; identifier?: string | null }) => issue.identifier || issue.id,
   useWorkspacePaths: () => ({ issueDetail: (id: string) => `/acme/issues/${id}` }),
 }));
 
@@ -175,7 +176,7 @@ describe("DraggableBoardCard side peek", () => {
     renderCard();
     // Handled here, not left to the browser (a new window on web).
     expect(fireEvent.click(link(), { shiftKey: true })).toBe(false);
-    expect(navigation.push).toHaveBeenCalledWith("/acme/issues/issue-1");
+    expect(navigation.push).toHaveBeenCalledWith("/acme/issues/MUL-1");
     expect(peek.open).not.toHaveBeenCalled();
     expect(peek.toggle).not.toHaveBeenCalled();
   });
