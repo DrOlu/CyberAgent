@@ -146,6 +146,8 @@ import type {
   CancelTaskResponse,
   Project,
   ArchiveProjectResponse,
+  ProjectProgressDetail,
+  ProjectActivityPage,
   CreateProjectRequest,
   UpdateProjectRequest,
   ListProjectsResponse,
@@ -427,6 +429,10 @@ import {
   SearchIssuesResponseSchema,
   ProjectSchema,
   ArchiveProjectResponseSchema,
+  ProjectProgressDetailSchema,
+  EMPTY_PROJECT_PROGRESS_DETAIL,
+  ProjectActivityPageSchema,
+  EMPTY_PROJECT_ACTIVITY_PAGE,
   ListProjectMembersResponseSchema,
   ListPrivateProjectsResponseSchema,
   ProjectSubscriptionSchema,
@@ -1107,6 +1113,18 @@ export class ApiClient {
       DocCollabTicketSchema,
       { enabled: false },
       { endpoint: "POST /api/docs/{id}/collab-ticket" },
+    );
+  }
+  /** Joins the live session of an issue's description; same shape as a doc's. */
+  async createIssueCollabTicket(id: string, options?: { state?: boolean }): Promise<DocCollabTicket> {
+    return parseWithFallback<DocCollabTicket>(
+      await this.fetch<unknown>(`/api/issues/${id}/collab-ticket`, {
+        method: "POST",
+        ...(options?.state ? { body: JSON.stringify({ state: true }) } : {}),
+      }),
+      DocCollabTicketSchema,
+      { enabled: false },
+      { endpoint: "POST /api/issues/{id}/collab-ticket" },
     );
   }
   async getDocVersion(id: string, number: number): Promise<DocVersion | null> {
@@ -4958,6 +4976,27 @@ export class ApiClient {
   async getProject(id: string): Promise<Project> {
     const raw = await this.fetch<unknown>(`/api/projects/${id}`);
     return parseWithFallback(raw, ProjectSchema, EMPTY_PROJECT, { endpoint: "GET /api/projects/:id" });
+  }
+
+  async getProjectProgress(id: string): Promise<ProjectProgressDetail> {
+    const raw = await this.fetch<unknown>(`/api/projects/${id}/progress`);
+    return parseWithFallback(raw, ProjectProgressDetailSchema, EMPTY_PROJECT_PROGRESS_DETAIL, {
+      endpoint: "GET /api/projects/:id/progress",
+    });
+  }
+
+  async listProjectActivity(
+    id: string,
+    params: { before?: string; limit?: number } = {},
+  ): Promise<ProjectActivityPage> {
+    const search = new URLSearchParams();
+    if (params.before) search.set("before", params.before);
+    if (params.limit) search.set("limit", String(params.limit));
+    const query = search.toString();
+    const raw = await this.fetch<unknown>(`/api/projects/${id}/activity${query ? `?${query}` : ""}`);
+    return parseWithFallback(raw, ProjectActivityPageSchema, EMPTY_PROJECT_ACTIVITY_PAGE, {
+      endpoint: "GET /api/projects/:id/activity",
+    });
   }
 
   async createProject(data: CreateProjectRequest): Promise<Project> {

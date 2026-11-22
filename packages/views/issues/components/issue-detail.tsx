@@ -9,7 +9,7 @@ import {
 import { IssueFlowCard } from "../../workflows/issue-flow-card";
 import { IssueAppRequests } from "../../common/app-requests";
 import { useStatusLabel } from "../utils/status-label";
-import { priorityLabel } from "../utils/priority-label";
+import { formatActivity, type ActivityT } from "./activity-text";
 import { useIssueStatuses } from "@multica/core/issue-statuses/hooks";
 import { useState, useEffect, useCallback, useMemo, useRef, useId, Fragment, type ComponentProps, type ReactNode } from "react";
 import { Virtuoso, type ListRange, type VirtuosoHandle } from "react-virtuoso";
@@ -45,6 +45,7 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@multica/u
 import { Sheet, SheetContent } from "@multica/ui/components/ui/sheet";
 import { useIsMobile } from "@multica/ui/hooks/use-mobile";
 import { StorageLimitNotice } from "../../billing/storage-limit-notice";
+import { useDocCollab, type DocCollaborator } from "../../docs/components/use-doc-collab";
 import { ContentEditor, ReadonlyContent, type ContentEditorRef, TitleEditor, type TitleEditorRef, useFileDropZone, FileDropOverlay, useLazyEditor, useEditorUpload, PreviewSequenceProvider, collectPreviewSequence, ImageThumbnailsProvider } from "../../editor";
 import {
   WAKEUP_ACTIVITY_ACTIONS,
@@ -85,7 +86,6 @@ import { TimelineHandoff } from "../../workflows/timeline-handoff";
 import { PropertyIcon } from "../../common/property-icon";
 import type { Attachment, InboxItem, Issue, IssueProperty, IssueStatus, IssueStatusCategory, IssuePriority, TimelineEntry, UpdateIssueRequest } from "@multica/core/types";
 import { contentReferencesAttachment } from "@multica/core/types";
-import { isBuiltInIssueStatus } from "@multica/core/issue-statuses";
 import { commentLandingTarget, isDeletedComment } from "@multica/core/issues/comment-deletion";
 import { formatDateOnly, isPastDateOnly } from "@multica/core/issues/date";
 import { useUpdateIssue } from "@multica/core/issues/mutations";
@@ -122,7 +122,7 @@ import { ResolvedThreadBar } from "./resolved-thread-bar";
 import { ThreadMinimap, type ThreadMinimapThread } from "./thread-minimap";
 import { collectThreadParticipants, collectThreadReplies, deriveThreadResolution } from "./thread-utils";
 import { IssueAgentHeaderChip } from "./issue-agent-header-chip";
-import { IssueWakeupHeaderChip } from "./issue-wakeup-header-chip";
+import { IssuePresenceHeaderChip } from "./issue-presence-header-chip";
 import { ExecutionLogSection } from "./execution-log-section";
 import { WakeupsSection } from "./wakeups-section";
 import { QuickActionsSection } from "./quick-actions-section";
@@ -347,164 +347,6 @@ function SubscriberPopoverContent({
 function shortDate(date: string | null, locale: string): string {
   if (!date) return "—";
   return formatDateOnly(date, { month: "short", day: "numeric" }, locale);
-}
-
-type ActivityT = ReturnType<typeof useT<"issues">>["t"];
-
-/**
- * Labels a status key from the activity feed. `resolveLabel` is the workspace
- * catalog resolver, which names custom statuses; without it — or for a status
- * since deleted — a built-in still gets its i18n name and anything else falls
- * back to the raw key. (MUL-6243)
- */
-function statusLabel(
-  status: string,
-  t: ActivityT,
-  resolveLabel?: (statusKey: string) => string,
-): string {
-  if (resolveLabel) return resolveLabel(status);
-  if (isBuiltInIssueStatus(status)) {
-    return t(($) => $.status[status]);
-  }
-  return status;
-}
-
-function formatActivity(
-  entry: TimelineEntry,
-  t: ActivityT,
-  locale: string,
-  resolveActorName?: (type: string, id: string) => string,
-  resolveStatusLabel?: (statusKey: string) => string,
-  requesterName?: string,
-): string {
-  const details = (entry.details ?? {}) as Record<string, string>;
-  switch (entry.action) {
-    case "created":
-      if (requesterName && entry.actor_type === "agent") {
-        return t(($) => $.activity.created_on_behalf_of, { name: requesterName });
-      }
-      return t(($) => $.activity.created);
-    case "status_changed":
-      // PR auto-complete (MUL-7429) says why the status moved.
-      if (details.source === "pr_automation") {
-        return t(($) => $.activity.status_changed_pr, {
-          from: statusLabel(details.from ?? "?", t, resolveStatusLabel),
-          to: statusLabel(details.to ?? "?", t, resolveStatusLabel),
-          prs: details.pull_requests ?? "",
-        });
-      }
-      return t(($) => $.activity.status_changed, {
-        from: statusLabel(details.from ?? "?", t, resolveStatusLabel),
-        to: statusLabel(details.to ?? "?", t, resolveStatusLabel),
-      });
-    case "pr_auto_complete_changed":
-      return (entry.details as { disabled?: unknown } | undefined)?.disabled === true
-        ? t(($) => $.activity.pr_auto_complete_disabled)
-        : t(($) => $.activity.pr_auto_complete_enabled);
-    case "priority_changed":
-      return t(($) => $.activity.priority_changed, {
-        from: priorityLabel(details.from ?? "?", t),
-        to: priorityLabel(details.to ?? "?", t),
-      });
-    case "assignee_changed": {
-      const isSelfAssign = details.to_type === entry.actor_type && details.to_id === entry.actor_id;
-      if (isSelfAssign) return t(($) => $.activity.self_assigned);
-      const toName = details.to_id && details.to_type && resolveActorName
-        ? resolveActorName(details.to_type, details.to_id)
-        : null;
-      if (toName) return t(($) => $.activity.assigned_to, { name: toName });
-      if (details.from_id && !details.to_id) return t(($) => $.activity.removed_assignee);
-      return t(($) => $.activity.changed_assignee);
-    }
-    case "start_date_changed": {
-      if (!details.to) return t(($) => $.activity.start_date_removed);
-      const formatted = formatDateOnly(details.to, { month: "short", day: "numeric" }, locale);
-      return t(($) => $.activity.start_date_set, { date: formatted });
-    }
-    case "due_date_changed": {
-      if (!details.to) return t(($) => $.activity.due_date_removed);
-      const formatted = formatDateOnly(details.to, { month: "short", day: "numeric" }, locale);
-      return t(($) => $.activity.due_date_set, { date: formatted });
-    }
-    case "title_changed":
-      return t(($) => $.activity.title_renamed, {
-        from: details.from ?? "?",
-        to: details.to ?? "?",
-      });
-    case "description_updated":
-      return t(($) => $.activity.description_updated);
-    case "duplicate_marked":
-      return t(($) => $.activity.duplicate_marked, {
-        identifier: details.original_identifier || "?",
-      });
-    case "duplicate_unmarked": {
-      const identifier = details.original_identifier || "?";
-      if (details.reason === "original_deleted") {
-        return t(($) => $.activity.duplicate_unmarked_original_deleted, { identifier });
-      }
-      // The row stands in for the status row of the reopen, so it says where
-      // the status went.
-      if (details.to) {
-        return t(($) => $.activity.duplicate_unmarked_to, {
-          identifier,
-          status: statusLabel(details.to, t, resolveStatusLabel),
-        });
-      }
-      return t(($) => $.activity.duplicate_unmarked, { identifier });
-    }
-    case "duplicate_added":
-      return t(($) => $.activity.duplicate_added, {
-        identifier: details.duplicate_identifier || "?",
-      });
-    case "duplicate_removed":
-      return t(($) => $.activity.duplicate_removed, {
-        identifier: details.duplicate_identifier || "?",
-      });
-    case "task_completed": {
-      const count = entry.coalesced_count ?? 1;
-      return count === 1
-        ? t(($) => $.activity.task_completed_single)
-        : t(($) => $.activity.task_completed, { count });
-    }
-    case "task_failed": {
-      const count = entry.coalesced_count ?? 1;
-      return count === 1
-        ? t(($) => $.activity.task_failed_single)
-        : t(($) => $.activity.task_failed, { count });
-    }
-    case "squad_leader_evaluated": {
-      const reason = details.reason?.trim();
-      switch (details.outcome) {
-        case "action":
-          return reason
-            ? t(($) => $.activity.squad_leader_action_reason, { reason })
-            : t(($) => $.activity.squad_leader_action);
-        case "no_action":
-          return reason
-            ? t(($) => $.activity.squad_leader_no_action_reason, { reason })
-            : t(($) => $.activity.squad_leader_no_action);
-        case "failed":
-          return reason
-            ? t(($) => $.activity.squad_leader_failed_reason, { reason })
-            : t(($) => $.activity.squad_leader_failed);
-        default:
-          return t(($) => $.activity.squad_leader_evaluated);
-      }
-    }
-    case "environment_controlled": {
-      const name = details.label || details.name || "?";
-      switch (details.action) {
-        case "stop":
-          return t(($) => $.activity.environment_stopped, { name });
-        case "restart":
-          return t(($) => $.activity.environment_restarted, { name });
-        default:
-          return t(($) => $.activity.environment_started, { name });
-      }
-    }
-    default:
-      return entry.action ?? "";
-  }
 }
 
 /**
@@ -1446,8 +1288,6 @@ export function IssueLoadError({
 // Loading skeleton
 
 const ISSUE_DETAIL_LAYOUT_ID = "multica_issue_detail_layout";
-const REVEALED_WAKEUPS: readonly IssueSidebarSection[] = ["wakeups"];
-
 /**
  * Exported so `IssueDetailRoute` can show the identical frame while it resolves
  * an identifier URL to its issue — the two waits are indistinguishable to the
@@ -3061,6 +2901,47 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
     setDescPendingAttachments([]);
   }, [id]);
 
+  // With live editing on, the description is a shared document that the
+  // collaboration service saves. The solo editor still shows first, so the
+  // page never waits on that answer and works as before when live editing is
+  // off; the live editor takes over once it is ready, though not while
+  // someone is in the solo one. Unmounting the solo editor flushes its
+  // pending save, which the server merges into the live document.
+  const descCollab = useDocCollab(id, issue?.description ?? "", "issue", !guest);
+  const descLive = descCollab.mode === "live" ? descCollab : null;
+  const [descLiveReadyFor, setDescLiveReadyFor] = useState<number | null>(null);
+  const [descSoloHeld, setDescSoloHeld] = useState(false);
+  useEffect(() => setDescSoloHeld(false), [id]);
+  const showLiveDesc = !!descLive?.ready && descLiveReadyFor === descLive.generation && !descSoloHeld;
+  const descContentRef = useRef<HTMLDivElement>(null);
+  const descPresence = useMemo(
+    () => descLive?.collaborators.filter((c) => !(c.kind === "member" && c.id === user?.id)) ?? [],
+    [descLive?.collaborators, user?.id],
+  );
+  const jumpToCollaborator = useCallback((c: DocCollaborator) => {
+    const caret = descContentRef.current?.querySelector<HTMLElement>(
+      `.collaboration-carets__caret[data-collaborator="${CSS.escape(`${c.kind}:${c.id}`)}"]`,
+    );
+    caret?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, []);
+  const descCarried = descCollab.mode === "solo" ? (descCollab.carried ?? null) : null;
+  const queueDescriptionSaveRef = useRef<
+    ((draft: { markdown: string; baseMarkdown: string; attachmentIds: string[] }) => void) | null
+  >(null);
+  useEffect(() => {
+    // Typed into a live session that never connected: save it as a solo edit.
+    if (descCarried === null) return;
+    queueDescriptionSaveRef.current?.({
+      markdown: descCarried,
+      baseMarkdown: issue?.description ?? "",
+      attachmentIds: descPendingAttachmentsRef.current
+        .filter((a) => contentReferencesAttachment(descCarried, a))
+        .map((a) => a.id),
+    });
+    // Once per carried draft; the issue is read as it is then.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [descCarried]);
+
   // Shared issue actions (mutations, pin, copy-link, modal dispatch, etc.).
   // Called before the `if (!issue)` early return so hook order stays stable.
   const actions = useIssueActions(issue);
@@ -3192,22 +3073,6 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
     });
   }, [beginDesktopSidebarToggle, isMobile, sidebarRef]);
 
-  // The header's wakeup chip opens the sidebar and brings the Wakeups section
-  // into view with focus on its heading, showing it on this issue even when
-  // the reader hid it from the sidebar. The reveal lasts until the reader
-  // switches the section in settings or moves to another issue.
-  const [revealedWakeupsFor, setRevealedWakeupsFor] = useState<string | null>(null);
-  if (revealedWakeupsFor !== null && revealedWakeupsFor !== id) setRevealedWakeupsFor(null);
-  const openWakeups = useCallback(() => {
-    setRevealedWakeupsFor(id);
-    if (!sidebarOpen) handleToggleSidebar();
-    window.requestAnimationFrame(() => {
-      const heading = document.getElementById(`issue-wakeups-${id}`);
-      heading?.scrollIntoView({ block: "nearest" });
-      heading?.focus({ preventScroll: true });
-    });
-  }, [handleToggleSidebar, id, sidebarOpen]);
-
   useRightSidebarShortcut(rightSidebarShortcutTargetRef, handleToggleSidebar);
 
   useIssueDetailScrollRestore({
@@ -3309,6 +3174,7 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
     }
     persistDescriptionSave(draft);
   };
+  queueDescriptionSaveRef.current = queueDescriptionSave;
 
   const canAddProperty = OPTIONAL_PROP_KEYS.some(
     (key) => !visibleOptionalProps.has(key) && (key !== "stage" || issue.parent_issue_id != null),
@@ -3741,8 +3607,6 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
             ? GUEST_SIDEBAR_SECTIONS.has(section)
             : (section !== "pull_requests" || githubSettings.prSidebar) && (section !== "plugins" || pluginsEnabled),
       )}
-      revealed={revealedWakeupsFor === id ? REVEALED_WAKEUPS : undefined}
-      onRevealEnd={() => setRevealedWakeupsFor(null)}
     />
   );
 
@@ -3905,6 +3769,7 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
           />
         )}
         <BreadcrumbHeader
+          className="@container/issue-header"
           leading={leadingAction}
           segments={breadcrumbSegments}
           leaf={
@@ -3924,11 +3789,23 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
           }
           actions={
             <>
-            {/* Live "agent is working" chip, leftmost in the right cluster so
-                it never overlaps the title (which truncates to make room).
-                It self-hides when no agent is active. */}
-            {!guest && <IssueAgentHeaderChip issueId={id} onJumpToRun={jumpToRun} />}
-            {!guest && <IssueWakeupHeaderChip issueId={id} onOpen={openWakeups} />}
+            {/* What is happening on the issue right now, left of the actions:
+                who else has it open, then which agent is working. Each chip
+                hides itself when there is nothing to say; the hairline before
+                the actions shows only while one of them does. */}
+            {!guest && (
+              <div className="flex items-center gap-1 empty:hidden after:ml-1 after:h-4 after:w-px after:bg-border">
+                {descLive && (
+                  <IssuePresenceHeaderChip
+                    collaborators={descPresence}
+                    locate={descLive.locate}
+                    watchCarets={descLive.watchCarets}
+                    onJump={jumpToCollaborator}
+                  />
+                )}
+                <IssueAgentHeaderChip issueId={id} onJumpToRun={jumpToRun} />
+              </div>
+            )}
             {!guest && <IssueDetailActionsDropdown
               issue={issue}
               locateInSidebar={!isPeek}
@@ -4192,18 +4069,37 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
               if (!descriptionEditingRef.current) {
                 descriptionEditingRef.current = true;
               }
+              if (!showLiveDesc) setDescSoloHeld(true);
             }}
             onBlurCapture={(event) => {
               if (!event.currentTarget.contains(event.relatedTarget)) {
                 descriptionEditingRef.current = false;
+                setDescSoloHeld(false);
               }
             }}
           >
             {descriptionAnnotations.popup}
-            <div data-comment-content={descriptionSourceId}>
+            <div ref={descContentRef} data-comment-content={descriptionSourceId}>
               {guest ? (
                 <ReadonlyContent content={issue.description ?? ""} attachments={descEditorAttachments} />
               ) : (
+              <>
+              {descLive?.ready && (
+                <div hidden={!showLiveDesc}>
+                  <ContentEditor
+                    ref={showLiveDesc ? descEditorRef : undefined}
+                    key={`${id}:${descLive.generation}`}
+                    collaboration={descLive.collaboration}
+                    onReady={() => setDescLiveReadyFor(descLive.generation)}
+                    placeholder={t(($) => $.detail.desc_placeholder)}
+                    onUploadFile={handleDescriptionUpload}
+                    currentIssueId={id}
+                    selectionAction={descriptionSelectionAction}
+                    attachments={descEditorAttachments}
+                  />
+                </div>
+              )}
+              {!showLiveDesc && (
               <ContentEditor
                 ref={descEditorRef}
                 key={id}
@@ -4246,6 +4142,8 @@ export function IssueDetail({ issueId, onDelete, onArchive, onUnsubscribeArchive
                 selectionAction={descriptionSelectionAction}
                 attachments={descEditorAttachments}
               />
+              )}
+              </>
               )}
             </div>
             {descStorageRefusal && (
