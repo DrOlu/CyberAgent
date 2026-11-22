@@ -35,6 +35,7 @@ import { useLocale, useT } from "../../i18n";
 import { useBuiltinViewNavigation } from "../../issue-views/builtin-views";
 import { useNavigation } from "../../navigation";
 import { formatSnoozeTime } from "./inbox-snooze-time";
+import { useInboxUndoShortcut } from "./use-inbox-shortcut";
 import { useRestoreInbox } from "./use-leave-inbox-row";
 
 const NO_SNOOZED: SnoozedInboxIssue[] = [];
@@ -179,6 +180,11 @@ export function InboxEmptyState({
 
   const canUndoCleared = (entry: LastInboxCleared) => entry.kind !== "unsubscribed" || entry.undoable;
 
+  // Z undoes what the inline undo shows, once its toast is gone.
+  const showsUndo = !isArchivedView && visibleCount === 0 && !!lastCleared && canUndoCleared(lastCleared);
+  useInboxUndoShortcut(showsUndo && lastCleared ? () => void handleUndoCleared(lastCleared) : null);
+  const undoKeycaps = !isCompact && <ActionShortcutKeycaps action="undoInboxAction" />;
+
   // Desktop prompt when active notifications exist in the Work panel.
   if (visibleCount > 0) {
     return (
@@ -222,6 +228,7 @@ export function InboxEmptyState({
                 {lastCleared.kind === "batch_archived"
                   ? t(($) => $.toasts.undo)
                   : t(($) => $.zero.undo_item, { label: lastCleared.label })}
+                {undoKeycaps}
               </Button>
             )}
           </div>
@@ -264,6 +271,7 @@ export function InboxEmptyState({
                 >
                   <Undo2 className="size-3" />
                   {t(($) => $.toasts.undo)}
+                  {undoKeycaps}
                 </button>
               </>
             )}

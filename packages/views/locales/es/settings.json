@@ -441,7 +441,7 @@
       },
       "undoInboxAction": {
         "label": "Deshacer acción de la bandeja",
-        "description": "Deshace el último archivado, posposición o baja mientras se ve su aviso, o restaura la notificación abierta una vez archivada."
+        "description": "Deshace el último archivado, posposición o baja mientras se ve su aviso; después, restaura la notificación abierta una vez archivada o lo que indica Bandeja de entrada vacía."
       },
       "send": {
         "label": "Enviar",
@@ -869,7 +869,7 @@
       "auto_presets": {
         "never": "Nunca",
         "completed": "Cuando la completas",
-        "handled": "Al responder, avanzar el estado o reasignar",
+        "handled": "Cuando la completas o activas un agente",
         "custom": "Personalizado",
         "custom_item": "Personalizado..."
       },
@@ -880,6 +880,7 @@
       },
       "auto_actions": {
         "completed": "Completar",
+        "agent_trigger": "Activar un agente",
         "comment": "Responder",
         "status": "Avanzar el estado",
         "assignee": "Reasignar",

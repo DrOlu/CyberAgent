@@ -441,7 +441,7 @@
       },
       "undoInboxAction": {
         "label": "Annuler l'action de la boîte de réception",
-        "description": "Annule le dernier archivage, report ou désabonnement tant que son message s'affiche, ou restaure la notification ouverte une fois archivée."
+        "description": "Annule le dernier archivage, report ou désabonnement tant que son message s'affiche ; ensuite, restaure la notification ouverte une fois archivée ou ce qu'indique Boîte de réception vide."
       },
       "send": {
         "label": "Envoyer",
@@ -869,7 +869,7 @@
       "auto_presets": {
         "never": "Jamais",
         "completed": "Quand vous la terminez",
-        "handled": "Après une réponse, une avancée de statut ou une réattribution",
+        "handled": "Quand vous la terminez ou déclenchez un agent",
         "custom": "Personnalisé",
         "custom_item": "Personnalisé..."
       },
@@ -880,6 +880,7 @@
       },
       "auto_actions": {
         "completed": "Terminer",
+        "agent_trigger": "Déclencher un agent",
         "comment": "Répondre",
         "status": "Faire avancer le statut",
         "assignee": "Réassigner",
