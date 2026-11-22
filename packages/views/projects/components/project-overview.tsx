@@ -124,7 +124,7 @@ export function ProjectOverviewBody({
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className={cn(OBJECT_PAGE_BODY, "space-y-8")}>
           <div className="flex items-center gap-3">
-            <div className="flex size-12 shrink-0 items-center justify-center rounded-xl border bg-muted/50 text-2xl">
+            <div className="flex size-12 shrink-0 items-center justify-center rounded-xl border bg-muted/50 text-display-sm">
               {project.icon || "📁"}
             </div>
             <h2 className="min-w-0 flex-1 text-title font-semibold">{project.title}</h2>
