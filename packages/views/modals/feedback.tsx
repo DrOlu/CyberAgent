@@ -16,6 +16,7 @@ import {
   useFileDropZone,
   FileDropOverlay,
   useUploadGate,
+  useEditorUpload,
 } from "../editor";
 import {
   useCreateFeedback,
@@ -25,8 +26,6 @@ import {
   type FeedbackKind,
 } from "@multica/core/feedback";
 import { useCurrentWorkspace } from "@multica/core/paths";
-import { useFileUpload } from "@multica/core/hooks/use-file-upload";
-import { api } from "@multica/core/api";
 import { useT } from "../i18n";
 import { useShortcut } from "@multica/core/shortcuts";
 import { ShortcutKeycaps } from "../common/shortcut-keycaps";
@@ -50,11 +49,15 @@ ${incomingInitialMessage}`;
 }
 
 export function FeedbackModal({
+  open = true,
   onClose,
+  onOpenChangeComplete,
   data,
   initialMessage,
 }: {
+  open?: boolean;
   onClose: () => void;
+  onOpenChangeComplete?: (open: boolean) => void;
   data?: Record<string, unknown> | null;
   initialMessage?: string;
 }) {
@@ -68,7 +71,6 @@ export function FeedbackModal({
   const clearDraft = useFeedbackDraftStore((s) => s.clearDraft);
 
   const editorRef = useRef<ContentEditorRef>(null);
-  const uploadGate = useUploadGate(editorRef);
   const incomingInitialMessage =
     initialMessage ?? (typeof data?.initialMessage === "string" ? data.initialMessage : "");
   const kind = typeof data?.kind === "string" && FEEDBACK_KIND_SET.has(data.kind as FeedbackKind)
@@ -80,7 +82,10 @@ export function FeedbackModal({
   const { isDragOver, dropZoneProps } = useFileDropZone({
     onDrop: (files) => files.forEach((f) => editorRef.current?.uploadFile(f)),
   });
-  const { uploadWithToast } = useFileUpload(api);
+  const { uploadWithToast } = useEditorUpload();
+  // The handler already refused to submit mid-upload, but the button stayed
+  // clickable — so the only feedback was a toast fired after the click.
+  const uploadGate = useUploadGate(editorRef);
   const mutation = useCreateFeedback();
 
   const canSubmit =
@@ -90,6 +95,12 @@ export function FeedbackModal({
     !uploadGate.uploading;
 
   const handleSubmit = async () => {
+    // The button can use debounced `message` state, but the keyboard shortcut
+    // must not: Command+Enter can arrive before ContentEditor's 150ms onUpdate
+    // fires. The editor ref below is the submit-time source of truth.
+    if (mutation.isPending) return;
+    // Keep the toast on this path: the shortcut can fire while the button is
+    // disabled and off-screen, so a silent no-op would read as a dead ⌘+Enter.
     if (uploadGate.isBlocked()) {
       toast.info(t(($) => $.feedback.toast_uploading));
       return;
@@ -133,7 +144,11 @@ export function FeedbackModal({
   };
 
   return (
-    <Dialog open onOpenChange={(v) => !v && onClose()}>
+    <Dialog
+      open={open}
+      onOpenChange={(v) => !v && onClose()}
+      onOpenChangeComplete={onOpenChangeComplete}
+    >
       <DialogContent className="sm:max-w-2xl !h-[28rem] p-0 gap-0 flex flex-col overflow-hidden">
         <DialogHeader className="px-5 pt-4 pb-2 shrink-0">
           <DialogTitle>{t(($) => $.feedback.title)}</DialogTitle>
@@ -174,12 +189,14 @@ export function FeedbackModal({
         <div className="flex items-center justify-between px-4 py-3 border-t shrink-0">
           <FileUploadButton
             size="sm"
+            multiple
             onSelect={(file) => editorRef.current?.uploadFile(file)}
           />
           <Button
             size="sm"
             onClick={handleSubmit}
             disabled={!canSubmit}
+            aria-disabled={uploadGate.uploading || undefined}
             aria-busy={uploadGate.uploading || undefined}
           >
             {mutation.isPending
