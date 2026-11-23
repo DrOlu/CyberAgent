@@ -469,15 +469,62 @@ reconcile_desktop_pkg() {
   '
 }
 
+# ── Phase 4: Reconcile root package.json ─────────────────────────────────────
+# Root package.json is manifest-owned, so upstream additions to it never flow
+# in through syncs. The pnpm patches (patches/*.patch, apps/mobile/patches/*)
+# ship as files but only take effect when declared under pnpm
+# .patchedDependencies — a dropped declaration silently unpatches
+# @tiptap/y-tiptap and fails collaboration-caret-restore.test.ts. Restore the
+# declaration whenever a patch file exists without one (MUL CI 2026-11-22).
+reconcile_root_pkg() {
+  if [ ! -f package.json ]; then
+    echo "::warning::package.json not found — skipping root reconcile"
+    return 0
+  fi
+  if ! command -v node >/dev/null 2>&1; then
+    echo "::warning::node not available — skipping root package.json reconcile"
+    return 0
+  fi
+
+  echo "Reconciling patchedDependencies in package.json..."
+  node -e '
+    const fs = require("node:fs");
+    const path = "package.json";
+    const pkg = JSON.parse(fs.readFileSync(path, "utf8"));
+    pkg.pnpm = pkg.pnpm || {};
+    pkg.pnpm.patchedDependencies = pkg.pnpm.patchedDependencies || {};
+    let changed = false;
+    const known = [
+      ["expo-modules-core@57.0.21", "apps/mobile/patches/expo-modules-core@57.0.21.patch"],
+      ["@tiptap/y-tiptap@3.3.1", "patches/@tiptap__y-tiptap@3.3.1.patch"],
+    ];
+    for (const [name, patchPath] of known) {
+      if (fs.existsSync(patchPath) && !pkg.pnpm.patchedDependencies[name]) {
+        pkg.pnpm.patchedDependencies[name] = patchPath;
+        changed = true;
+        console.log(`[reconcile_root_pkg] restored patchedDependency ${name}`);
+      }
+    }
+    if (changed) {
+      fs.writeFileSync(path, JSON.stringify(pkg, null, 2) + "\n");
+      console.log("[reconcile_root_pkg] package.json updated — regenerate pnpm-lock.yaml (pnpm install) so the patches are recorded");
+    } else {
+      console.log("[reconcile_root_pkg] patchedDependencies already complete");
+    }
+  '
+}
+
 # ── Main ─────────────────────────────────────────────────────────────────────
 case "$PHASE" in
   --restore) restore_files ;;
   --rebrand) rebrand_substitutions ;;
   --reconcile-desktop-pkg) reconcile_desktop_pkg ;;
+  --reconcile-root-pkg) reconcile_root_pkg ;;
   all)
     restore_files
     rebrand_substitutions
     reconcile_desktop_pkg
+    reconcile_root_pkg
     ;;
   *) echo "Usage: $0 [--restore|--rebrand|--reconcile-desktop-pkg|all]" >&2; exit 1 ;;
 esac

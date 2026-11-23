@@ -29,6 +29,10 @@
       "@xmldom/xmldom": "^0.8.13",
       "postcss": "8.5.10",
       "uuid": "11.1.1"
+    },
+    "patchedDependencies": {
+      "expo-modules-core@57.0.21": "apps/mobile/patches/expo-modules-core@57.0.21.patch",
+      "@tiptap/y-tiptap@3.3.1": "patches/@tiptap__y-tiptap@3.3.1.patch"
     }
   },
   "devDependencies": {
