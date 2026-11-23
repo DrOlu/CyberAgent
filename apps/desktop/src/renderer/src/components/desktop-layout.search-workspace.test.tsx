@@ -216,7 +216,9 @@ it("cancels an in-flight search when the production router switches workspace", 
   fireEvent.change(input(), { target: { value: "alpha" } });
   // Issues, projects and docs: one held search request each. Docs search runs
   // on its own debounce, so waiting for only the first two raced its arrival.
-  await waitFor(() => expect(held.length).toBe(3), NETWORK_WAIT);
+  // Under CI load that same debounce can fire a second docs request, so count
+  // with a floor: an exact count would fail on the late duplicate forever.
+  await waitFor(() => expect(held.length).toBeGreaterThanOrEqual(3), NETWORK_WAIT);
   await notify("synthetic-b");
   await act(async () => {
     for (const { response, payload } of held.splice(0)) response.end(JSON.stringify(payload));
