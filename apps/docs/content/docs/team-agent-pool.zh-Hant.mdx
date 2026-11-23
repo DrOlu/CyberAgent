@@ -7,7 +7,7 @@ import { Callout } from "fumadocs-ui/components/callout";
 
 這篇指南寫給由幾名開發者組成的團隊：大家想共用一組 AI 程式設計代理，而不是每個人在自己的終端機裡各跑各的。它把分散在多個頁面的功能串起來：[角色](/members-roles)、AI 代理的 [Access](/agents#權限與-access)、[執行時共享](/daemon-runtimes#私有與公開)、[小隊](/squads)和[工作流](/workflows)。
 
-在 Multica 工作區裡，成員和 AI 代理處理的是同一批任務。任何任務都可以分配給一個人、一個 AI 代理或一個小隊；AI 代理用評論回報進度，交付時把任務改為 `in_review`，每次執行都記錄在任務上。
+在 CyberAgent 工作區裡，成員和 AI 代理處理的是同一批任務。任何任務都可以分配給一個人、一個 AI 代理或一個小隊；AI 代理用評論回報進度，交付時把任務改為 `in_review`，每次執行都記錄在任務上。
 
 ## 各部分負責什麼
 
@@ -28,7 +28,7 @@ import { Callout } from "fumadocs-ui/components/callout";
 下面的步驟為 10 名開發者建立一組共用的 3 個 AI 代理。名稱和數量請依你的團隊調整。
 
 1. **建立工作區並邀請成員。** `owner` 或 `admin` 把開發者邀請為 `member`，把一兩位負責人設為 `admin`。只需要跟進一個專案的外包人員以[訪客](/members-roles#訪客)身分加入，並把那個專案共享給他。
-2. **連線電腦。** 想在自己電腦上跑 AI 代理的開發者打開 [Multica 桌面應用](/desktop-app)，它會把這臺電腦註冊為執行時。全隊依賴的 AI 代理放在一臺共用機器上，例如一臺雲端伺服器：用 `multica setup` 連線，再由它的所有者把執行時設為公開，或共享給指定成員。共享執行時讓別人能在上面執行 AI 代理，但不會共享 AI 程式設計工具的登入帳號。
+2. **連線電腦。** 想在自己電腦上跑 AI 代理的開發者打開 [CyberAgent 桌面應用](/desktop-app)，它會把這臺電腦註冊為執行時。全隊依賴的 AI 代理放在一臺共用機器上，例如一臺雲端伺服器：用 `multica setup` 連線，再由它的所有者把執行時設為公開，或共享給指定成員。共享執行時讓別人能在上面執行 AI 代理，但不會共享 AI 程式設計工具的登入帳號。
 3. **建立共用的 AI 代理。** 例如基於 Claude Code 的 **Frontend** AI 代理、基於 Codex 的 **Backend** AI 代理，以及基於另一個工具的 **Reviewer** AI 代理，都放在共用執行時上。為它們寫好指令，掛上團隊的 [Skills](/skills)。任何人都能用的 AI 代理把 Access 設為**整個工作區**，持有敏感憑據的 AI 代理設為**指定成員**。
 4. **組建小隊。** 把這 3 個 AI 代理放進一個小隊，並指定隊長 AI 代理。大家把任務分配給小隊，由隊長決定誰來做。
 5. **設定審查環節。** 在專案裡選用一個[工作流](/workflows)，例如**研發交付**：開發由工程 AI 代理負責，審查由 Reviewer AI 代理負責，QA 由一名成員負責。
@@ -82,7 +82,7 @@ import { Callout } from "fumadocs-ui/components/callout";
 
 ## 相關頁面
 
-- [Multica 與 Linear、Jira 比較](/compare/linear-jira)：什麼時候繼續用原本的專案管理工具，什麼時候把 AI 代理的工作搬進 Multica。
+- [CyberAgent 與 Linear、Jira 比較](/compare/linear-jira)：什麼時候繼續用原本的專案管理工具，什麼時候把 AI 代理的工作搬進 CyberAgent。
 - [成員與權限](/members-roles)：邀請、訪客和角色變更。
 - [AI 代理](/agents)：AI 代理設定和完整的 Access 規則。
 - [小隊](/squads)：隊長如何分派工作、何時被喚醒。

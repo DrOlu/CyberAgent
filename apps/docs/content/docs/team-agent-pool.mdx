@@ -7,7 +7,7 @@ import { Callout } from "fumadocs-ui/components/callout";
 
 This guide is for a team of several developers who want to share AI coding agents instead of each person running their own in a terminal. It strings together features documented on separate pages: [roles](/members-roles), agent [Access](/agents#permissions-and-access), [runtime sharing](/daemon-runtimes#private-and-public-runtimes), [squads](/squads), and [workflows](/workflows).
 
-In a Multica workspace, members and agents work from the same issues. Any issue can be assigned to a person, an agent, or a squad; agents post progress as comments, move the issue to `in_review` when they deliver, and every run is recorded on the issue.
+In a CyberAgent workspace, members and agents work from the same issues. Any issue can be assigned to a person, an agent, or a squad; agents post progress as comments, move the issue to `in_review` when they deliver, and every run is recorded on the issue.
 
 ## What each part does
 
@@ -28,7 +28,7 @@ In a Multica workspace, members and agents work from the same issues. Any issue 
 The steps below set up a team of ten developers sharing three agents. Adjust the names and numbers to your team.
 
 1. **Create the workspace and invite people.** An `owner` or `admin` invites the developers as `member`s and one or two leads as `admin`s. A contractor who should only follow one project joins as a [guest](/members-roles#guests) with that project shared.
-2. **Connect the computers.** Each developer who wants agents on their own machine opens [Multica Desktop](/desktop-app), which registers it as a runtime. For agents the whole team relies on, connect a shared machine, such as a cloud VM, with `multica setup`, and have its owner make the runtime public or share it with specific members. Sharing a runtime lets others run agents there; it does not share the AI coding tool's login.
+2. **Connect the computers.** Each developer who wants agents on their own machine opens [CyberAgent Desktop](/desktop-app), which registers it as a runtime. For agents the whole team relies on, connect a shared machine, such as a cloud VM, with `multica setup`, and have its owner make the runtime public or share it with specific members. Sharing a runtime lets others run agents there; it does not share the AI coding tool's login.
 3. **Create the shared agents.** For example, a **Frontend** agent on Claude Code, a **Backend** agent on Codex, and a **Reviewer** agent on another tool, all on the shared runtime. Give them instructions and the team's [skills](/skills). Set Access to **Entire workspace** for agents anyone may use, and to **Specific people** for an agent that holds sensitive credentials.
 4. **Add a squad.** Put the three agents in a squad with a leader agent. People assign an issue to the squad, and the leader picks who works on it.
 5. **Set up review.** In a project, choose a [workflow](/workflows) such as **Delivery**: Development is handled by an engineering agent, Review by the Reviewer agent, and QA by a member.
@@ -82,7 +82,7 @@ A regular member does not see other people's **Only me** agents. Their usage app
 
 ## Related
 
-- [Multica vs Linear and Jira](/compare/linear-jira) — when a team should keep its tracker and when to move agent work into Multica.
+- [CyberAgent vs Linear and Jira](/compare/linear-jira) — when a team should keep its tracker and when to move agent work into CyberAgent.
 - [Members and roles](/members-roles) — invitations, guests, and role changes.
 - [Agents](/agents) — agent configuration and the full Access rules.
 - [Squads](/squads) — how the leader routes work and when it is woken up.

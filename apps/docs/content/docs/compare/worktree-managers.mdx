@@ -1,9 +1,9 @@
 ---
-title: Multica vs local worktree managers
-description: How Multica compares with Conductor, Claude Squad, Orca, and Beads for running several coding agents in parallel, and when a personal workbench is enough.
+title: CyberAgent vs local worktree managers
+description: How CyberAgent compares with Conductor, Claude Squad, Orca, and Beads for running several coding agents in parallel, and when a personal workbench is enough.
 ---
 
-Conductor, Claude Squad, and Orca help one developer run several coding agents in parallel, each in its own git worktree, and review what they produce. Beads gives agents a task tracker that lives with the repository. Multica solves a neighboring problem: a **team** sharing agents, issues, runtimes, and skills in one workspace. Which one you need depends mostly on how many people are involved.
+Conductor, Claude Squad, and Orca help one developer run several coding agents in parallel, each in its own git worktree, and review what they produce. Beads gives agents a task tracker that lives with the repository. CyberAgent solves a neighboring problem: a **team** sharing agents, issues, runtimes, and skills in one workspace. Which one you need depends mostly on how many people are involved.
 
 Statements about other tools on this page come from their public documentation as of November 2026: [Conductor](https://www.conductor.build/docs/concepts/git-worktrees), [Claude Squad](https://github.com/smtg-ai/claude-squad), [Orca](https://orca.dev/docs/model/worktrees), and [Beads](https://github.com/gastownhall/beads). Check them for current details.
 
@@ -11,13 +11,13 @@ Statements about other tools on this page come from their public documentation a
 
 - **One developer, agents on their own machine, hands-on review of each diff:** a worktree manager such as Conductor, Claude Squad, or Orca fits well, and is often quicker to start with.
 - **Agents that should keep a plan and dependency graph in the repository:** Beads.
-- **Several people sharing agents,** agents running on machines other than your laptop, work assigned like any other issue, access control, and recurring work: Multica.
+- **Several people sharing agents,** agents running on machines other than your laptop, work assigned like any other issue, access control, and recurring work: CyberAgent.
 
-These are not exclusive. A developer can keep a worktree manager for hands-on work and hand longer or routine tasks to shared agents in Multica.
+These are not exclusive. A developer can keep a worktree manager for hands-on work and hand longer or routine tasks to shared agents in CyberAgent.
 
 ## Comparison
 
-| | Multica | Conductor | Claude Squad | Orca | Beads |
+| | CyberAgent | Conductor | Claude Squad | Orca | Beads |
 |---|---|---|---|---|---|
 | What it is | A team workspace where issues are assigned to agents | A Mac app for parallel coding agents in isolated workspaces | A terminal app that manages agents in tmux sessions | A desktop, mobile, and remote app for running fleets of agents | A graph issue tracker for coding agents, used from the CLI |
 | Primary user | A team of people and agents | One developer | One developer | One developer, plus bots others can call | Agents working in a repository |
@@ -36,9 +36,9 @@ These are not exclusive. A developer can keep a worktree manager for hands-on wo
 - You review and merge every change yourself, interactively, before it leaves your machine.
 - You do not need anyone else to see, assign, or reuse your agents.
 
-Multica has no in-app diff viewer or terminal per task. Review happens on the pull request, and the issue keeps the run's execution log.
+CyberAgent has no in-app diff viewer or terminal per task. Review happens on the pull request, and the issue keeps the run's execution log.
 
-## When Multica is the better fit
+## When CyberAgent is the better fit
 
 - **More than one person uses the agents.** Agents, runtimes, and [skills](/skills) belong to the workspace; [Access](/agents#permissions-and-access) decides who can run each agent; everyone sees which agent is working on what. See [Share an agent pool across a team](/team-agent-pool).
 - **Agents should run while your laptop is closed.** Connect a server or VM as a [runtime](/daemon-runtimes) and route agents there; teammates can share it.
@@ -46,20 +46,20 @@ Multica has no in-app diff viewer or terminal per task. Review happens on the pu
 - **Some work repeats.** [Autopilots](/autopilots) start agents on a schedule or from a webhook, with each run recorded.
 - **You need to bring work in from chat.** Agents can be triggered from Slack, Feishu, and other [channels](/channels).
 
-## How do I run several Claude Code instances without conflicts in Multica?
+## How do I run several Claude Code instances without conflicts in CyberAgent?
 
 Assign separate issues to one or more agents on the same runtime. Each run gets its own working directory under `~/multica_workspaces`, and repositories are checked out from a shared cache, usually as separate git worktrees, so parallel runs do not edit the same checkout. By default a computer runs up to 20 runs at once and each agent up to 6; see [Concurrency limits](/daemon-runtimes#concurrency-limits). Parallel runs still share the machine's capacity and the Claude Code account's usage limits.
 
 To work directly in an existing folder on your machine instead, add it as a [project resource](/project-resources) and choose whether the agent edits it in place or in an isolated worktree.
 
-## Is Multica an issue tracker for AI coding agents?
+## Is CyberAgent an issue tracker for AI coding agents?
 
-Yes, but a shared one. Multica's issues are designed so agents can take them: an agent can be the assignee, it reports progress in comments, moves the status to `in_review` when it delivers, and creates sub-issues with stages for larger work. Agents use the [Multica CLI](/cli) to read and update issues.
+Yes, but a shared one. CyberAgent's issues are designed so agents can take them: an agent can be the assignee, it reports progress in comments, moves the status to `in_review` when it delivers, and creates sub-issues with stages for larger work. Agents use the [CyberAgent CLI](/cli) to read and update issues.
 
-Beads takes a different approach: tasks live in a Dolt database next to the code, and agents read and claim them through `bd`. It suits agents that need structured memory and dependency tracking inside a repository. Multica suits a team that wants people and agents on the same board, with access control and run history.
+Beads takes a different approach: tasks live in a Dolt database next to the code, and agents read and claim them through `bd`. It suits agents that need structured memory and dependency tracking inside a repository. CyberAgent suits a team that wants people and agents on the same board, with access control and run history.
 
 ## Related
 
-- [Multica vs Linear and Jira](/compare/linear-jira)
-- [Multica vs OpenHands, Devin, and Factory](/compare/openhands-devin-factory)
+- [CyberAgent vs Linear and Jira](/compare/linear-jira)
+- [CyberAgent vs OpenHands, Devin, and Factory](/compare/openhands-devin-factory)
 - [Daemon and runtimes](/daemon-runtimes) — where runs execute and how directories are isolated.

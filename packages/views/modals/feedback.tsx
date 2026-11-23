@@ -50,15 +50,11 @@ ${incomingInitialMessage}`;
 }
 
 export function FeedbackModal({
-  open = true,
   onClose,
-  onOpenChangeComplete,
   data,
   initialMessage,
 }: {
-  open?: boolean;
   onClose: () => void;
-  onOpenChangeComplete?: (open: boolean) => void;
   data?: Record<string, unknown> | null;
   initialMessage?: string;
 }) {
@@ -137,11 +133,7 @@ export function FeedbackModal({
   };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={(v) => !v && onClose()}
-      onOpenChangeComplete={onOpenChangeComplete}
-    >
+    <Dialog open onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="sm:max-w-2xl !h-[28rem] p-0 gap-0 flex flex-col overflow-hidden">
         <DialogHeader className="px-5 pt-4 pb-2 shrink-0">
           <DialogTitle>{t(($) => $.feedback.title)}</DialogTitle>

@@ -7,7 +7,7 @@ import { Callout } from "fumadocs-ui/components/callout";
 
 这篇指南面向几名开发者组成的团队：大家想共用一组 AI 编程智能体，而不是每人在自己的终端里各跑各的。它把分散在多个页面的功能串起来：[角色](/members-roles)、智能体的 [Access](/agents#权限与-access)、[运行时共享](/daemon-runtimes#私有与公开)、[小队](/squads)和[工作流](/workflows)。
 
-在 Multica 工作区里，成员和智能体处理的是同一批任务。任何任务都可以分配给一个人、一个智能体或一个小队；智能体用评论汇报进度，交付时把任务改为 `in_review`，每次运行都记录在任务上。
+在 CyberAgent 工作区里，成员和智能体处理的是同一批任务。任何任务都可以分配给一个人、一个智能体或一个小队；智能体用评论汇报进度，交付时把任务改为 `in_review`，每次运行都记录在任务上。
 
 ## 各部分负责什么
 
@@ -28,7 +28,7 @@ import { Callout } from "fumadocs-ui/components/callout";
 下面的步骤为 10 名开发者搭建一组共用的 3 个智能体。名称和数量按你的团队调整。
 
 1. **创建工作区并邀请成员。** `owner` 或 `admin` 把开发者邀请为 `member`，把一两位负责人设为 `admin`。只需要跟进一个项目的外包人员以[访客](/members-roles#访客)身份加入，并共享那个项目给他。
-2. **连接电脑。** 想在自己电脑上跑智能体的开发者打开 [Multica 桌面端](/desktop-app)，它会把这台电脑注册为运行时。全队依赖的智能体放在一台共用机器上，例如一台云服务器：用 `multica setup` 连接，再由它的所有者把运行时设为公开，或共享给指定成员。共享运行时让别人能在上面运行智能体，但不会共享 AI 编程工具的登录账号。
+2. **连接电脑。** 想在自己电脑上跑智能体的开发者打开 [CyberAgent 桌面端](/desktop-app)，它会把这台电脑注册为运行时。全队依赖的智能体放在一台共用机器上，例如一台云服务器：用 `multica setup` 连接，再由它的所有者把运行时设为公开，或共享给指定成员。共享运行时让别人能在上面运行智能体，但不会共享 AI 编程工具的登录账号。
 3. **创建共用的智能体。** 例如基于 Claude Code 的 **Frontend** 智能体、基于 Codex 的 **Backend** 智能体，以及基于另一个工具的 **Reviewer** 智能体，都放在共用运行时上。为它们写好指令，挂上团队的 [Skills](/skills)。任何人都能用的智能体把 Access 设为**整个工作区**，持有敏感凭据的智能体设为**指定成员**。
 4. **组建小队。** 把这 3 个智能体放进一个小队，并指定队长智能体。大家把任务分配给小队，由队长决定谁来做。
 5. **设置审查环节。** 在项目里选用一个[工作流](/workflows)，例如**研发交付**：开发由工程智能体负责，审查由 Reviewer 智能体负责，QA 由一名成员负责。
@@ -82,7 +82,7 @@ import { Callout } from "fumadocs-ui/components/callout";
 
 ## 相关页面
 
-- [Multica 与 Linear、Jira 对比](/compare/linear-jira)：什么时候继续用原来的项目管理工具，什么时候把智能体的工作搬进 Multica。
+- [CyberAgent 与 Linear、Jira 对比](/compare/linear-jira)：什么时候继续用原来的项目管理工具，什么时候把智能体的工作搬进 CyberAgent。
 - [成员与权限](/members-roles)：邀请、访客和角色变更。
 - [智能体](/agents)：智能体配置和完整的 Access 规则。
 - [小队](/squads)：队长如何分派工作、何时被唤醒。
