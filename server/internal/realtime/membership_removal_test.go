@@ -277,10 +277,8 @@ func TestMembershipRemovalClosesResourceOnlySubscriber(t *testing.T) {
 	mc.revoked.Store(true)
 	hub.BroadcastToWorkspace(testWorkspaceID, removalFrame(testWorkspaceID, testUserID))
 	wantMembershipClosed(t, conn)
-	// The peer observes the close before stopClient's removeClient runs, so the
-	// room teardown lands a beat after the read error (same race as waitFor's
-	// doc comment). Poll instead of asserting on the close instant.
-	waitFor(t, "closed client to leave its rooms", func() bool {
-		return !hub.HasLocalSubscribers(ScopeTask, "resource")
-	})
+	waitFor(t, "membership removal to finish", func() bool { return hub.memberRemovalPending.Load() == 0 })
+	if hub.HasLocalSubscribers(ScopeTask, "resource") {
+		t.Fatal("revocation skipped the resource-only connection")
+	}
 }
