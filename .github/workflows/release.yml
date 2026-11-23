@@ -111,6 +111,23 @@ jobs:
           go mod tidy
           cd ..
 
+      - name: Remove stale release for this tag
+        # Re-pointing a tag (delete + re-push onto a fixed commit) leaves the
+        # old release and its assets in place; GoReleaser then fails every
+        # asset upload with `422 already_exists` (v1.5.364). Delete the stale
+        # release so this run republishes artifacts built from the commit the
+        # tag points to now. The tag itself is kept — only the release and
+        # its assets are removed.
+        run: |
+          if gh release view "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            echo "Deleting stale release ${GITHUB_REF_NAME} (left over from a previous build of this tag)"
+            gh release delete "${GITHUB_REF_NAME}" --repo "${GITHUB_REPOSITORY}" --yes
+          else
+            echo "No existing release for ${GITHUB_REF_NAME} — nothing to clean"
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
