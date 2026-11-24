@@ -49,7 +49,7 @@ describe("parseIssueDeepLink", () => {
   });
 });
 
-const chatLink = (url: string) => `multica://open/chat?url=${encodeURIComponent(url)}`;
+const chatLink = (url: string) => `cyberagent://open/chat?url=${encodeURIComponent(url)}`;
 
 describe("parseIssueDeepLink for chats", () => {
   it("opens the chat session named in the link", () => {
@@ -83,7 +83,7 @@ describe("parseIssueDeepLink for chats", () => {
     chatLink("https://tasks.example/acme%2Fevil/chat"),
     chatLink("https://tasks.example/acme/chat?session=../settings"),
     chatLink("https://tasks.example/acme/chat?session="),
-    "multica://open/settings?url=https%3A%2F%2Ftasks.example%2Facme%2Fchat",
+    "cyberagent://open/settings?url=https%3A%2F%2Ftasks.example%2Facme%2Fchat",
   ])("ignores a link whose kind and address do not match: %s", (url) => {
     expect(parseIssueDeepLink(url, "https://tasks.example")).toBeNull();
   });

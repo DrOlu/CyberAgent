@@ -120,7 +120,7 @@ describe("IssueDeepLinkBridge", () => {
 
   it("opens a chat session by link, reusing the open chat tab without adding another", () => {
     const chatLink = (path: string) =>
-      `multica://open/chat?url=${encodeURIComponent(`https://tasks.example${path}`)}`;
+      `cyberagent://open/chat?url=${encodeURIComponent(`https://tasks.example${path}`)}`;
     useTabStore.getState().openTab("/acme/chat?session=s-old", "", { activate: true });
     const chatTab = getActiveTab(useTabStore.getState())!;
     useTabStore.getState().openTab("/acme/issues/ACM-1", "", { activate: true });

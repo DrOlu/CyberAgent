@@ -2,8 +2,8 @@ import { parseIssueWindowPath } from "./issue-window";
 import { parseWorkspaceSlug } from "./workspace-window";
 
 /**
- * `multica://open/issue?url=<issue page URL>` and
- * `multica://open/chat?url=<chat page URL>`, the links another app uses to
+ * `cyberagent://open/issue?url=<issue page URL>` and
+ * `cyberagent://open/chat?url=<chat page URL>`, the links another app uses to
  * open an issue or a chat session in the desktop app.
  */
 export type IssueDeepLink =
@@ -19,7 +19,7 @@ export function parseIssueDeepLink(
 ): IssueDeepLink | null {
   try {
     const link = new URL(value);
-    if (link.protocol !== "multica:" || link.host !== "open") return null;
+    if (link.protocol !== "cyberagent:" || link.host !== "open") return null;
     const kind = link.pathname === "/issue" ? "issue" : link.pathname === "/chat" ? "chat" : null;
     if (!kind) return null;
     const url = new URL(link.searchParams.get("url") ?? "");
