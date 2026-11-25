@@ -133,6 +133,10 @@ server/cmd/multica/cmd_update.go
 # Packages — user-visible strings that need stable CyberAgent text
 packages/ui/components/common/multica-icon.tsx
 packages/ui/styles/base.css
+# Audits base.css's animation set (hardcoded class lists); keep it in lockstep
+# with the snapshotted base.css — upstream's copy expects upstream's classes
+# and fails CI in the fork.
+packages/ui/styles/reduced-motion.test.ts
 packages/ui/styles/tokens.css
 packages/views/auth/login-page.test.tsx
 

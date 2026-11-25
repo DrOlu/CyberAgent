@@ -43,12 +43,10 @@ const attachmentCss = sheets["packages/views/editor/styles/attachment.css"]!;
  * `@media (prefers-reduced-motion: reduce)` in the same file; the reason says
  * why that rule is not `animation: none`.
  */
-const EXCEPTIONS: Record<string, Record<string, string>> = {
-  "packages/ui/styles/base.css": {
-    ".animate-skeleton":
-      "Keeps only skeleton-hold, a 200ms visibility step that moves nothing, so data that lands fast still skips the placeholder. The pulse stops.",
-  },
-};
+// CyberAgent fork: `base.css` is snapshotted (see scripts/rebrand-manifest.txt)
+// and carries its own animation set, all of it fully stopped under the system
+// reduced-motion setting — so unlike upstream there are no live exceptions here.
+const EXCEPTIONS: Record<string, Record<string, string>> = {};
 
 const REDUCED_MEDIA = /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{/g;
 
@@ -204,19 +202,15 @@ describe("base.css under the system reduced-motion setting", () => {
   it("finds the animated classes", () => {
     expect(animated).toEqual(
       expect.arrayContaining([
-        ".animate-chat-enter-fade",
-        ".animate-chat-enter-next",
-        ".animate-chat-enter-prev",
         ".animate-chat-impulse",
-        ".animate-inbox-enter-fade",
-        ".animate-inbox-enter-next",
-        ".animate-inbox-enter-prev",
+        ".animate-chat-text-shimmer",
+        ".animate-completion-badge",
+        ".animate-completion-check",
+        ".animate-entrance-spin",
         ".animate-nav-progress-sweep",
         ".animate-onboarding-enter",
-        ".animate-skeleton",
-        ".border-beam-light",
-        ".multica-pop",
-        ".shimmer-text-window",
+        ".animate-welcome-emoji-pop",
+        ".border-beam::before",
       ]),
     );
   });
@@ -232,10 +226,10 @@ describe("stillMoving", () => {
   });
 
   it("flags a class whose reduced rule was deleted", () => {
-    const covered = ".animate-chat-enter-prev,\n  .animate-chat-enter-fade {";
+    const covered = ".animate-chat-text-shimmer,\n  .animate-nav-progress-sweep {";
     expect(css).toContain(covered);
-    const source = css.replace(covered, ".animate-chat-enter-prev {");
-    expect(stillMoving(source, baseExceptions)).toEqual([".animate-chat-enter-fade"]);
+    const source = css.replace(covered, ".animate-chat-text-shimmer {");
+    expect(stillMoving(source, baseExceptions)).toEqual([".animate-nav-progress-sweep"]);
   });
 
   it("flags a class whose reduced rule swaps in a shorter fade", () => {
