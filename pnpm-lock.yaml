@@ -225,6 +225,9 @@ patchedDependencies:
   expo-modules-core@57.0.21:
     hash: 52e0bb7a9afc2d62b773afaf938f3be85fde749ce4047635e71547c1ba8cde0e
     path: apps/mobile/patches/expo-modules-core@57.0.21.patch
+  micromark-extension-gfm-autolink-literal@2.1.0:
+    hash: 20676bd882c25278e01dfb34676096201fab3bc6682ec1a65f62c021d84889c6
+    path: patches/micromark-extension-gfm-autolink-literal@2.1.0.patch
 
 importers:
 

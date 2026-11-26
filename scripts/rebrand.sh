@@ -497,6 +497,7 @@ reconcile_root_pkg() {
     const known = [
       ["expo-modules-core@57.0.21", "apps/mobile/patches/expo-modules-core@57.0.21.patch"],
       ["@tiptap/y-tiptap@3.3.1", "patches/@tiptap__y-tiptap@3.3.1.patch"],
+      ["micromark-extension-gfm-autolink-literal@2.1.0", "patches/micromark-extension-gfm-autolink-literal@2.1.0.patch"],
     ];
     for (const [name, patchPath] of known) {
       if (fs.existsSync(patchPath) && !pkg.pnpm.patchedDependencies[name]) {
