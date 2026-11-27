@@ -12,7 +12,10 @@ jobs:
     steps:
       - name: Check last sync and alert if overdue
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          # The repo has no GH_TOKEN secret — the canonical PAT is PAT_TOKEN.
+          # With the wrong name gh ran unauthenticated, `gh run list` failed,
+          # and the watchdog silently skipped every check (run 45930925262).
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
@@ -23,17 +26,25 @@ jobs:
           MAX_AGE=90
           MULTICA_WEBHOOK="https://api.multica.ai/api/webhooks/autopilots/awt_azjpEQ-2NJYENF86fUIV8Zm6pWE7_0qanO76WOaG0kw"
 
-          # Get last run time
-          LAST_RUN=$(gh run list \
-            --repo "$REPO" \
-            --workflow "$WORKFLOW_FILE" \
-            --limit 1 \
-            --json createdAt \
-            --jq ".[0].createdAt" 2>/dev/null || echo "")
+          # Get last run time — retry a few times; GitHub's API hiccups often
+          # clear on retry, and a watchdog that can't see must say so loudly
+          # (exit 1) instead of silently skipping like it used to.
+          LAST_RUN=""
+          for attempt in 1 2 3; do
+            LAST_RUN=$(gh run list \
+              --repo "$REPO" \
+              --workflow "$WORKFLOW_FILE" \
+              --limit 1 \
+              --json createdAt \
+              --jq ".[0].createdAt" 2>/dev/null || echo "")
+            [ -n "$LAST_RUN" ] && break
+            echo "Attempt ${attempt}: could not fetch last run time, retrying..."
+            sleep 10
+          done
 
           if [ -z "$LAST_RUN" ]; then
-            echo "Could not fetch last run time — skipping"
-            exit 0
+            echo "Could not fetch last run time after 3 attempts — failing so the failure notifier alerts"
+            exit 1
           fi
 
           # Calculate age in minutes (Linux date)
