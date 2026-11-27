@@ -77,7 +77,14 @@ apps/desktop/scripts/brand-dev-electron.mjs
 # auto-resolves these files to upstream (--theirs) and breaks CI + releases.
 apps/desktop/scripts/package.mjs
 apps/desktop/scripts/package.test.mjs
-apps/desktop/src/main/index.ts
+# apps/desktop/src/main/index.ts was removed from this manifest on 2026-11-27.
+# While it was snapshotted, every sync shipped a months-old frozen main
+# process against a current preload: the preload's sync IPC channels
+# (window:other-workspaces, window:focus-workspace, dev-toolbar visibility)
+# had no main-process handler, so ipcRenderer.sendSync blocked the renderer
+# thread forever — the v1.5.372 settings-tab freeze. The file now tracks
+# upstream; scripts/rebrand.sh applies the only fork deltas it needs
+# (PROTOCOL, app name, Canary dev title, Windows AUMID).
 apps/desktop/src/renderer/index.html
 apps/desktop/src/renderer/src/App.tsx
 apps/desktop/src/shared/runtime-config.test.ts
