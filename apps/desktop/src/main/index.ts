@@ -324,14 +324,14 @@ function handleDeepLink(url: string): void {
     const parsed = new URL(url);
     if (parsed.protocol !== `${PROTOCOL}:`) return;
 
-    // multica://auth/callback?token=<jwt>
+    // cyberagent://auth/callback?token=<jwt>
     if (parsed.hostname === "auth" && parsed.pathname === "/callback") {
       const token = parsed.searchParams.get("token");
       if (token) dispatchToMainRenderer("auth:token", token);
       return;
     }
 
-    // multica://invite/<invitationId>
+    // cyberagent://invite/<invitationId>
     // Dispatched from the web invite page when the user chooses "Open in
     // desktop app". The renderer opens the invite overlay — no tab, no
     // route persistence, so deep-linking the same invite twice stays safe.
@@ -341,7 +341,7 @@ function handleDeepLink(url: string): void {
       return;
     }
 
-    // multica://open/issue?url=… and multica://open/chat?url=…
+    // cyberagent://open/issue?url=… and cyberagent://open/chat?url=…
     if (
       parsed.hostname === "open" &&
       (parsed.pathname === "/issue" || parsed.pathname === "/chat")
