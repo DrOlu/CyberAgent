@@ -98,6 +98,20 @@ open('.goreleaser.yml', 'w').write(text)
   _sed apps/desktop/package.json 's/"name": "Multica"/"name": "CyberAgent"/g'
   _sed apps/desktop/package.json 's/"productId":.*"com.multica"/"productId": "ng.hyperspace.cyberagent"/g'
 
+  # ── Desktop main process ───────────────────────────────────────────────
+  # apps/desktop/src/main/index.ts is NOT snapshot-restored (removed from
+  # rebrand-manifest.txt 2026-11-27): while it was manifest-frozen, every
+  # sync shipped a months-old main process against a current preload. The
+  # preload's sync IPC (window:other-workspaces / window:focus-workspace /
+  # dev-toolbar get) deadlocked the renderer forever — no main handler ever
+  # answered — which is the v1.5.372 settings-tab freeze. These targeted
+  # substitutions are the only fork deltas the file needs; everything else
+  # tracks upstream so future merges stay clean.
+  _sed apps/desktop/src/main/index.ts 's/const PROTOCOL = "multica";/const PROTOCOL = "cyberagent";/g'
+  _sed apps/desktop/src/main/index.ts 's/Multica Canary/CyberAgent Canary/g'
+  _sed apps/desktop/src/main/index.ts 's/app.setName("Multica");/app.setName("CyberAgent");/g'
+  _sed apps/desktop/src/main/index.ts 's/is.dev ? "ai.multica.desktop.dev" : "ai.multica.desktop",/is.dev ? "ng.hyperspace.cyberagent.dev" : "ng.hyperspace.cyberagent",/g'
+
   # ── package.json (root) ─────────────────────────────────────────────────
   _sed package.json 's/"name": "multica"/"name": "cyberagent"/g'
 
