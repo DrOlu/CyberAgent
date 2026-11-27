@@ -386,6 +386,14 @@ jobs:
           cd ../..
           node scripts/check-main-bundle-esm-deps.mjs
 
+      - name: Verify desktop preload bundles all sandboxed-forbidden deps
+        # A sandboxed preload can only require electron + a few builtins; a
+        # bare require of a node_modules package throws "module not found"
+        # and bricks every window (v1.5.374: externalized
+        # @electron-toolkit/preload). Runs on the bundle built above.
+        if: steps.check.outputs.has_changes == 'true'
+        run: node scripts/check-preload-sandbox-deps.mjs
+
       # Run a fast, zero-dep guardrail BEFORE pushing the sync commit.
       # If upstream added a new top-level field to the landing-page
       # LandingDict type (apps/web/features/landing/i18n/types.ts) that
