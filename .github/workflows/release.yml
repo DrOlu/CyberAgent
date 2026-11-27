@@ -85,6 +85,44 @@ jobs:
       - name: Verify landing i18n dictionaries match the LandingDict type
         run: node scripts/check-landing-i18n.mjs
 
+      # v1.5.372 shipped with patches/micromark-extension-gfm-autolink-literal@
+      # 2.1.0.patch present but NOT declared in pnpm.patchedDependencies (the
+      # rebrand's reconcile_root_pkg known list predated it). pnpm installed
+      # the extension unpatched and the released desktop app froze for seconds
+      # rendering large GFM content. CI on main caught it 16 minutes later,
+      # but Release runs concurrently with CI on main, so the tag had already
+      # published the broken build. Guard the release itself: every .patch
+      # file in the tree must be declared, or the build ships unpatched.
+      - name: Verify every pnpm patch file is declared
+        run: |
+          node - <<'EOF'
+          const fs = require("fs");
+          const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+          const declared = new Set(
+            Object.values(pkg.pnpm?.patchedDependencies ?? {}).map(String),
+          );
+          const found = [];
+          const walk = (dir) => {
+            for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+              const p = `${dir}/${e.name}`;
+              if (e.isDirectory()) walk(p);
+              else if (e.name.endsWith(".patch")) found.push(p);
+            }
+          };
+          for (const dir of ["patches", "apps/mobile/patches"]) {
+            if (fs.existsSync(dir)) walk(dir);
+          }
+          const undeclared = found.filter((p) => !declared.has(p));
+          if (undeclared.length) {
+            console.error(
+              "::error::Patch files exist but are missing from package.json pnpm.patchedDependencies — pnpm would install them UNPATCHED:",
+            );
+            for (const p of undeclared) console.error(`  - ${p}`);
+            process.exit(1);
+          }
+          console.log(`All ${found.length} patch file(s) declared.`);
+          EOF
+
   release:
     needs: verify
     # Only run on the canonical upstream repo. Forks don't have the
