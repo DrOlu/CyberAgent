@@ -239,7 +239,9 @@ jobs:
           ./scripts/rebrand.sh --rebrand
 
       - name: Validate docker-compose env vars post-restore
-        if: steps.check_changes.outputs.has_changes == 'true'
+        # steps.check_changes was a typo — the check step's id is `check`, so
+        # this guard evaluated undefined and the step never ran.
+        if: steps.check.outputs.has_changes == 'true'
         run: |
           # After snapshot restore, upstream env vars added directly to main
           # (between sync runs) may have been overwritten with an older snapshot.
@@ -395,7 +397,8 @@ jobs:
       # `main` stays green and we get a workflow failure notification
       # pointing at the missing keys.
       - name: Verify docker-compose env vars
-        if: steps.check_changes.outputs.has_changes == 'true'
+        # Same check_changes typo as the validate step above — never ran.
+        if: steps.check.outputs.has_changes == 'true'
         run: node scripts/check-compose-env.mjs
 
       - name: Verify landing i18n dictionaries are in sync with the LandingDict type
