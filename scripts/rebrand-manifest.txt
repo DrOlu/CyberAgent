@@ -67,7 +67,16 @@ apps/desktop/electron-builder.yml
 # to dependencies and scripts must flow through, but the 3 brand fields
 # (productName, description, homepage) are re-applied after merge by
 # scripts/rebrand.sh's reconcile_desktop_pkg step.
-apps/desktop/electron.vite.config.ts
+# NOTE: electron.vite.config.ts was un-snapshotted on 2026-11-27. It was
+# frozen on a version whose preload block externalized
+# @electron-toolkit/preload — a matched pair with the old frozen
+# main/index.ts (sandbox: false). Once main/index.ts tracked upstream
+# again (sandbox: true), the sandboxed preload died with
+# "module not found: @electron-toolkit/preload" and bricked every
+# window (v1.5.374). The file now tracks upstream; the only fork delta
+# is the fix-path exclude in the main block, and
+# apps/desktop/scripts/check-preload-sandbox-deps.mjs fails any build
+# that externalizes a sandboxed-forbidden package.
 apps/desktop/scripts/brand-dev-electron.mjs
 # package.mjs carries CyberAgent's release contract that upstream dropped:
 # RELEASE_TAG-first version derivation (used by release.yml and
